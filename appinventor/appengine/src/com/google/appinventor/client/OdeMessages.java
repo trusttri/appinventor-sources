@@ -4875,6 +4875,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String ClearCachesMethods();
 
+  @DefaultMessage("RunJavaScript")
+  @Description("")
+  String RunJavaScriptMethods();
+
   @DefaultMessage("GoBack")
   @Description("")
   String GoBackMethods();

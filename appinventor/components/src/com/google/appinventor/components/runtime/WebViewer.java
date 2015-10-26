@@ -440,6 +440,14 @@ public final class WebViewer extends AndroidViewComponent {
     webview.clearCache(true);
   }
 
+  /*
+   *  Takes a JS function name and calls that function in the webViewer.
+   */
+  @SimpleFunction(description = "Run JavaScript method.")
+  public void runJavaScript(String functionName) {
+    //TODO: implement this
+  }
+
   /**
    * Allows the setting of properties to be monitored from the javascript
    * in the WebView
@@ -473,4 +481,3 @@ public final class WebViewer extends AndroidViewComponent {
 
   }
 }
-
