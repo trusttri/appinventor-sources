@@ -444,8 +444,8 @@ public final class WebViewer extends AndroidViewComponent {
    *  Takes a JS function name and calls that function in the webViewer.
    */
   @SimpleFunction(description = "Run JavaScript method.")
-  public void runJavaScript(String functionName) {
-    //TODO: implement this
+  public void RunJavaScript(String functionName) {
+    wvInterface.runJavaScriptFunction(functionName);
   }
 
   /**
@@ -477,6 +477,10 @@ public final class WebViewer extends AndroidViewComponent {
      */
     public void setWebViewString(String newString) {
       webViewString = newString;
+    }
+
+    public void runJavaScriptFunction(String functionName) {
+      webview.loadUrl("javascript:" + functionName + "()");
     }
 
   }
