@@ -451,12 +451,12 @@ public final class WebViewer extends AndroidViewComponent {
 
   @SimpleFunction(description = "Create a JavaScript variable.")
   public void CreateJavaScriptVariable(String variableName, String value) {
-    webview.loadUrl("javascript: var " + variableName + "= '" + value + "';");
+    webview.loadUrl("javascript: var " + variableName + " = " + value + ";");
   }
 
   @SimpleFunction(description = "Create a JavaScript object.")
-  public void CreateJavaScriptObject(String objectName) {
-    //TODO: blah blah
+  public void CreateJavaScriptAttribute(String variableName, String attributeName, String attributeValue) {
+    webview.loadUrl("javascript:" + variableName + "." + attributeName + " = " + attributeValue + ";");
   }
 
   /**
