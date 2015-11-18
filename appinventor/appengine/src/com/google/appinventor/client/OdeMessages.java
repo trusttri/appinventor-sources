@@ -4879,6 +4879,14 @@ public interface OdeMessages extends Messages {
   @Description("")
   String RunJavaScriptMethods();
 
+  @DefaultMessage("CreateJavaScriptVariable")
+  @Description("")
+  String CreateJavaScriptVariableMethods();
+
+  @DefaultMessage("CreateJavaScriptObject")
+  @Description("")
+  String CreateJavaScriptObjectMethods();
+
   @DefaultMessage("GoBack")
   @Description("")
   String GoBackMethods();

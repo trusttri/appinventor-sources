@@ -446,6 +446,17 @@ public final class WebViewer extends AndroidViewComponent {
   @SimpleFunction(description = "Run JavaScript method.")
   public void RunJavaScript(String functionName) {
     webview.loadUrl("javascript:" + functionName + "()");
+    //TODO: get return value
+  }
+
+  @SimpleFunction(description = "Create a JavaScript variable.")
+  public void CreateJavaScriptVariable(String variableName, String value) {
+    webview.loadUrl("javascript: var " + variableName + "= '" + value + "';");
+  }
+
+  @SimpleFunction(description = "Create a JavaScript object.")
+  public void CreateJavaScriptObject(String objectName) {
+    //TODO: blah blah
   }
 
   /**
