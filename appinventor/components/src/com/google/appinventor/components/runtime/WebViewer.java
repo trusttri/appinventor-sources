@@ -444,8 +444,8 @@ public final class WebViewer extends AndroidViewComponent {
    *  Takes a JS function name and calls that function in the webViewer.
    */
   @SimpleFunction(description = "Run JavaScript method.")
-  public void RunJavaScript(String functionName) {
-    webview.loadUrl("javascript:" + functionName + "()");
+  public void RunJavaScript(String functionName, String inputs) {
+    webview.loadUrl("javascript:" + functionName + "(" + inputs + ")");
     //TODO: get return value
   }
 
@@ -455,8 +455,29 @@ public final class WebViewer extends AndroidViewComponent {
   }
 
   @SimpleFunction(description = "Create a JavaScript object.")
-  public void CreateJavaScriptAttribute(String variableName, String attributeName, String attributeValue) {
-    webview.loadUrl("javascript:" + variableName + "." + attributeName + " = " + attributeValue + ";");
+  public void CreateJavaScriptObject(String variableName, String attributes, String attributeValues) {
+    String[] attributesList = attributes.split(" ");
+    String[] attributeValuesList = attributeValues.split(" ");
+
+    if(attributesList.length != attributeValuesList.length) {
+      webview.loadUrl("javascript: alert('uh oh" + attributesList.length + " " + attributeValuesList.length + "');");
+      return;
+    }
+
+    String attributesString = "{";
+
+    for(int i = 0; i < attributesList.length; i++) {
+      attributesString += attributesList[i] + ": " + attributeValuesList[i];
+      if(i != attributesList.length - 1) {
+        attributesString += ", ";
+      }
+    }
+
+    attributesString += "}";
+
+    webview.loadUrl("javascript:alert(" + attributesString + ")");
+
+    webview.loadUrl("javascript: var " + variableName + " = " + attributesString + ";");
   }
 
   /**
