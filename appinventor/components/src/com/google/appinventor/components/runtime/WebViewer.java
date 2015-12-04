@@ -445,8 +445,15 @@ public final class WebViewer extends AndroidViewComponent {
    */
   @SimpleFunction(description = "Run JavaScript method.")
   public void RunJavaScript(String functionName, String inputs) {
-    webview.loadUrl("javascript:" + functionName + "(" + inputs + ")");
-    //TODO: get return value
+    webview.loadUrl("javascript:window.AppInventor.onData(" + functionName + "(" + inputs + "))");
+  }
+
+  /*
+   *  Gets the value returned by the last JavaScript method called.
+   */
+  @SimpleFunction(description = "Get JavaScript return value.")
+  public String GetJavaScriptReturnValue() {
+    return wvInterface.getReturnString();
   }
 
   @SimpleFunction(description = "Create a JavaScript variable.")
@@ -457,10 +464,9 @@ public final class WebViewer extends AndroidViewComponent {
   @SimpleFunction(description = "Create a JavaScript object.")
   public void CreateJavaScriptObject(String variableName, String attributes, String attributeValues) {
     String[] attributesList = attributes.split(" ");
-    String[] attributeValuesList = attributeValues.split(" ");
+    String[] attributeValuesList = attributeValues.split(", ");
 
     if(attributesList.length != attributeValuesList.length) {
-      webview.loadUrl("javascript: alert('uh oh" + attributesList.length + " " + attributeValuesList.length + "');");
       return;
     }
 
@@ -475,8 +481,6 @@ public final class WebViewer extends AndroidViewComponent {
 
     attributesString += "}";
 
-    webview.loadUrl("javascript:alert(" + attributesString + ")");
-
     webview.loadUrl("javascript: var " + variableName + " = " + attributesString + ";");
   }
 
@@ -487,11 +491,13 @@ public final class WebViewer extends AndroidViewComponent {
   public class WebViewInterface {
     Context mContext;
     String webViewString;
+    String returnString;
 
     /** Instantiate the interface and set the context */
     WebViewInterface(Context c) {
       mContext = c;
       webViewString = " ";
+      returnString = " ";
     }
 
     /**
@@ -502,6 +508,23 @@ public final class WebViewer extends AndroidViewComponent {
     @JavascriptInterface
     public String getWebViewString() {
       return webViewString;
+    }
+
+    /**
+     * Set returnString to value returned by JavaScript method.
+     */
+    @JavascriptInterface
+    public void onData(String value) {
+      returnString = value;
+    }
+
+    /**
+     * Get the returnString.
+     * @return string
+     */
+    @JavascriptInterface
+    public String getReturnString() {
+      return returnString;
     }
 
     /**
