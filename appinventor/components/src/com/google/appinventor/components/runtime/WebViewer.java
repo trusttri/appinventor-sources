@@ -445,7 +445,15 @@ public final class WebViewer extends AndroidViewComponent {
    */
   @SimpleFunction(description = "Run JavaScript method.")
   public void RunJavaScript(String functionName, String inputs) {
-    webview.loadUrl("javascript:window.AppInventor.onData(" + functionName + "(" + inputs + "))");
+    webview.loadUrl("javascript:window.AppInventor.runMethod(" + functionName + "(" + inputs + "))");
+  }
+
+  /*
+   * Create a function in JavaScript. Inputs are separated by commas.
+   */
+  @SimpleFunction(description = "Create JavaScript function.")
+  public void CreateJavaScriptFunction(String functionName, String inputs, String function) {
+    webview.loadUrl("javascript: function " + functionName + "(" + inputs + ") { " + function + " };");
   }
 
   /*
@@ -461,9 +469,13 @@ public final class WebViewer extends AndroidViewComponent {
     webview.loadUrl("javascript: var " + variableName + " = " + value + ";");
   }
 
+  /*
+   * Create a JavaScript object with certain attributes, each of which has a value.
+   * Split up attributes and values by a comma and a space - i.e. 1, 2, 3, 4
+   */
   @SimpleFunction(description = "Create a JavaScript object.")
   public void CreateJavaScriptObject(String variableName, String attributes, String attributeValues) {
-    String[] attributesList = attributes.split(" ");
+    String[] attributesList = attributes.split(", ");
     String[] attributeValuesList = attributeValues.split(", ");
 
     if(attributesList.length != attributeValuesList.length) {
@@ -514,7 +526,7 @@ public final class WebViewer extends AndroidViewComponent {
      * Set returnString to value returned by JavaScript method.
      */
     @JavascriptInterface
-    public void onData(String value) {
+    public void runMethod(String value) {
       returnString = value;
     }
 

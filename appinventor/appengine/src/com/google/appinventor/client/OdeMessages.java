@@ -4879,6 +4879,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String RunJavaScriptMethods();
 
+  @DefaultMessage("CreateJavaScriptFunction")
+  @Description("")
+  String CreateJavaScriptFunctionMethods();
+
   @DefaultMessage("CreateJavaScriptVariable")
   @Description("")
   String CreateJavaScriptVariableMethods();
