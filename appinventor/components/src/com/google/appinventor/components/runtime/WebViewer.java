@@ -453,7 +453,7 @@ public final class WebViewer extends AndroidViewComponent {
    */
   @SimpleFunction(description = "Create JavaScript function.")
   public void CreateJavaScriptFunction(String functionName, String inputs, String function) {
-    webview.loadUrl("javascript: function " + functionName + "(" + inputs + ") { " + function + " };");
+    webview.loadUrl("javascript: function " + functionName + "(" + inputs + ") { " + function + "; }");
   }
 
   /*
