@@ -563,6 +563,14 @@ public interface OdeMessages extends Messages {
   @Description("Information about the Companion")
   String companionInformation();
 
+  @DefaultMessage("Update the Companion")
+  @Description("Menu item to update the Companion to the latest version")
+  String companionUpdate();
+
+  @DefaultMessage("You must have a project open to update the Companion")
+  @Description("")
+  String companionUpdateMustHaveProject();
+
   @DefaultMessage("Show Splash Screen")
   @Description("Redisplay the Splash Screen")
   String showSplashMenuItem();
@@ -1428,7 +1436,7 @@ public interface OdeMessages extends Messages {
       "Any projects that you package in the future will be signed using your new keystore file. " +
       "Changing the keystore affects the ability to reinstall previously installed apps. If you " +
       "are not sure that you want to do this, please read the documentation about keystores by " +
-      "clicking above on \"Learn\", then \"Troubleshooting\", and then \"Keystores and Signing " +
+      "clicking above on \"Help\", then \"Troubleshooting\", and then \"Keystores and Signing " +
       "of Applications\"\n\n" +
       "There is no undo for overwriting your keystore file.")
   @Description("Confirmation message shown when keystore is about to be overwritten.")
@@ -1447,7 +1455,7 @@ public interface OdeMessages extends Messages {
       "Any projects that you package in the future will be signed using your new keystore file. " +
       "Changing the keystore affects the ability to reinstall previously installed apps. If you " +
       "are not sure that you want to do this, please read the documentation about keystores by " +
-      "clicking above on \"Learn\", then \"Troubleshooting\", and then \"Keystores and Signing " +
+      "clicking above on \"Help\", then \"Troubleshooting\", and then \"Keystores and Signing " +
       "of Applications\"\n\n" +
       "There is no undo for deleting your keystore file.")
   @Description("Confirmation message for delete keystore")
@@ -1621,6 +1629,14 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Unfeature")
   @Description("Text for gallery Unfeature Text")
   String galleryUnfeaturedText();
+
+  @DefaultMessage("Tutorial")
+  @Description("Text for gallery Tutorial  Text")
+  String galleryTutorialText();
+
+  @DefaultMessage("Untutorial")
+  @Description("Text for gallery Untutorial Text")
+  String galleryUntutorialText();
 
   @DefaultMessage(" ")
   @Description("Text for gallery Single Space Text")
@@ -1802,6 +1818,10 @@ public interface OdeMessages extends Messages {
   @Description("Error message reported when can't get featured on server.")
   String galleryFeaturedAppError();
 
+  @DefaultMessage("Server error: could not retrieve tutorial apps from gallery")
+  @Description("Error message reported when can't get tutorial on server.")
+  String galleryTutorialAppError();
+
   @DefaultMessage("Server error: could not complete a search of gallery")
   @Description("Error message reported when can't search on server.")
   String gallerySearchError();
@@ -1952,6 +1972,18 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("{0} already exists. You cannot create another project with the same name.")
   @Description("Error shown when a new project name would be the same as an existing one")
   String duplicateProjectNameError(String projectName);
+
+  @DefaultMessage("Project names cannot contain spaces")
+  @Description("Error shown when user types space into project name.")
+  String whitespaceProjectNameError();
+
+  @DefaultMessage("Project names must begin with a letter")
+  @Description("Error shown when user does not type letter as first character in project name.")
+  String firstCharProjectNameError();
+
+  @DefaultMessage("Invalid character. Project names can only contain letters, numbers, and underscores")
+  @Description("Error shown when user types invalid character into project name.")
+  String invalidCharProjectNameError();
 
   // Used in youngandroid/YoungAndroidFormUpgrader.java
 
@@ -2210,6 +2242,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("BarcodeScanner")
   @Description("")
   String barcodeScannerComponentPallette();
+
+  @DefaultMessage("GyroscopeSensor")
+  @Description("")
+  String gyroscopeSensorComponentPallette();
 
   @DefaultMessage("LocationSensor")
   @Description("")
@@ -2572,7 +2608,7 @@ public interface OdeMessages extends Messages {
   @Description("")
   String MessageProperties();
 
-  @DefaultMessage("MinimumInterval")
+  @DefaultMessage("MinimumInterval (ms)")
   @Description("")
   String MinimumIntervalProperties();
 
@@ -2675,6 +2711,26 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("ServiceURL")
   @Description("")
   String ServiceURLProperties();
+
+  @DefaultMessage("FirebaseURL")
+  @Description("")
+  String FirebaseURLProperties();
+
+  @DefaultMessage("ProjectBucket")
+  @Description("")
+  String ProjectBucketProperties();
+
+  @DefaultMessage("DeveloperBucket")
+  @Description("")
+  String DeveloperBucketProperties();
+
+  @DefaultMessage("FirebaseToken")
+  @Description("")
+  String FirebaseTokenProperties();
+
+  @DefaultMessage("PrivateUserStorage")
+  @Description("")
+  String PrivateUserStorageProperties();
 
   @DefaultMessage("Scrollable")
   @Description("")
@@ -2819,6 +2875,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Rotates")
   @Description("")
   String RotatesProperties();
+
+  @DefaultMessage("RotationAngle")
+  @Description("")
+  String RotationAngleProperties();
 
   @DefaultMessage("Selection")
   @Description("")
@@ -3136,6 +3196,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String RollProperties();
 
+  @DefaultMessage("Scaling")
+  @Description("A property for scaling images")
+  String ScalingProperties();
+
   @DefaultMessage("SearchResults")
   @Description("")
   String SearchResultsProperties();
@@ -3172,13 +3236,25 @@ public interface OdeMessages extends Messages {
   @Description("")
   String XAccelProperties();
 
+  @DefaultMessage("XAngularVelocity")
+  @Description("")
+  String XAngularVelocityProperties();
+
   @DefaultMessage("YAccel")
   @Description("")
   String YAccelProperties();
 
+  @DefaultMessage("YAngularVelocity")
+  @Description("")
+  String YAngularVelocityProperties();
+
   @DefaultMessage("ZAccel")
   @Description("")
   String ZAccelProperties();
+
+  @DefaultMessage("ZAngularVelocity")
+  @Description("")
+  String ZAngularVelocityProperties();
 
   @DefaultMessage("Width")
   @Description("")
@@ -3396,6 +3472,14 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("weeks")
   @Description("")
   String weeksParams();
+
+  @DefaultMessage("quantity")
+  @Description("")
+  String quantityParams();
+
+  @DefaultMessage("duration")
+  @Description("")
+  String durationParams();
 
   @DefaultMessage("years")
   @Description("")
@@ -3789,6 +3873,22 @@ public interface OdeMessages extends Messages {
   @Description("")
   String textToTranslateParams();
 
+  @DefaultMessage("xAngularVelocity")
+  @Description("")
+  String xAngularVelocityParams();
+
+  @DefaultMessage("yAngularVelocity")
+  @Description("")
+  String yAngularVelocityParams();
+
+  @DefaultMessage("zAngularVelocity")
+  @Description("")
+  String zAngularVelocityParams();
+
+  @DefaultMessage("timestamp")
+  @Description("")
+  String timestampParams();
+
   //Events
   @DefaultMessage("AccelerationChanged")
   @Description("")
@@ -3966,6 +4066,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String WebServiceErrorEvents();
 
+  @DefaultMessage("FirebaseError")
+  @Description("")
+  String FirebaseErrorEvents();
+
   @DefaultMessage("LocationChanged")
   @Description("")
   String LocationChangedEvents();
@@ -4086,6 +4190,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String ValueStoredEvents();
 
+  @DefaultMessage("DataChanged")
+  @Description("")
+  String DataChangedEvents();
+
   @DefaultMessage("DirectMessagesReceived")
   @Description("")
   String DirectMessagesReceivedEvents();
@@ -4165,6 +4273,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Shaking")
   @Description("")
   String ShakingEvents();
+
+  @DefaultMessage("GyroscopeChanged")
+  @Description("")
+  String GyroscopeChangedEvents();
 
   //Methods
   @DefaultMessage("ResolveActivity")
@@ -4315,6 +4427,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String SetBackgroundPixelColorMethods();
 
+  @DefaultMessage("AddDuration")
+  @Description("")
+  String AddDurationMethods();
+
   @DefaultMessage("AddDays")
   @Description("")
   String AddDaysMethods();
@@ -4351,6 +4467,26 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DurationMethods();
 
+  @DefaultMessage("DurationToSeconds")
+  @Description("")
+  String DurationToSecondsMethods();
+
+  @DefaultMessage("DurationToMinutes")
+  @Description("")
+  String DurationToMinutesMethods();
+
+  @DefaultMessage("DurationToHours")
+  @Description("")
+  String DurationToHoursMethods();
+
+  @DefaultMessage("DurationToDays")
+  @Description("")
+  String DurationToDaysMethods();
+
+  @DefaultMessage("DurationToWeeks")
+  @Description("")
+  String DurationToWeeksMethods();
+
   @DefaultMessage("FormatDate")
   @Description("")
   String FormatDateMethods();
@@ -4370,6 +4506,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Hour")
   @Description("")
   String HourMethods();
+
+  @DefaultMessage("Instant")
+  @Description("")
+  String InstantMethods();
 
   @DefaultMessage("MakeInstant")
   @Description("")
@@ -4751,6 +4891,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String StoreValueMethods();
 
+  @DefaultMessage("InitializeValue")
+  @Description("")
+  String InitializeValueMethods();
+
   @DefaultMessage("Authorize")
   @Description("")
   String AuthorizeMethods();
@@ -5105,6 +5249,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GameClientHelpStringComponentPallette();
 
+  @DefaultMessage("<p>Non-visible component that can measure angular velocity in three dimensions in units of degrees per second.</p><p>In order to function, the component must have its <code>Enabled</code> property set to True, and the device must have a gyroscope sensor.</p>")
+  @Description("")
+  String GyroscopeSensorHelpStringComponentPallette();
+
   @DefaultMessage("<p>A formatting element in which to place components that should be displayed from left to right.  If you wish to have components displayed one over another, use <code>VerticalArrangement</code> instead.</p>")
   @Description("")
   String HorizontalArrangementHelpStringComponentPallette();
@@ -5137,7 +5285,7 @@ public interface OdeMessages extends Messages {
   @Description("")
   String LocationSensorHelpStringComponentPallette();
 
-  @DefaultMessage("<p>Non-visible component to provide NFC capabilities.  For now this component supports the reading and writing of text tags only (if supported by the device)</p><p>In order to read and write text tags, the component must have its <code>ReadMode</code> property set to True or False respectively.</p>")
+  @DefaultMessage("<p>Non-visible component to provide NFC capabilities.  For now this component supports the reading and writing of text tags only (if supported by the device)</p><p>In order to read and write text tags, the component must have its <code>ReadMode</code> property set to True or False respectively.</p><p><strong>Note:</strong> This component will only work on Screen1 of any App Inventor app.</p>")
   @Description("")
   String NearFieldHelpStringComponentPallette();
 
@@ -5278,13 +5426,21 @@ public interface OdeMessages extends Messages {
   @Description("")
   String WebHelpStringComponentPallette();
 
-  @DefaultMessage("Component for viewing Web pages.  The Home URL can be specified in the Designer or in the Blocks Editor.  The view can be set to follow links when they are tapped, and users can fill in Web forms. Warning: This is not a full browser.  For example, pressing the phone\"s hardware Back key will exit the app, rather than move back in the browser history.<p />You can use the WebViewer.WebViewString property to communicate between your app and Javascript code running in the Webviewer page. In the app, you get and set WebViewString.  In the WebViewer, you include Javascript that references the window.AppInventor object, using the methoods </em getWebViewString()</em> and <em>setWebViewString(text)</em>.  <p />For example, if the WebViewer opens to a page that contains the Javascript command <br /> <em>document.write(\"The answer is\" + window.AppInventor.getWebViewString());</em> <br />and if you set WebView.WebVewString to \"hello\", then the web page will show </br ><em>The answer is hello</em>.  <br />And if the Web page contains Javascript that executes the command <br /><em>windowAppInventor.setWebViewString(\"hello from Javascript\")</em>, <br />then the value of the WebViewString property will be <br /><em>hello from Javascript</em>. ")
+  @DefaultMessage("Component for viewing Web pages.  The Home URL can be specified in the Designer or in the Blocks Editor.  The view can be set to follow links when they are tapped, and users can fill in Web forms. Warning: This is not a full browser.  For example, pressing the phone\"s hardware Back key will exit the app, rather than move back in the browser history.<p />You can use the WebViewer.WebViewString property to communicate between your app and Javascript code running in the Webviewer page. In the app, you get and set WebViewString.  In the WebViewer, you include Javascript that references the window.AppInventor object, using the methoods </em getWebViewString()</em> and <em>setWebViewString(text)</em>.  <p />For example, if the WebViewer opens to a page that contains the Javascript command <br /> <em>document.write(\"The answer is\" + window.AppInventor.getWebViewString());</em> <br />and if you set WebView.WebVewString to \"hello\", then the web page will show </br ><em>The answer is hello</em>.  <br />And if the Web page contains Javascript that executes the command <br /><em>window.AppInventor.setWebViewString(\"hello from Javascript\")</em>, <br />then the value of the WebViewString property will be <br /><em>hello from Javascript</em>. ")
   @Description("")
   String WebViewerHelpStringComponentPallette();
 
   @DefaultMessage("Use this component to translate words and sentences between different languages. This component needs Internet access, as it will request translations to the Yandex.Translate service. Specify the source and target language in the form source-target using two letter language codes. So\"en-es\" will translate from English to Spanish while \"es-ru\" will translate from Spanish to Russian. If you leave out the source language, the service will attempt to detect the source language. So providing just \"es\" will attempt to detect the source language and translate it to Spanish.<p /> This component is powered by the Yandex translation service.  See http://api.yandex.com/translate/ for more information, including the list of available languages and the meanings of the language codes and status codes. <p />Note: Translation happens asynchronously in the background. When the translation is complete, the \"GotTranslation\" event is triggered.")
   @Description("")
   String YandexTranslateHelpStringComponentPallette();
+
+  @DefaultMessage("A non-visible component allowing you to store data on a Web database powered by Firebase. " +
+      "This allows the users of your app to share data with each other. " +
+      "By default, data will be stored in App Inventor''s shared Firebase database. " +
+      "Otherwise, you can specify the URL for your own Firebase in the \"FirebaseURL\" property. " +
+      "Learn more at <a target=\"_blank\" href=\"http://www.firebase.com\">Firebase.com</a>.")
+  @Description("")
+  String FirebaseDBHelpStringComponentPallette();
 
 
   //Ode.java messages
@@ -5417,18 +5573,19 @@ public interface OdeMessages extends Messages {
   String blocksTruncatedDialogText();
 
   @DefaultMessage("<p>It appears that <b>" + "%1" +
-                "</b> has had all blocks removed. Either you removed them intentionally, or this is " +
-                "the result of a bug in our system.</p><p>" +
-                "<ul><li>Select \"OK, save the empty screen\" to continue to save the empty screen</li>" +
-                "<li>Select \"No, Do Not Save\" below to restore the previously saved version</li></ul></p>")
+      "</b> has had all blocks removed.</p><p>" +
+      "<ul><li>You can save the enpty screen, and then all those blocks will be " +
+      "permanently gone from the project.</li>" +
+      "<li>Alternatively, you can restore the previously saved version " +
+      "of the project.</li></ul></p>")
   @Description("")
   String blocksTruncatedDialogMessage();
 
-  @DefaultMessage("OK, save the empty screen")
+  @DefaultMessage("Save the empty screen now.")
   @Description("")
   String blocksTruncatedDialogButtonSave();
 
-  @DefaultMessage("No, Do Not Save")
+  @DefaultMessage("Restore the previous version.")
   @Description("")
   String blocksTruncatedDialogButtonNoSave();
 
@@ -5471,6 +5628,18 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Pусский")
   @Description("")
   String SwitchToRussian();
+
+  @DefaultMessage("한국어")
+  @Description("")
+  String SwitchToKorean();
+
+  @DefaultMessage("Svenska")
+  @Description("")
+  String SwitchToSwedish();
+
+  @DefaultMessage("Português do Brasil")
+  @Description("")
+  String switchToPortugueseBR();
 
   @DefaultMessage("Progress Bar")
   @Description("")
@@ -5589,4 +5758,37 @@ public interface OdeMessages extends Messages {
   @Description("")
   String PostMediaMethods();
 
+  @DefaultMessage("Scale proportionally")
+  @Description("A choice in ScalingChoicePropertyEditor")
+  String scaleProportionally();
+
+  @DefaultMessage("Scale to fit")
+  @Description("A choice in ScalingChoicePropertyEditor")
+  String scaleToFit();
+
+  @DefaultMessage("Unauthenticate")
+  @Description("")
+  String UnauthenticateMethods();
+
+  @DefaultMessage("Use Default")
+  @Description("Used by the MockFirebaseDB to display default checkbox")
+  String useDefault();
+
+  @DefaultMessage("DefaultURL")
+  @Description("")
+  String DefaultURLProperties();
+
+  @DefaultMessage("Warning!")
+  @Description("")
+  String warningDialogTitle();
+
+  @DefaultMessage("The useFront property has been removed from your Camera Component")
+  @Description("")
+  String useFrontDeprecated();
+
+  @DefaultMessage("FirebaseDB is an experimental feature " +
+    "which may change in the future or break. Packaged Apps built with this component may not " +
+    "function into the indefinite future.")
+  @Description("")
+  String firebaseExperimentalWarning();
 }
