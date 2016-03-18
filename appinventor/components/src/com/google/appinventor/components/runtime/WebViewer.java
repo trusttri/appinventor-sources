@@ -166,6 +166,9 @@ public final class WebViewer extends AndroidViewComponent {
   // false means to let the WebView handle the Url.  In other words, returning
   // true will not follow the link, and returning false will follow the link.
   private class WebViewerClient extends WebViewClient {
+    //path to javascript library uploaded by user
+    private String jsLibraryPath = "";
+    
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
       return !followLinks;
@@ -296,6 +299,22 @@ public final class WebViewer extends AndroidViewComponent {
   public void IgnoreSslErrors(boolean ignoreSslErrors) {
     this.ignoreSslErrors = ignoreSslErrors;
     resetWebViewClient();
+  }
+
+
+  /**
+   * Sets JavaScript file
+   */
+  @SimpleProperty(description = "Get the name of the file for the JavaScript library " +
+      "uploaded by the user",
+      category = PropertyCategory.BEHAVIOR)
+  public void JavaScriptLibrary() {
+    return jsLibraryPath;
+  }
+
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR)
+  public void JavaScriptLibrary(String path) {
+
   }
 
   /**
@@ -438,6 +457,11 @@ public final class WebViewer extends AndroidViewComponent {
   @SimpleFunction(description = "Clear WebView caches.")
   public void ClearCaches() {
     webview.clearCache(true);
+  }
+
+  public void setJavaScriptPath(String path) {
+    jsLibraryPath = path;
+    GoToUrl(path);
   }
 
   /*
