@@ -3268,6 +3268,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String WebViewStringProperties();
 
+  @DefaultMessage("JavaScriptLibrary")
+  @Description("")
+  String JavaScriptLibraryProperties();
+
   //Params
   @DefaultMessage("xAccel")
   @Description("")
