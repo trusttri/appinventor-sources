@@ -135,6 +135,7 @@ public final class WebViewer extends AndroidViewComponent {
     // will be fill-parent, which will be the default for the web viewer.
 
     HomeUrl("");
+    JavaScriptLibrary("");
     Width(LENGTH_FILL_PARENT);
     Height(LENGTH_FILL_PARENT);
   }
@@ -310,14 +311,14 @@ public final class WebViewer extends AndroidViewComponent {
    */
   @SimpleProperty(description = "Get the name of the file for the JavaScript library " +
       "uploaded by the user",
-      category = PropertyCategory.BEHAVIOR)
+      category = PropertyCategory.BEHAVIOR, userVisible = false)
   public String JavaScriptLibrary() {
     return jsLibraryPath;
   }
 
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_ASSET,
       defaultValue = "")
-  @SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = true)
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = false)
   public void JavaScriptLibrary(String path) {
     jsLibraryPath = path;
 
