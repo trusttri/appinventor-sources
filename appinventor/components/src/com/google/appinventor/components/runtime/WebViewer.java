@@ -22,6 +22,7 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.EclairUtil;
 import com.google.appinventor.components.runtime.util.FroyoUtil;
 import com.google.appinventor.components.runtime.util.SdkLevel;
+import com.google.appinventor.components.runtime.util.MediaUtil;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -220,6 +221,7 @@ public final class WebViewer extends AndroidViewComponent {
   @SimpleProperty()
   public void HomeUrl(String url) {
     homeUrl = url;
+    JavaScriptLibrary("");
     // clear the history, since changing Home is a kind of reset
     webview.clearHistory();
     webview.loadUrl(homeUrl);
@@ -317,12 +319,13 @@ public final class WebViewer extends AndroidViewComponent {
       defaultValue = "")
   @SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = true)
   public void JavaScriptLibrary(String path) {
-    setJavaScriptPath(path);
-  }
-
-  public void setJavaScriptPath(String path) {
     this.jsLibraryPath = path;
-    GoToUrl(path);
+
+    if(path == null | path.equals("")) {
+      return;
+    } else {
+      webview.loadUrl(MediaUtil.createAssetURLString(path, container.$form()));
+    }
   }
 
   /**

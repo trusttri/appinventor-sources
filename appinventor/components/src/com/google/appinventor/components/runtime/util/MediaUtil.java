@@ -50,6 +50,9 @@ public class MediaUtil {
   private static final String LOG_TAG = "MediaUtil";
   private static final String REPL_ASSET_DIR = "/sdcard/AppInventor/assets/";
 
+  private static final String COMPANION_ASSET_PATH = "file:///mnt/sdcard/AppInventor/assets/";
+  private static final String APP_ASSET_PATH = "file:///android_asset/";
+
   // tempFileMap maps cached media (assets, etc) to their respective temp files.
   private static final Map<String, File> tempFileMap = new HashMap<String, File>();
 
@@ -68,6 +71,17 @@ public class MediaUtil {
     } catch (Exception e) {
       throw new IOException("Unable to determine file path of file url " + mediaPath);
     }
+  }
+
+  public static String createAssetURLString(String path, Form form) {
+    if (form instanceof ReplForm) {
+      if (((ReplForm)form).isAssetsLoaded())
+        return COMPANION_ASSET_PATH + path;
+      else
+        return APP_ASSET_PATH + path;
+    }
+
+    return APP_ASSET_PATH + path;
   }
 
   /**
@@ -107,6 +121,9 @@ public class MediaUtil {
       // It's a well formed URL.
       if (mediaPath.startsWith("file:")) {
         return MediaSource.FILE_URL;
+
+      } else if(mediaPath.startsWith("asset:")) {
+
       }
 
       return MediaSource.URL;
