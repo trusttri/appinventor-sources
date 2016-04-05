@@ -312,19 +312,19 @@ public final class WebViewer extends AndroidViewComponent {
       "uploaded by the user",
       category = PropertyCategory.BEHAVIOR)
   public String JavaScriptLibrary() {
-    return this.jsLibraryPath;
+    return jsLibraryPath;
   }
 
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_ASSET,
       defaultValue = "")
   @SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = true)
   public void JavaScriptLibrary(String path) {
-    this.jsLibraryPath = path;
+    jsLibraryPath = path;
 
-    if(path == null | path.equals("")) {
+    if(path == null || path.equals("")) {
       return;
     } else {
-      webview.loadUrl(MediaUtil.createAssetURLString(path, container.$form()));
+      webview.loadUrl(MediaUtil.createAssetURLString(jsLibraryPath, container.$form()));
     }
   }
 
