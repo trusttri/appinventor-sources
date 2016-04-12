@@ -748,6 +748,43 @@ Blockly.Blocks.component_component_block = {
   }
 };
 
+Blockly.Blocks.webviewer_javascript = {
+  category : 'Component',
+
+  function() {
+    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      this.setMutator(new Blockly.Mutator(['js_input']));
+    }
+  },
+
+  helpUrl : function() {
+      var mode = this.typeName;
+      return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
+  },
+
+  mutationToDom : function() {
+    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      //TODO: put something in here, presumably?
+    }
+  }
+}
+
+Blockly.Blocks['js_input'] = {
+  init: function() {
+    this.setColor(Blockly.PROCEDURE_CATEGORY_HUE);
+    this.appendDummyInput()
+      .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TITLE);
+    THIS.APPENDSTATEMENTINPUT('STACK');
+    this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORCONTAINER_TOOLTIP);
+    this.contextMenu = false;
+  }
+}
+
+Blockly.ComponentBlock.JSMethodNames = ["CreateJavaScriptObject", "CreateJavaScriptFunction", "RunJavaScript"];
+Blockly.ComponentBlock.isJSMethodName =  function  (name) {
+    return Blockly.ComponentBlock.JSMethodNames.indexOf(name) != -1;
+};
+
 Blockly.ComponentBlock.timeUnits = ["Years", "Months", "Weeks", "Days", "Hours", "Minutes", "Seconds", "Duration"];
 Blockly.ComponentBlock.timeUnitsMenu =
   [[ Blockly.Msg.TIME_YEARS, "Years"],
