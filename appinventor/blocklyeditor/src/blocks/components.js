@@ -750,21 +750,72 @@ Blockly.Blocks.component_component_block = {
 
 Blockly.Blocks.webviewer_javascript = {
   category : 'Component',
-
-  function() {
+  init: function() {
     if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       this.setMutator(new Blockly.Mutator(['js_input']));
     }
   },
-
-  helpUrl : function() {
-      var mode = this.typeName;
-      return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
+  helpUrl: function() {
+    var mode = this.typeName;
+    return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
   },
-
-  mutationToDom : function() {
+  mutationToDom: function() {
     if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       //TODO: put something in here, presumably?
+    }
+  },
+  domToMutation: function() {
+    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      //TODO: also put something here
+    }
+  },
+  renameVar: function() {
+    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      //TODO
+    }
+  },
+  removeProcedureValue: function() {
+    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      //TODO
+    }
+  },
+  compose: function(containerBlock) {
+    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      var params = [];
+      this.paramIds_ = [];
+      var paramBlock = containerBlock.getInputTargetBlock('STACK');
+      while (paramBlock) {
+        params.push(paramBlock.getFieldValue('NAME'));
+        this.paramIds_.push(paramBlock.id);
+        paramBlock = paramBlock.nextConnection &&
+            paramBlock.nextConnection.targetBlock();
+      }
+    }
+  },
+  decompose: function(workspace) {
+    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
+      containerBlock.initSvg();
+      // [lyn, 11/24/12] Remember the associated procedure, so can
+      // appropriately change body when update name in param block.
+      containerBlock.setProcBlock(this);
+      this.paramIds_ = [] // [lyn, 10/26/13] Added
+      var connection = containerBlock.getInput('STACK').connection;
+      for (var x = 0; x < this.arguments_.length; x++) {
+        var paramBlock = new Blockly.Block.obtain(workspace, 'procedures_mutatorarg');
+        this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
+        paramBlock.initSvg();
+        paramBlock.setFieldValue(this.arguments_[x], 'NAME');
+        // Store the old location.
+        paramBlock.oldLocation = x;
+        connection.connect(paramBlock.previousConnection);
+        connection = paramBlock.nextConnection;
+      }
+      // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
+      // and use true flag to initialize tracking.
+      Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
+                                       this.workspace, this.arguments_, this.paramIds_, true);
+      return containerBlock;
     }
   }
 }
@@ -774,7 +825,19 @@ Blockly.Blocks['js_input'] = {
     this.setColor(Blockly.PROCEDURE_CATEGORY_HUE);
     this.appendDummyInput()
       .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TITLE);
-    THIS.APPENDSTATEMENTINPUT('STACK');
+      .appendField(new Blockly.FieldTextInput('x',Blockly.LexicalVariable.renameParam), 'NAME');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TOOLTIP);
+    this.contextMenu = false;
+}
+
+Blockly.Blocks['js_input_container'] = {
+  init: function() {
+    this.setColor(Blockly.PROCEDURE_CATEGORY_HUE);
+    this.appendDummyInput()
+      .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORCONTAINER_TITLE);
+    this.appendStatementInput('STACK');
     this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORCONTAINER_TOOLTIP);
     this.contextMenu = false;
   }
