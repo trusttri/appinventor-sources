@@ -751,6 +751,7 @@ Blockly.Blocks.component_component_block = {
 Blockly.Blocks.webviewer_javascript = {
   category : 'Component',
   init: function() {
+    alert(thistypeName == "WebViewer" + " " + Blockly.ComponentBlock.isJSMethodName(this.methodName));
     if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       this.setMutator(new Blockly.Mutator(['js_input']));
     }
@@ -802,7 +803,7 @@ Blockly.Blocks.webviewer_javascript = {
       this.paramIds_ = [] // [lyn, 10/26/13] Added
       var connection = containerBlock.getInput('STACK').connection;
       for (var x = 0; x < this.arguments_.length; x++) {
-        var paramBlock = new Blockly.Block.obtain(workspace, 'procedures_mutatorarg');
+        var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
         this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
         paramBlock.initSvg();
         paramBlock.setFieldValue(this.arguments_[x], 'NAME');
@@ -824,12 +825,15 @@ Blockly.Blocks['js_input'] = {
   init: function() {
     this.setColor(Blockly.PROCEDURE_CATEGORY_HUE);
     this.appendDummyInput()
-      .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TITLE);
+      .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TITLE)
       .appendField(new Blockly.FieldTextInput('x',Blockly.LexicalVariable.renameParam), 'NAME');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TOOLTIP);
     this.contextMenu = false;
+  }
+
+  //TODO: add a bunch more functions
 }
 
 Blockly.Blocks['js_input_container'] = {
@@ -841,6 +845,8 @@ Blockly.Blocks['js_input_container'] = {
     this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORCONTAINER_TOOLTIP);
     this.contextMenu = false;
   }
+
+  //TODO: add a bunch more functions
 }
 
 Blockly.ComponentBlock.JSMethodNames = ["CreateJavaScriptObject", "CreateJavaScriptFunction", "RunJavaScript"];
