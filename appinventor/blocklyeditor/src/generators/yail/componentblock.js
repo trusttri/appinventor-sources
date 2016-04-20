@@ -318,3 +318,8 @@ Blockly.Yail.component_component_block = function() {
   return [Blockly.Yail.YAIL_GET_COMPONENT + this.getFieldValue("COMPONENT_SELECTOR") + Blockly.Yail.YAIL_CLOSE_COMBINATION,
           Blockly.Yail.ORDER_ATOMIC];
 }
+
+Blockly.Yail.webviewer_javascript = function() {
+  return [Blockly.Yail.YAIL_GET_COMPONENT + this.getFieldValue("COMPONENT_SELECTOR") + Blockly.Yail.YAIL_CLOSE_COMBINATION,
+          Blockly.Yail.ORDER_ATOMIC];
+}
