@@ -519,6 +519,7 @@ Blockly.Drawer.defaultBlockXMLStrings = {
      mutatorXMLStringFunction: function(mutatorAttributes) {
        return '' +
         '<xml>' +
+        '<block type="webviewer_javascript">' +
         //TODO: put stuff here
         Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
         '</xml>';}},
@@ -527,6 +528,7 @@ Blockly.Drawer.defaultBlockXMLStrings = {
      mutatorXMLStringFunction: function(mutatorAttributes) {
        return '' +
         '<xml>' +
+        '<block type="webviewer_javascript">' +
         //TODO: put stuff here
         Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
         '</xml>';}},
@@ -535,6 +537,7 @@ Blockly.Drawer.defaultBlockXMLStrings = {
      mutatorXMLStringFunction: function(mutatorAttributes) {
        return '' +
         '<xml>' +
+        '<block type="webviewer_javascript">' +
         //TODO: put stuff here
         Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
         '</xml>';}}

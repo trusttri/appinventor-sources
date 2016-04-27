@@ -750,6 +750,7 @@ Blockly.Blocks.component_component_block = {
 
 Blockly.Blocks.webviewer_javascript = {
   category : 'Component',
+  bodyInputName: 'STACK',
   init: function() {
     alert(thistypeName == "WebViewer" + " " + Blockly.ComponentBlock.isJSMethodName(this.methodName));
     if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
