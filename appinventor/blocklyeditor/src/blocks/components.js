@@ -467,7 +467,7 @@ Blockly.Blocks.component_method = {
   decompose: function(workspace) {
     this.typeName = xmlElement.getAttribute('component_type');
     this.methodName = xmlElement.getAttribute('method_name');
-    
+
     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
       containerBlock.initSvg();
