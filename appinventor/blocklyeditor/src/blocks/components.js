@@ -262,9 +262,28 @@ Blockly.Blocks.component_event = {
  */
 Blockly.Blocks.component_method = {
   category : 'Component',
+
+  bodyInputName : function() {
+    this.typeName = xmlElement.getAttribute('component_type');
+    this.methodName = xmlElement.getAttribute('method_name');
+
+    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      return 'STACK';
+    }
+  },
+
   helpUrl : function() {
       var mode = this.typeName;
       return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
+  },
+
+  init : function() {
+    this.typeName = xmlElement.getAttribute('component_type');
+    this.methodName = xmlElement.getAttribute('method_name');
+
+    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      this.setMutator(new Blockly.Mutator(['js_input']));
+    }
   },
 
   mutationToDom : function() {
@@ -426,6 +445,50 @@ Blockly.Blocks.component_method = {
       }
     }
     return tb;
+  },
+
+  compose: function(containerBlock) {
+    this.typeName = xmlElement.getAttribute('component_type');
+    this.methodName = xmlElement.getAttribute('method_name');
+
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      var params = [];
+      this.paramIds_ = [];
+      var paramBlock = containerBlock.getInputTargetBlock('STACK');
+      while (paramBlock) {
+        params.push(paramBlock.getFieldValue('NAME'));
+        this.paramIds_.push(paramBlock.id);
+        paramBlock = paramBlock.nextConnection &&
+            paramBlock.nextConnection.targetBlock();
+      }
+    }
+  },
+
+  decompose: function(workspace) {
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
+      containerBlock.initSvg();
+      // [lyn, 11/24/12] Remember the associated procedure, so can
+      // appropriately change body when update name in param block.
+      containerBlock.setProcBlock(this);
+      this.paramIds_ = [] // [lyn, 10/26/13] Added
+      var connection = containerBlock.getInput('STACK').connection;
+      for (var x = 0; x < this.arguments_.length; x++) {
+        var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
+        this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
+        paramBlock.initSvg();
+        paramBlock.setFieldValue(this.arguments_[x], 'NAME');
+        // Store the old location.
+        paramBlock.oldLocation = x;
+        connection.connect(paramBlock.previousConnection);
+        connection = paramBlock.nextConnection;
+      }
+      // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
+      // and use true flag to initialize tracking.
+      Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
+                                       this.workspace, this.arguments_, this.paramIds_, true);
+      return containerBlock;
+    }
   }
 };
 
@@ -748,78 +811,78 @@ Blockly.Blocks.component_component_block = {
   }
 };
 
-Blockly.Blocks.webviewer_javascript = {
-  category : 'Component',
-  bodyInputName: 'STACK',
-  helpUrl: function() {
-    var mode = this.typeName;
-    return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
-  },
-  init: function() {
-    this.setColour(Blockly.ComponentBlock.COLOUR_METHOD);
-    this.setMutator(new Blockly.Mutator(['js_input']));
-    var name = ""
-  },
-  mutationToDom: function() {
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-      //TODO: put something in here, presumably?
-    }
-  },
-  domToMutation: function() {
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-      //TODO: also put something here
-    }
-  },
-  renameVar: function() {
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-      //TODO
-    }
-  },
-  removeProcedureValue: function() {
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-      //TODO
-    }
-  },
-  compose: function(containerBlock) {
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-      var params = [];
-      this.paramIds_ = [];
-      var paramBlock = containerBlock.getInputTargetBlock('STACK');
-      while (paramBlock) {
-        params.push(paramBlock.getFieldValue('NAME'));
-        this.paramIds_.push(paramBlock.id);
-        paramBlock = paramBlock.nextConnection &&
-            paramBlock.nextConnection.targetBlock();
-      }
-    }
-  },
-  decompose: function(workspace) {
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-      var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
-      containerBlock.initSvg();
-      // [lyn, 11/24/12] Remember the associated procedure, so can
-      // appropriately change body when update name in param block.
-      containerBlock.setProcBlock(this);
-      this.paramIds_ = [] // [lyn, 10/26/13] Added
-      var connection = containerBlock.getInput('STACK').connection;
-      for (var x = 0; x < this.arguments_.length; x++) {
-        var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
-        this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
-        paramBlock.initSvg();
-        paramBlock.setFieldValue(this.arguments_[x], 'NAME');
-        // Store the old location.
-        paramBlock.oldLocation = x;
-        connection.connect(paramBlock.previousConnection);
-        connection = paramBlock.nextConnection;
-      }
-      // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
-      // and use true flag to initialize tracking.
-      Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
-                                       this.workspace, this.arguments_, this.paramIds_, true);
-      return containerBlock;
-    }
-  }
-}
+// Blockly.Blocks.webviewer_javascript = {
+//   category : 'Component',
+//   bodyInputName: 'STACK',
+//   helpUrl: function() {
+//     var mode = this.typeName;
+//     return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
+//   },
+//   init: function() {
+//     this.setColour(Blockly.ComponentBlock.COLOUR_METHOD);
+//     this.setMutator(new Blockly.Mutator(['js_input']));
+//     var name = ""
+//   },
+//   mutationToDom: function() {
+//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+//       //TODO: put something in here, presumably?
+//     }
+//   },
+//   domToMutation: function() {
+//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+//       //TODO: also put something here
+//     }
+//   },
+//   renameVar: function() {
+//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+//       //TODO
+//     }
+//   },
+//   removeProcedureValue: function() {
+//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+//       //TODO
+//     }
+//   },
+//   compose: function(containerBlock) {
+//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+//       var params = [];
+//       this.paramIds_ = [];
+//       var paramBlock = containerBlock.getInputTargetBlock('STACK');
+//       while (paramBlock) {
+//         params.push(paramBlock.getFieldValue('NAME'));
+//         this.paramIds_.push(paramBlock.id);
+//         paramBlock = paramBlock.nextConnection &&
+//             paramBlock.nextConnection.targetBlock();
+//       }
+//     }
+//   },
+//   decompose: function(workspace) {
+//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+//       var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
+//       containerBlock.initSvg();
+//       // [lyn, 11/24/12] Remember the associated procedure, so can
+//       // appropriately change body when update name in param block.
+//       containerBlock.setProcBlock(this);
+//       this.paramIds_ = [] // [lyn, 10/26/13] Added
+//       var connection = containerBlock.getInput('STACK').connection;
+//       for (var x = 0; x < this.arguments_.length; x++) {
+//         var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
+//         this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
+//         paramBlock.initSvg();
+//         paramBlock.setFieldValue(this.arguments_[x], 'NAME');
+//         // Store the old location.
+//         paramBlock.oldLocation = x;
+//         connection.connect(paramBlock.previousConnection);
+//         connection = paramBlock.nextConnection;
+//       }
+//       // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
+//       // and use true flag to initialize tracking.
+//       Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
+//                                        this.workspace, this.arguments_, this.paramIds_, true);
+//       return containerBlock;
+//     }
+//   }
+// }
 
 Blockly.Blocks['js_input'] = {
   init: function() {

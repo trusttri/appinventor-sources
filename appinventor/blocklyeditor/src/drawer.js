@@ -191,10 +191,10 @@ Blockly.Drawer.instanceNameToXMLArray = function(instanceName) {
     mutatorAttributes = {component_type: typeName, instance_name: instanceName, method_name: methodObjects[i].name, is_generic:"false"};
     xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_method",mutatorAttributes));
 
-    if(typeName == "WebViewer" && (methodObjects[i].name == "CreateJavaScriptFunction" || methodObjects[i].name == "CreateJavaScriptObject" || methodObjects[i].name == "RunJavaScript")) {
-      mutatorAttributes = {component_type: typeName, instance_name: instanceName, method_name: methodObjects[i].name, is_generic:"false"};
-      xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("webviewer_javascript",mutatorAttributes));
-    }
+    // if(typeName == "WebViewer" && (methodObjects[i].name == "CreateJavaScriptFunction" || methodObjects[i].name == "CreateJavaScriptObject" || methodObjects[i].name == "RunJavaScript")) {
+    //   mutatorAttributes = {component_type: typeName, instance_name: instanceName, method_name: methodObjects[i].name, is_generic:"false"};
+    //   xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("webviewer_javascript",mutatorAttributes));
+    // }
   }
 
   //for each property
@@ -514,32 +514,32 @@ Blockly.Drawer.defaultBlockXMLStrings = {
 
   ],
 
-  webviewer_javascript: [
-    {matchingMutatorAttributes:{component_type:"WebViewer", method_name: "RunJavaScript"},
-     mutatorXMLStringFunction: function(mutatorAttributes) {
-       return '' +
-        '<xml>' +
-        '<block type="webviewer_javascript">' +
-        //TODO: put stuff here
-        Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
-        '</xml>';}},
-
-    {matchingMutatorAttributes:{component_type:"WebViewer", method_name: "CreateJavaScriptFunction"},
-     mutatorXMLStringFunction: function(mutatorAttributes) {
-       return '' +
-        '<xml>' +
-        '<block type="webviewer_javascript">' +
-        //TODO: put stuff here
-        Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
-        '</xml>';}},
-
-    {matchingMutatorAttributes:{component_type:"WebViewer", method_name: "CreateJavaScriptObject"},
-     mutatorXMLStringFunction: function(mutatorAttributes) {
-       return '' +
-        '<xml>' +
-        '<block type="webviewer_javascript">' +
-        //TODO: put stuff here
-        Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
-        '</xml>';}}
-  ]
+  // webviewer_javascript: [
+  //   {matchingMutatorAttributes:{component_type:"WebViewer", method_name: "RunJavaScript"},
+  //    mutatorXMLStringFunction: function(mutatorAttributes) {
+  //      return '' +
+  //       '<xml>' +
+  //       '<block type="webviewer_javascript">' +
+  //       //TODO: put stuff here
+  //       Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
+  //       '</xml>';}},
+  //
+  //   {matchingMutatorAttributes:{component_type:"WebViewer", method_name: "CreateJavaScriptFunction"},
+  //    mutatorXMLStringFunction: function(mutatorAttributes) {
+  //      return '' +
+  //       '<xml>' +
+  //       '<block type="webviewer_javascript">' +
+  //       //TODO: put stuff here
+  //       Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
+  //       '</xml>';}},
+  //
+  //   {matchingMutatorAttributes:{component_type:"WebViewer", method_name: "CreateJavaScriptObject"},
+  //    mutatorXMLStringFunction: function(mutatorAttributes) {
+  //      return '' +
+  //       '<xml>' +
+  //       '<block type="webviewer_javascript">' +
+  //       //TODO: put stuff here
+  //       Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
+  //       '</xml>';}}
+  // ]
 };
