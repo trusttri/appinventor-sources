@@ -751,38 +751,37 @@ Blockly.Blocks.component_component_block = {
 Blockly.Blocks.webviewer_javascript = {
   category : 'Component',
   bodyInputName: 'STACK',
-  init: function() {
-    alert(thistypeName == "WebViewer" + " " + Blockly.ComponentBlock.isJSMethodName(this.methodName));
-    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-      this.setMutator(new Blockly.Mutator(['js_input']));
-    }
-  },
   helpUrl: function() {
     var mode = this.typeName;
     return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
   },
+  init: function() {
+    this.setColour(Blockly.ComponentBlock.COLOUR_METHOD);
+    this.setMutator(new Blockly.Mutator(['js_input']));
+    var name = ""
+  },
   mutationToDom: function() {
-    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       //TODO: put something in here, presumably?
     }
   },
   domToMutation: function() {
-    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       //TODO: also put something here
     }
   },
   renameVar: function() {
-    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       //TODO
     }
   },
   removeProcedureValue: function() {
-    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       //TODO
     }
   },
   compose: function(containerBlock) {
-    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       var params = [];
       this.paramIds_ = [];
       var paramBlock = containerBlock.getInputTargetBlock('STACK');
@@ -795,7 +794,7 @@ Blockly.Blocks.webviewer_javascript = {
     }
   },
   decompose: function(workspace) {
-    if (thistypeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
       containerBlock.initSvg();
       // [lyn, 11/24/12] Remember the associated procedure, so can
