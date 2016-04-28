@@ -465,6 +465,9 @@ Blockly.Blocks.component_method = {
   },
 
   decompose: function(workspace) {
+    this.typeName = xmlElement.getAttribute('component_type');
+    this.methodName = xmlElement.getAttribute('method_name');
+    
     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
       var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
       containerBlock.initSvg();
@@ -897,7 +900,7 @@ Blockly.Blocks['js_input'] = {
   }
 
   //TODO: add a bunch more functions
-}
+};
 
 Blockly.Blocks['js_input_container'] = {
   init: function() {
@@ -910,7 +913,7 @@ Blockly.Blocks['js_input_container'] = {
   }
 
   //TODO: add a bunch more functions
-}
+};
 
 Blockly.ComponentBlock.JSMethodNames = ["CreateJavaScriptObject", "CreateJavaScriptFunction", "RunJavaScript"];
 Blockly.ComponentBlock.isJSMethodName =  function  (name) {

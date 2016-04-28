@@ -957,3 +957,4 @@ Blockly.Blocks['procedures_callreturn'] = {
   // blocks have not been loaded yet (they are loaded in typeblock.js)
   typeblock: [{ translatedName: Blockly.Msg.LANG_PROCEDURES_CALLRETURN_TRANSLATED_NAME}]
 };
+
