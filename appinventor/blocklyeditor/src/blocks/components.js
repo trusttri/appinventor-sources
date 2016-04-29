@@ -276,7 +276,7 @@ Blockly.Blocks.component_method = {
       return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
   },
 
-  init : function() {
+  addMutators : function() {
     if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
       this.setMutator(new Blockly.Mutator(['js_input']));
     }
@@ -312,7 +312,7 @@ Blockly.Blocks.component_method = {
       this.componentN = this.typeName;
       this.methodN = this.methodName;
 
-      this.init();
+      this.addMutators();
     }
 
     var isGenericString = xmlElement.getAttribute('is_generic');
@@ -451,45 +451,43 @@ Blockly.Blocks.component_method = {
     return tb;
   },
 
+  inputs_: [], //list of inputs in the function
+
   compose: function(containerBlock) {
-    if (this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
-      var params = [];
-      this.paramIds_ = [];
-      var paramBlock = containerBlock.getInputTargetBlock('STACK');
-      while (paramBlock) {
-        params.push(paramBlock.getFieldValue('NAME'));
-        this.paramIds_.push(paramBlock.id);
-        paramBlock = paramBlock.nextConnection &&
-            paramBlock.nextConnection.targetBlock();
-      }
+    var inputBlock = containerBlock.getInputTargetBlock('STACK');
+    this.inputCount_ = 0
+    while (inputBlock) {
+      this.inputCount_++;
+      var inputInput = this.appendValueInput('INPUT' + this.inputCount_)
+        .appendField("input");
+
+      inputBlock = inputBlock.nextConnection &&
+      inputBlock.nextConnection.targetBlock();
     }
   },
 
   decompose: function(workspace) {
-    if (this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
-      var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
-      containerBlock.initSvg();
-      // [lyn, 11/24/12] Remember the associated procedure, so can
-      // appropriately change body when update name in param block.
-      containerBlock.setProcBlock(this);
-      this.paramIds_ = [] // [lyn, 10/26/13] Added
-      var connection = containerBlock.getInput('STACK').connection;
-      for (var x = 0; x < this.arguments_.length; x++) {
-        var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
-        this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
-        paramBlock.initSvg();
-        paramBlock.setFieldValue(this.arguments_[x], 'NAME');
-        // Store the old location.
-        paramBlock.oldLocation = x;
-        connection.connect(paramBlock.previousConnection);
-        connection = paramBlock.nextConnection;
-      }
-      // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
-      // and use true flag to initialize tracking.
-      Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
-                                       this.workspace, this.arguments_, this.paramIds_, true);
-      return containerBlock;
+    var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
+    containerBlock.initSvg();
+    // [lyn, 11/24/12] Remember the associated procedure, so can
+    // appropriately change body when update name in param block.
+    this.paramIds_ = [] // [lyn, 10/26/13] Added
+    var connection = containerBlock.getInput('STACK').connection;
+    for (var x = 0; x < this.inputs_.length; x++) {
+      var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
+      this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
+      paramBlock.initSvg();
+      paramBlock.setFieldValue(this.arguments_[x], 'NAME');
+      // Store the old location.
+      paramBlock.oldLocation = x;
+      connection.connect(paramBlock.previousConnection);
+      connection = paramBlock.nextConnection;
     }
+    // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
+    // and use true flag to initialize tracking.
+    Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
+                                     this.workspace, this.arguments_, this.paramIds_, true);
+    return containerBlock;
   }
 };
 
@@ -812,82 +810,9 @@ Blockly.Blocks.component_component_block = {
   }
 };
 
-// Blockly.Blocks.webviewer_javascript = {
-//   category : 'Component',
-//   bodyInputName: 'STACK',
-//   helpUrl: function() {
-//     var mode = this.typeName;
-//     return Blockly.ComponentBlock.METHODS_HELPURLS[mode];
-//   },
-//   init: function() {
-//     this.setColour(Blockly.ComponentBlock.COLOUR_METHOD);
-//     this.setMutator(new Blockly.Mutator(['js_input']));
-//     var name = ""
-//   },
-//   mutationToDom: function() {
-//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-//       //TODO: put something in here, presumably?
-//     }
-//   },
-//   domToMutation: function() {
-//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-//       //TODO: also put something here
-//     }
-//   },
-//   renameVar: function() {
-//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-//       //TODO
-//     }
-//   },
-//   removeProcedureValue: function() {
-//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-//       //TODO
-//     }
-//   },
-//   compose: function(containerBlock) {
-//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-//       var params = [];
-//       this.paramIds_ = [];
-//       var paramBlock = containerBlock.getInputTargetBlock('STACK');
-//       while (paramBlock) {
-//         params.push(paramBlock.getFieldValue('NAME'));
-//         this.paramIds_.push(paramBlock.id);
-//         paramBlock = paramBlock.nextConnection &&
-//             paramBlock.nextConnection.targetBlock();
-//       }
-//     }
-//   },
-//   decompose: function(workspace) {
-//     if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
-//       var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
-//       containerBlock.initSvg();
-//       // [lyn, 11/24/12] Remember the associated procedure, so can
-//       // appropriately change body when update name in param block.
-//       containerBlock.setProcBlock(this);
-//       this.paramIds_ = [] // [lyn, 10/26/13] Added
-//       var connection = containerBlock.getInput('STACK').connection;
-//       for (var x = 0; x < this.arguments_.length; x++) {
-//         var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
-//         this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
-//         paramBlock.initSvg();
-//         paramBlock.setFieldValue(this.arguments_[x], 'NAME');
-//         // Store the old location.
-//         paramBlock.oldLocation = x;
-//         connection.connect(paramBlock.previousConnection);
-//         connection = paramBlock.nextConnection;
-//       }
-//       // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
-//       // and use true flag to initialize tracking.
-//       Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
-//                                        this.workspace, this.arguments_, this.paramIds_, true);
-//       return containerBlock;
-//     }
-//   }
-// }
-
 Blockly.Blocks['js_input'] = {
   init: function() {
-    this.setColor(Blockly.PROCEDURE_CATEGORY_HUE);
+    this.setColour(Blockly.PROCEDURE_CATEGORY_HUE);
     this.appendDummyInput()
       .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TITLE)
       .appendField(new Blockly.FieldTextInput('x',Blockly.LexicalVariable.renameParam), 'NAME');
@@ -902,7 +827,7 @@ Blockly.Blocks['js_input'] = {
 
 Blockly.Blocks['js_input_container'] = {
   init: function() {
-    this.setColor(Blockly.PROCEDURE_CATEGORY_HUE);
+    this.setColour(Blockly.PROCEDURE_CATEGORY_HUE);
     this.appendDummyInput()
       .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORCONTAINER_TITLE);
     this.appendStatementInput('STACK');
@@ -913,7 +838,7 @@ Blockly.Blocks['js_input_container'] = {
   //TODO: add a bunch more functions
 };
 
-Blockly.ComponentBlock.JSMethodNames = ["CreateJavaScriptObject", "CreateJavaScriptFunction", "RunJavaScript"];
+Blockly.ComponentBlock.JSMethodNames = ["RunJavaScript"]; //"CreateJavaScriptObject", "CreateJavaScriptFunction",
 Blockly.ComponentBlock.isJSMethodName =  function  (name) {
     return Blockly.ComponentBlock.JSMethodNames.indexOf(name) != -1;
 };
