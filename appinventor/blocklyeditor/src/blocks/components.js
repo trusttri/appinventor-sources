@@ -262,12 +262,11 @@ Blockly.Blocks.component_event = {
  */
 Blockly.Blocks.component_method = {
   category : 'Component',
+  componentN : null,
+  methodN : null,
 
   bodyInputName : function() {
-    this.typeName = xmlElement.getAttribute('component_type');
-    this.methodName = xmlElement.getAttribute('method_name');
-
-    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
       return 'STACK';
     }
   },
@@ -278,10 +277,7 @@ Blockly.Blocks.component_method = {
   },
 
   init : function() {
-    this.typeName = xmlElement.getAttribute('component_type');
-    this.methodName = xmlElement.getAttribute('method_name');
-
-    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
       this.setMutator(new Blockly.Mutator(['js_input']));
     }
   },
@@ -311,6 +307,14 @@ Blockly.Blocks.component_method = {
 
     this.typeName = xmlElement.getAttribute('component_type');
     this.methodName = xmlElement.getAttribute('method_name');
+
+    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+      this.componentN = this.typeName;
+      this.methodN = this.methodName;
+
+      this.init();
+    }
+
     var isGenericString = xmlElement.getAttribute('is_generic');
     this.isGeneric = (isGenericString == "true" ? true : false);
     if(!this.isGeneric) {
@@ -448,10 +452,7 @@ Blockly.Blocks.component_method = {
   },
 
   compose: function(containerBlock) {
-    this.typeName = xmlElement.getAttribute('component_type');
-    this.methodName = xmlElement.getAttribute('method_name');
-
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
       var params = [];
       this.paramIds_ = [];
       var paramBlock = containerBlock.getInputTargetBlock('STACK');
@@ -465,10 +466,7 @@ Blockly.Blocks.component_method = {
   },
 
   decompose: function(workspace) {
-    this.typeName = xmlElement.getAttribute('component_type');
-    this.methodName = xmlElement.getAttribute('method_name');
-
-    if (this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if (this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
       var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
       containerBlock.initSvg();
       // [lyn, 11/24/12] Remember the associated procedure, so can
