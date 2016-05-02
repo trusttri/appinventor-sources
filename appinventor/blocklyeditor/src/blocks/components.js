@@ -451,43 +451,26 @@ Blockly.Blocks.component_method = {
     return tb;
   },
 
-  inputs_: [], //list of inputs in the function
+  inputs_ : [],
+  compose : Blockly.compose,
+  saveConnections : Blockly.saveConnections,
+  repeatingInputName : 'input',
 
-  compose: function(containerBlock) {
-    var inputBlock = containerBlock.getInputTargetBlock('STACK');
-    this.inputCount_ = 0
-    while (inputBlock) {
-      this.inputCount_++;
-      var inputInput = this.appendValueInput('INPUT' + this.inputCount_)
-        .appendField("input");
+  addEmptyInput : function () {
+    // this.appendDummyInput('INPUT')
+    //     .appendField('input');
+  },
 
-      inputBlock = inputBlock.nextConnection &&
-      inputBlock.nextConnection.targetBlock();
+  addInput : function (inputNum) {
+    var input = this.appendValueInput(this.repeatingInputName + inputNum).setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT));
+    if (inputNum === 0) {
+      input.appendField('input');
     }
+    return input;
   },
 
   decompose: function(workspace) {
-    var containerBlock = new Blockly.Block.obtain(workspace, 'js_input_container');
-    containerBlock.initSvg();
-    // [lyn, 11/24/12] Remember the associated procedure, so can
-    // appropriately change body when update name in param block.
-    this.paramIds_ = [] // [lyn, 10/26/13] Added
-    var connection = containerBlock.getInput('STACK').connection;
-    for (var x = 0; x < this.inputs_.length; x++) {
-      var paramBlock = new Blockly.Block.obtain(workspace, 'js_input');
-      this.paramIds_.push(paramBlock.id); // [lyn, 10/26/13] Added
-      paramBlock.initSvg();
-      paramBlock.setFieldValue(this.arguments_[x], 'NAME');
-      // Store the old location.
-      paramBlock.oldLocation = x;
-      connection.connect(paramBlock.previousConnection);
-      connection = paramBlock.nextConnection;
-    }
-    // [lyn, 10/26/13] Rather than passing null for paramIds, pass actual paramIds
-    // and use true flag to initialize tracking.
-    Blockly.Procedures.mutateCallers(this.getFieldValue('NAME'),
-                                     this.workspace, this.arguments_, this.paramIds_, true);
-    return containerBlock;
+    return Blockly.decompose(workspace, 'js_input_container', this);
   }
 };
 
