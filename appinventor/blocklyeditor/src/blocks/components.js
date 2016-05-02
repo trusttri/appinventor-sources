@@ -457,20 +457,23 @@ Blockly.Blocks.component_method = {
   repeatingInputName : 'input',
 
   addEmptyInput : function () {
-    // this.appendDummyInput('INPUT')
-    //     .appendField('input');
+    // Nothing here
   },
 
   addInput : function (inputNum) {
     var input = this.appendValueInput(this.repeatingInputName + inputNum).setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT));
     if (inputNum === 0) {
-      input.appendField('input');
+      input.appendField('inputs');
     }
     return input;
   },
 
+  updateContainerBlock: function (containerBlock) {
+    containerBlock.inputList[0].fieldRow[0].setText('inputs');
+  },
+
   decompose: function(workspace) {
-    return Blockly.decompose(workspace, 'js_input_container', this);
+    return Blockly.decompose(workspace, 'js_input', this);
   }
 };
 
@@ -802,19 +805,6 @@ Blockly.Blocks['js_input'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TOOLTIP);
-    this.contextMenu = false;
-  }
-
-  //TODO: add a bunch more functions
-};
-
-Blockly.Blocks['js_input_container'] = {
-  init: function() {
-    this.setColour(Blockly.PROCEDURE_CATEGORY_HUE);
-    this.appendDummyInput()
-      .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORCONTAINER_TITLE);
-    this.appendStatementInput('STACK');
-    this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORCONTAINER_TOOLTIP);
     this.contextMenu = false;
   }
 
