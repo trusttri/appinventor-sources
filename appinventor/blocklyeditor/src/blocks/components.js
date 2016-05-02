@@ -451,7 +451,6 @@ Blockly.Blocks.component_method = {
     return tb;
   },
 
-  inputs_ : [],
   compose : Blockly.compose,
   saveConnections : Blockly.saveConnections,
   repeatingInputName : 'input',
