@@ -266,7 +266,7 @@ Blockly.Blocks.component_method = {
   methodN : null,
 
   bodyInputName : function() {
-    if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
+    if(this.componentN == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodN) || Blockly.ComponentBlock.isJSAttributeName(this.methodN))) {
       return 'STACK';
     }
   },
@@ -277,8 +277,10 @@ Blockly.Blocks.component_method = {
   },
 
   addMutators : function() {
-    if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodN)) {
+    if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSInputName(this.methodN)) {
       this.setMutator(new Blockly.Mutator(['js_input']));
+    } else if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSAttributeName(this.methodN))  {
+      this.setMutator(new Blockly.Mutator(['js_attribute']));
     }
   },
 
@@ -308,7 +310,7 @@ Blockly.Blocks.component_method = {
     this.typeName = xmlElement.getAttribute('component_type');
     this.methodName = xmlElement.getAttribute('method_name');
 
-    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)) {
+    if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
       this.componentN = this.typeName;
       this.methodN = this.methodName;
 
@@ -453,19 +455,47 @@ Blockly.Blocks.component_method = {
 
   compose : Blockly.compose,
   saveConnections : Blockly.saveConnections,
-  repeatingInputName : 'input',
+  repeatingInputName : '',
 
   addEmptyInput : function () {
     // Nothing here
   },
 
   addInput : function (inputNum) {
-    var input = this.appendValueInput(this.repeatingInputName + inputNum)
-      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
-      .setAlign(Blockly.ALIGN_RIGHT);
-    if (inputNum === 0) {
-      input.appendField('inputs');
+    if(Blockly.ComponentBlock.isJSInputName(this.methodN)) {
+
+      this.repeatingInputName = 'input';
+
+      var input = this.appendValueInput(this.repeatingInputName + inputNum)
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
+        .setAlign(Blockly.ALIGN_RIGHT);
+      if (inputNum === 0) {
+        input.appendField('inputs');
+      }
+
+    } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodN)) {
+
+      this.repeatingInputName = 'attribute';
+
+      var input = this.appendValueInput(this.repeatingInputName + inputNum)
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
+        .setAlign(Blockly.ALIGN_RIGHT);
+
+      if (inputNum === 0) {
+        input.appendField('attribute');
+      }
+
+      this.appendValueInput(this.attributeValueName + inputNum)
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
+        .setAlign(Blockly.ALIGN_RIGHT);
+
+      if (inputNum === 0) {
+        input.appendField('attributeValue');
+      }
     }
+
+    //TODO: figure out a way to default to 1 input without adding that input to the top
+
     return input;
   },
 
@@ -474,7 +504,11 @@ Blockly.Blocks.component_method = {
   },
 
   decompose: function(workspace) {
-    return Blockly.decompose(workspace, 'js_input', this);
+    if(Blockly.ComponentBlock.isJSInputName(this.methodN)) {
+      return Blockly.decompose(workspace, 'js_input', this);
+    } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodN)) {
+      return Blockly.decompose(workspace, 'js_attribute', this);
+    }
   }
 };
 
@@ -808,13 +842,30 @@ Blockly.Blocks['js_input'] = {
     this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TOOLTIP);
     this.contextMenu = false;
   }
-
-  //TODO: add a bunch more functions
 };
 
-Blockly.ComponentBlock.JSMethodNames = ["RunJavaScript"]; //"CreateJavaScriptObject", "CreateJavaScriptFunction",
-Blockly.ComponentBlock.isJSMethodName =  function  (name) {
-    return Blockly.ComponentBlock.JSMethodNames.indexOf(name) != -1;
+Blockly.Blocks['js_attribute'] = {
+  init: function() {
+    this.setColour(Blockly.PROCEDURE_CATEGORY_HUE);
+    this.appendDummyInput()
+      .appendField(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TITLE)
+      .appendField(new Blockly.FieldTextInput('attribute',Blockly.LexicalVariable.renameParam), 'NAME1')
+      .appendField(new Blockly.FieldTextInput('attributeValue',Blockly.LexicalVariable.renameParam), 'NAME2');
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(Blockly.Msg.LANG_PROCEDURES_MUTATORARG_TOOLTIP);
+    this.contextMenu = false;
+  }
+};
+
+Blockly.ComponentBlock.JSInputNames = ["RunJavaScript", "CreateJavaScriptFunction"];
+Blockly.ComponentBlock.isJSInputName =  function  (name) {
+    return Blockly.ComponentBlock.JSInputNames.indexOf(name) != -1;
+};
+
+Blockly.ComponentBlock.JSAttributeNames = ["CreateJavaScriptObject"];
+Blockly.ComponentBlock.isJSAttributeName =  function  (name) {
+    return Blockly.ComponentBlock.JSAttributeNames.indexOf(name) != -1;
 };
 
 Blockly.ComponentBlock.timeUnits = ["Years", "Months", "Weeks", "Days", "Hours", "Minutes", "Seconds", "Duration"];
