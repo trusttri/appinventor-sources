@@ -460,7 +460,9 @@ Blockly.Blocks.component_method = {
   },
 
   addInput : function (inputNum) {
-    var input = this.appendValueInput(this.repeatingInputName + inputNum).setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT));
+    var input = this.appendValueInput(this.repeatingInputName + inputNum)
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
+      .setAlign(Blockly.ALIGN_RIGHT);
     if (inputNum === 0) {
       input.appendField('inputs');
     }
