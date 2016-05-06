@@ -279,8 +279,10 @@ Blockly.Blocks.component_method = {
   addMutators : function() {
     if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSInputName(this.methodN)) {
       this.setMutator(new Blockly.Mutator(['js_input']));
+      this.compose = Blockly.compose;
     } else if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSAttributeName(this.methodN))  {
       this.setMutator(new Blockly.Mutator(['js_attribute']));
+      this.compose = this.attributeCompose;
     }
   },
 
@@ -475,43 +477,35 @@ Blockly.Blocks.component_method = {
     return input;
   },
 
-  compose : function(containerBlock) {
-    if(Blockly.ComponentBlock.isJSInputName(this.methodN)) {
+  attributeCompose : function(containerBlock) {
+    for (var x = this.attrCount_; x > 0; x--) {
+      this.removeInput('ATTR' + x);
+      this.removeInput('ATTRVAL' + x);
+    }
 
-      Blockly.compose(containerBlock);
+    this.attrCount_ = 0;
 
-    } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodN)) {
-      for (var x = this.attrCount_; x > 0; x--) {
-        this.removeInput('ATTR' + x);
-        this.removeInput('ATTRVAL' + x);
-      }
+    var attributeBlock = containerBlock.getInputTargetBlock('STACK');
 
-      this.attrCount_ = 0;
+    while(attributeBlock) {
+      this.attrCount_++;
 
-      var attributeBlock = containerBlock.getInputTargetBlock('STACK');
+      var input1 = this.appendValueInput('ATTR' + this.attrCount_)
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
+        .setAlign(Blockly.ALIGN_RIGHT);
 
-      while(attributeBlock) {
-        this.attrCount_++;
+      var input2 = this.appendValueInput('ATTRVAL' + this.attrCount_)
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
+        .setAlign(Blockly.ALIGN_RIGHT);
 
-        var input1 = this.appendValueInput('ATTR' + this.attrCount_)
-          .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
-          .setAlign(Blockly.ALIGN_RIGHT);
+      input1.appendField('attribute' + this.attrCount_);
+      input2.appendField('attributeValue' + this.attrCount_);
 
-        var input2 = this.appendValueInput('ATTRVAL' + this.attrCount_)
-          .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
-          .setAlign(Blockly.ALIGN_RIGHT);
+      // input1.connection.connect(attributeBlock.valueConnection_);
+      // input2.connection.connect(attributeBlock.valueConnection_);
 
-        input1.appendField('attribute' + this.attrCount_);
-        input2.appendField('attributeValue' + this.attrCount_);
-
-        // input1.connection.connect(attributeBlock.valueConnection_);
-        // input2.connection.connect(attributeBlock.valueConnection_);
-
-        attributeBlock = attributeBlock.nextConnection &&
-        attributeBlock.nextConnection.targetBlock();
-      }
-
-
+      attributeBlock = attributeBlock.nextConnection &&
+      attributeBlock.nextConnection.targetBlock();
     }
   },
 
