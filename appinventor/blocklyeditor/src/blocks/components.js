@@ -314,6 +314,8 @@ Blockly.Blocks.component_method = {
       this.componentN = this.typeName;
       this.methodN = this.methodName;
 
+      this.attrCount_ = window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
+
       this.addMutators();
     }
 
@@ -479,10 +481,11 @@ Blockly.Blocks.component_method = {
       Blockly.compose(containerBlock);
 
     } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodN)) {
-      if (this.attrCount_) {
-        this.removeInput('ATTR');
-        this.removeInput('ATTRVAL')
+      for (var x = this.attrCount_; x > 0; x--) {
+        this.removeInput('ATTR' + x);
+        this.removeInput('ATTRVAL' + x);
       }
+
       this.attrCount_ = 0;
 
       var attributeBlock = containerBlock.getInputTargetBlock('STACK');
@@ -498,16 +501,14 @@ Blockly.Blocks.component_method = {
           .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
           .setAlign(Blockly.ALIGN_RIGHT);
 
-        if (this.attrCount_ === 1) {
-          input1.appendField('attribute');
-          input1.appendField('attributeValue');
-        }
+        input1.appendField('attribute' + this.attrCount_);
+        input2.appendField('attributeValue' + this.attrCount_);
 
-        input1.connection.connect(attributeBlock.valueConnection_);
-        input2.connection.connect(attributeBlock.valueConnection_);
+        // input1.connection.connect(attributeBlock.valueConnection_);
+        // input2.connection.connect(attributeBlock.valueConnection_);
 
-        attrBlock = attrBlock.nextConnection &&
-        attrBlock.nextConnection.targetBlock();
+        attributeBlock = attributeBlock.nextConnection &&
+        attributeBlock.nextConnection.targetBlock();
       }
 
 
