@@ -316,7 +316,7 @@ Blockly.Blocks.component_method = {
       this.componentN = this.typeName;
       this.methodN = this.methodName;
 
-      this.attrCount_ = window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
+      this.itemCount_ = window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
 
       this.addMutators();
     }
@@ -478,35 +478,31 @@ Blockly.Blocks.component_method = {
   },
 
   attributeCompose : function(containerBlock) {
-    for (var x = this.attrCount_; x > 0; x--) {
+    for (var x = this.itemCount_ - 1; x >= 0; x--) {
       this.removeInput('ATTR' + x);
       this.removeInput('ATTRVAL' + x);
     }
 
-    this.attrCount_ = 0;
+    this.itemCount_ = 0;
 
     var attributeBlock = containerBlock.getInputTargetBlock('STACK');
 
     while(attributeBlock) {
-      this.attrCount_++;
+      var input1 = this.appendValueInput('ATTR' + this.itemCount_)
+        .setCheck('Text')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('attribute' + this.itemCount_);
 
-      var input1 = this.appendValueInput('ATTR' + this.attrCount_)
-        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
-        .setAlign(Blockly.ALIGN_RIGHT);
+      var input2 = this.appendValueInput('ATTRVAL' + this.itemCount_)
+        .setCheck('Text')
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField('value' + this.itemCount_);
 
-      var input2 = this.appendValueInput('ATTRVAL' + this.attrCount_)
-        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
-        .setAlign(Blockly.ALIGN_RIGHT);
-
-      input1.appendField('attribute' + this.attrCount_);
-      input2.appendField('attributeValue' + this.attrCount_);
-
-      // input1.connection.connect(attributeBlock.valueConnection_);
-      // input2.connection.connect(attributeBlock.valueConnection_);
-
+      this.itemCount_++;
       attributeBlock = attributeBlock.nextConnection &&
       attributeBlock.nextConnection.targetBlock();
     }
+
   },
 
   saveConnections : Blockly.saveConnections,
