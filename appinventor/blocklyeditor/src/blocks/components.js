@@ -266,7 +266,7 @@ Blockly.Blocks.component_method = {
   methodN : null,
 
   bodyInputName : function() {
-    if(this.componentN == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodN) || Blockly.ComponentBlock.isJSAttributeName(this.methodN))) {
+    if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
       return 'STACK';
     }
   },
@@ -277,10 +277,10 @@ Blockly.Blocks.component_method = {
   },
 
   addMutators : function() {
-    if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSInputName(this.methodN)) {
+    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSInputName(this.methodName)) {
       this.setMutator(new Blockly.Mutator(['js_input']));
       this.compose = Blockly.compose;
-    } else if(this.componentN == "WebViewer" && Blockly.ComponentBlock.isJSAttributeName(this.methodN))  {
+    } else if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSAttributeName(this.methodName))  {
       this.setMutator(new Blockly.Mutator(['js_attribute']));
       this.compose = this.attributeCompose;
     }
@@ -304,6 +304,8 @@ Blockly.Blocks.component_method = {
       container.setAttribute('method_name', 'Add' + timeUnit);
       container.setAttribute('timeUnit', timeUnit);
     }
+
+    // if (this.typeName == "WebViewer" && )
     return container;
   },
 
@@ -313,11 +315,7 @@ Blockly.Blocks.component_method = {
     this.methodName = xmlElement.getAttribute('method_name');
 
     if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
-      this.componentN = this.typeName;
-      this.methodN = this.methodName;
-
       this.itemCount_ = window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
-
       this.addMutators();
     }
 
@@ -506,16 +504,15 @@ Blockly.Blocks.component_method = {
   },
 
   saveConnections : Blockly.saveConnections,
-  repeatingInputName : '',
 
   updateContainerBlock: function (containerBlock) {
     containerBlock.inputList[0].fieldRow[0].setText('inputs');
   },
 
   decompose: function(workspace) {
-    if(Blockly.ComponentBlock.isJSInputName(this.methodN)) {
+    if(Blockly.ComponentBlock.isJSInputName(this.methodName)) {
       return Blockly.decompose(workspace, 'js_input', this);
-    } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodN)) {
+    } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodName)) {
       return Blockly.decompose(workspace, 'js_attribute', this);
     }
   }
