@@ -421,7 +421,12 @@ Blockly.Blocks.component_method = {
       if(this.methodName == "RunJavaScript") {
         for(var i = 0; i < this.itemCount_; i++) {
           this.addInput(i);
-          // this.targetBlock(xmlElement.getAttribute('input' + i));
+        }
+      }
+
+      if(this.methodName == "CreateJavaScriptObject") {
+        for(var i = 0; i < this.itemCount_; i++) {
+          this.addAttributeInput(i);
         }
       }
     }
@@ -526,6 +531,18 @@ Blockly.Blocks.component_method = {
       attributeBlock.nextConnection.targetBlock();
     }
 
+  },
+
+  addAttributeInput : function(index) {
+    this.appendValueInput('ATTR' + index)
+      .setCheck('Text')
+      .setAlign(Blockly.ALIGN_RIGHT)
+      .appendField('attribute' + index);
+
+    this.appendValueInput('ATTRVAL' + index)
+      .setCheck('Text')
+      .setAlign(Blockly.ALIGN_RIGHT)
+      .appendField('value' + index);
   },
 
   saveConnections : Blockly.saveConnections,
