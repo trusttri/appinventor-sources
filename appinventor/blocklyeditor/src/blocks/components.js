@@ -306,17 +306,16 @@ Blockly.Blocks.component_method = {
     }
 
     if(this.typeName == "WebViewer") {
-      if((Blockly.ComponentBlock.isJSInputName(this.methodName)) {
-        var numItems = window.parseInt(xmlElement.getAttribute('js_input'), 10);
+      numItems = this.itemCount_;
+      if(Blockly.ComponentBlock.isJSInputName(this.methodName)) {
           for(var i = 0; i < numItems; i++) {
-            container.setAttribute('input' + i, this.getFieldValue('input' + i));
+            container.setAttribute('input' + i, this.getInputTargetBlock('input' + i));
           }
 
       } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodName)) {
-        var numItems = window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
         for(var i = 0; i < numItems; i++) {
-          container.setAttribute('attribute' + i, this.getFieldValue('ATTR' + i));
-          container.setAttribute('attributeVal' + i, this.getFieldValue('ATTRVAL' + i));
+          container.setAttribute('attribute' + i, this.getInputTargetBlock('ATTR' + i));
+          container.setAttribute('attributeVal' + i, this.getInputTargetBlock('ATTRVAL' + i));
         }
       }
     }
@@ -485,7 +484,7 @@ Blockly.Blocks.component_method = {
     }
 
     //TODO: figure out a way to default to 1 input without adding that input to the top
-
+    this.inputCount_ = inputNum;
     return input;
   },
 
