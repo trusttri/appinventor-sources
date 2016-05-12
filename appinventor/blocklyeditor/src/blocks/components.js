@@ -305,7 +305,21 @@ Blockly.Blocks.component_method = {
       container.setAttribute('timeUnit', timeUnit);
     }
 
-    // if (this.typeName == "WebViewer" && )
+    if(this.typeName == "WebViewer") {
+      if((Blockly.ComponentBlock.isJSInputName(this.methodName)) {
+        var numItems = window.parseInt(xmlElement.getAttribute('js_input'), 10);
+          for(var i = 0; i < numItems; i++) {
+            container.setAttribute('input' + i, this.getFieldValue('input' + i));
+          }
+
+      } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodName)) {
+        var numItems = window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
+        for(var i = 0; i < numItems; i++) {
+          container.setAttribute('attribute' + i, this.getFieldValue('ATTR' + i));
+          container.setAttribute('attributeVal' + i, this.getFieldValue('ATTRVAL' + i));
+        }
+      }
+    }
     return container;
   },
 
