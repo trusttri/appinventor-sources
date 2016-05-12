@@ -266,7 +266,7 @@ Blockly.Blocks.component_method = {
   methodN : null,
 
   bodyInputName : function() {
-    if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
+    if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSMethodName(this.methodName))) {
       return 'STACK';
     }
   },
@@ -277,10 +277,10 @@ Blockly.Blocks.component_method = {
   },
 
   addMutators : function() {
-    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSInputName(this.methodName)) {
+    if(this.typeName == "WebViewer" && (this.methodName == "RunJavaScript" || this.methodName == "CreateJavaScriptFunction")) {
       this.setMutator(new Blockly.Mutator(['js_input']));
       this.compose = Blockly.compose;
-    } else if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSAttributeName(this.methodName))  {
+    } else if(this.typeName == "WebViewer" && this.methodName == "CreateJavaScriptObject")  {
       this.setMutator(new Blockly.Mutator(['js_attribute']));
       this.compose = this.attributeCompose;
     }
@@ -308,12 +308,12 @@ Blockly.Blocks.component_method = {
     if(this.typeName == "WebViewer") {
       numItems = this.itemCount_;
       container.setAttribute('item_count', numItems);
-      if(Blockly.ComponentBlock.isJSInputName(this.methodName)) {
+      if(this.methodName == "RunJavaScript" || this.methodName == "CreateJavaScriptFunction") {
           for(var i = 0; i < numItems; i++) {
             container.setAttribute('input' + i, this.getInputTargetBlock('input' + i));
           }
 
-      } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodName)) {
+      } else if (this.methodName == "CreateJavaScriptObject") {
         for(var i = 0; i < numItems; i++) {
           container.setAttribute('attribute' + i, this.getInputTargetBlock('ATTR' + i));
           container.setAttribute('attribute_val' + i, this.getInputTargetBlock('ATTRVAL' + i));
@@ -410,7 +410,7 @@ Blockly.Blocks.component_method = {
       this.setDisabled(true);
     }
 
-    if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
+    if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)){
       this.itemCount_ = xmlElement.getAttribute('item_count');//window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
 
       if(this.itemCount_ == null) {
@@ -535,9 +535,9 @@ Blockly.Blocks.component_method = {
   },
 
   decompose: function(workspace) {
-    if(Blockly.ComponentBlock.isJSInputName(this.methodName)) {
+    if(this.methodName == "RunJavaScript" || this.methodName == "CreateJavaScriptFunction") {
       return Blockly.decompose(workspace, 'js_input', this);
-    } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodName)) {
+    } else if (this.methodName == "CreateJavaScriptObject") {
       return Blockly.decompose(workspace, 'js_attribute', this);
     }
   }
@@ -889,14 +889,9 @@ Blockly.Blocks['js_attribute'] = {
   }
 };
 
-Blockly.ComponentBlock.JSInputNames = ["RunJavaScript", "CreateJavaScriptFunction"];
-Blockly.ComponentBlock.isJSInputName =  function  (name) {
-    return Blockly.ComponentBlock.JSInputNames.indexOf(name) != -1;
-};
-
-Blockly.ComponentBlock.JSAttributeNames = ["CreateJavaScriptObject"];
-Blockly.ComponentBlock.isJSAttributeName =  function  (name) {
-    return Blockly.ComponentBlock.JSAttributeNames.indexOf(name) != -1;
+Blockly.ComponentBlock.JSMethodNames = ["RunJavaScript", "CreateJavaScriptFunction", "CreateJavaScriptObject"];
+Blockly.ComponentBlock.isJSMethodName =  function  (name) {
+    return Blockly.ComponentBlock.JSMethodNames.indexOf(name) != -1;
 };
 
 Blockly.ComponentBlock.timeUnits = ["Years", "Months", "Weeks", "Days", "Hours", "Minutes", "Seconds", "Duration"];
