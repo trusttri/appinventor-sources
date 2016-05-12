@@ -307,6 +307,7 @@ Blockly.Blocks.component_method = {
 
     if(this.typeName == "WebViewer") {
       numItems = this.itemCount_;
+      container.setAttribute('item_count', numItems);
       if(Blockly.ComponentBlock.isJSInputName(this.methodName)) {
           for(var i = 0; i < numItems; i++) {
             container.setAttribute('input' + i, this.getInputTargetBlock('input' + i));
@@ -315,7 +316,7 @@ Blockly.Blocks.component_method = {
       } else if (Blockly.ComponentBlock.isJSAttributeName(this.methodName)) {
         for(var i = 0; i < numItems; i++) {
           container.setAttribute('attribute' + i, this.getInputTargetBlock('ATTR' + i));
-          container.setAttribute('attributeVal' + i, this.getInputTargetBlock('ATTRVAL' + i));
+          container.setAttribute('attribute_val' + i, this.getInputTargetBlock('ATTRVAL' + i));
         }
       }
     }
@@ -328,8 +329,19 @@ Blockly.Blocks.component_method = {
     this.methodName = xmlElement.getAttribute('method_name');
 
     if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
-      this.itemCount_ = window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
+      this.itemCount_ = xmlElement.getAttribute('item_count');//window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
+
+      if(this.itemCount_ == null) {
+        this.itemCount_ = 0;
+      }
       this.addMutators();
+
+      if(this.methodName == "RunJavaScript") {
+        for(var i = 0; i < this.itemCount_; i++) {
+          this.addInput(i);
+          // this.targetBlock(xmlElement.getAttribute('input' + i));
+        }
+      }
     }
 
     var isGenericString = xmlElement.getAttribute('is_generic');
