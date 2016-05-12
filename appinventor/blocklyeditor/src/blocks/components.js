@@ -328,22 +328,6 @@ Blockly.Blocks.component_method = {
     this.typeName = xmlElement.getAttribute('component_type');
     this.methodName = xmlElement.getAttribute('method_name');
 
-    if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
-      this.itemCount_ = xmlElement.getAttribute('item_count');//window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
-
-      if(this.itemCount_ == null) {
-        this.itemCount_ = 0;
-      }
-      this.addMutators();
-
-      if(this.methodName == "RunJavaScript") {
-        for(var i = 0; i < this.itemCount_; i++) {
-          this.addInput(i);
-          // this.targetBlock(xmlElement.getAttribute('input' + i));
-        }
-      }
-    }
-
     var isGenericString = xmlElement.getAttribute('is_generic');
     this.isGeneric = (isGenericString == "true" ? true : false);
     if(!this.isGeneric) {
@@ -424,6 +408,22 @@ Blockly.Blocks.component_method = {
     if (this.getMethodTypeObject().deprecated === "true" && this.workspace === Blockly.mainWorkspace) {
       this.badBlock();
       this.setDisabled(true);
+    }
+
+    if(this.typeName == "WebViewer" && (Blockly.ComponentBlock.isJSInputName(this.methodName) || Blockly.ComponentBlock.isJSAttributeName(this.methodName))) {
+      this.itemCount_ = xmlElement.getAttribute('item_count');//window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
+
+      if(this.itemCount_ == null) {
+        this.itemCount_ = 0;
+      }
+      this.addMutators();
+
+      if(this.methodName == "RunJavaScript") {
+        for(var i = 0; i < this.itemCount_; i++) {
+          this.addInput(i);
+          // this.targetBlock(xmlElement.getAttribute('input' + i));
+        }
+      }
     }
   },
   // Rename the block's instanceName, type, and reset its title
