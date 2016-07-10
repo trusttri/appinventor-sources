@@ -424,6 +424,12 @@ Blockly.Blocks.component_method = {
         }
       }
 
+      if(this.methodName == "CreateJavaScriptFunction") {
+        for(var i = 0; i < this.itemCount_; i++) {
+          this.addInput(i);
+        }
+      }
+
       if(this.methodName == "CreateJavaScriptObject") {
         for(var i = 0; i < this.itemCount_; i++) {
           this.addAttributeInput(i);
