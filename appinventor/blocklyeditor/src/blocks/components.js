@@ -691,6 +691,8 @@ Blockly.Blocks.component_method = {
     } else if (this.methodName == "CreateJavaScriptObject") {
       return Blockly.decompose(workspace, 'js_attribute', this);
     }
+  },
+
   // check if block corresponds to a method inside componentTypes[typeName].methodDictionary
   verify : function() {
 
