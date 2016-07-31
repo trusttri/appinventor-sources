@@ -141,6 +141,7 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
 // type information associated with the socket. The component parameter is treated differently
 // here than the other method parameters. This may be fine, but consider whether
 // to get the type for the first socket in a more general way in this case.
+
   var paramObjects = methodBlock.getMethodTypeObject().params;
   var numOfParams = paramObjects.length;
   var yailTypes = [];
@@ -170,11 +171,20 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
     }
   }
 
-  var args = [];
-  for (var x = 0; x < numOfParams; x++) {
-    // TODO(hal, andrew): check for empty socket and generate error if necessary
-    args.push(Blockly.Yail.YAIL_SPACER
-              + Blockly.Yail.valueToCode(methodBlock, 'ARG' + x, Blockly.Yail.ORDER_NONE));
+  // Fix the arguments so they pull from the other inputs instead, if using certain WebViewer methods
+  if(methodBlock.typeName == "WebViewer" && methodBlock.typeName == "CreateJavaScriptFunction") {
+
+  }else if(methodBlock.typeName == "WebViewer" && methodBlock.typeName == "RunJavaScript") {
+
+  }else if(methodBlock.typeName == "WebViewer" && methodBlock.typeName == "CreateJavaScriptObject")  {
+
+  }else {
+    var args = [];
+    for (var x = 0; x < numOfParams; x++) {
+      // TODO(hal, andrew): check for empty socket and generate error if necessary
+      args.push(Blockly.Yail.YAIL_SPACER
+                + Blockly.Yail.valueToCode(methodBlock, 'ARG' + x, Blockly.Yail.ORDER_NONE));
+    }
   }
 
   return callPrefix

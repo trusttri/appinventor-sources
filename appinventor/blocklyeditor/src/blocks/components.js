@@ -518,19 +518,23 @@ Blockly.Blocks.component_method = {
       this.addMutators();
 
       if(this.methodName == "RunJavaScript") {
-        this.removeInput("inputs");
+        // this.removeInput("ARG1");
         for(var i = 0; i < this.itemCount_; i++) {
           this.addInput(i);
         }
       }
 
       if(this.methodName == "CreateJavaScriptFunction") {
+        // this.removeInput("ARG1");
+        // this.removeInput("ARG2");
         for(var i = 0; i < this.itemCount_; i++) {
           this.addInput(i);
         }
       }
 
       if(this.methodName == "CreateJavaScriptObject") {
+        // this.removeInput("ARG1");
+        // this.removeInput("ARG2");
         for(var i = 0; i < this.itemCount_; i++) {
           this.addAttributeInput(i);
         }
