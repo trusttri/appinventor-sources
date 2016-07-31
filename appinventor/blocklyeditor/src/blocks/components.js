@@ -619,7 +619,6 @@ Blockly.Blocks.component_method = {
     return tb;
   },
 
-<<<<<<< HEAD
   addEmptyInput : function () {
     // Nothing here
   },
@@ -691,7 +690,7 @@ Blockly.Blocks.component_method = {
       return Blockly.decompose(workspace, 'js_input', this);
     } else if (this.methodName == "CreateJavaScriptObject") {
       return Blockly.decompose(workspace, 'js_attribute', this);
-=======
+    }
   // check if block corresponds to a method inside componentTypes[typeName].methodDictionary
   verify : function() {
 
@@ -764,7 +763,6 @@ Blockly.Blocks.component_method = {
       }
     } else {
       this.badBlock();
->>>>>>> master
     }
   }
 
