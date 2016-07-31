@@ -411,7 +411,7 @@ Blockly.Blocks.component_method = {
     }
 
     if(this.typeName == "WebViewer" && Blockly.ComponentBlock.isJSMethodName(this.methodName)){
-      this.itemCount_ = xmlElement.getAttribute('item_count');//window.parseInt(xmlElement.getAttribute('js_attribute'), 10);
+      this.itemCount_ = xmlElement.getAttribute('item_count');
 
       if(this.itemCount_ == null) {
         this.itemCount_ = 0;
@@ -419,6 +419,7 @@ Blockly.Blocks.component_method = {
       this.addMutators();
 
       if(this.methodName == "RunJavaScript") {
+        this.removeInput("inputs");
         for(var i = 0; i < this.itemCount_; i++) {
           this.addInput(i);
         }
@@ -523,12 +524,12 @@ Blockly.Blocks.component_method = {
 
     while(attributeBlock) {
       var input1 = this.appendValueInput('ATTR' + this.itemCount_)
-        .setCheck('Text')
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('attribute' + this.itemCount_);
 
       var input2 = this.appendValueInput('ATTRVAL' + this.itemCount_)
-        .setCheck('Text')
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField('value' + this.itemCount_);
 
