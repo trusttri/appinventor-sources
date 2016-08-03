@@ -171,20 +171,33 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
     }
   }
 
+  var args = [];
   // Fix the arguments so they pull from the other inputs instead, if using certain WebViewer methods
-  if(methodBlock.typeName == "WebViewer" && methodBlock.typeName == "CreateJavaScriptFunction") {
+  if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "CreateJavaScriptFunction") {
 
-  }else if(methodBlock.typeName == "WebViewer" && methodBlock.typeName == "RunJavaScript") {
+    // For now, assuming inputs are string format mimicking JavaScript
+    // var inputString = "";
+    // for (var x = 0; x < methodBlock.inputList.length - 4; x++) {
+    //   inputString += methodBlock.getInputTargetBlock('input' + x).toString();
+    //
+    //   if(x < methodBlock.inputList.length - 5) {
+    //     inputString += ",";
+    //   }
+    // }
+    // inputString += "";
 
-  }else if(methodBlock.typeName == "WebViewer" && methodBlock.typeName == "CreateJavaScriptObject")  {
+  }else if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "RunJavaScript") {
+    //IDEA: create method somewhere that can concatenate a list of all blocks with repeating names
+    //then, create another method that will replace the contents of a block with name with that list
 
-  }else {
-    var args = [];
-    for (var x = 0; x < numOfParams; x++) {
-      // TODO(hal, andrew): check for empty socket and generate error if necessary
-      args.push(Blockly.Yail.YAIL_SPACER
-                + Blockly.Yail.valueToCode(methodBlock, 'ARG' + x, Blockly.Yail.ORDER_NONE));
-    }
+  }else if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "CreateJavaScriptObject")  {
+
+  }
+
+  for (var x = 0; x < numOfParams; x++) {
+    // TODO(hal, andrew): check for empty socket and generate error if necessary
+    args.push(Blockly.Yail.YAIL_SPACER
+              + Blockly.Yail.valueToCode(methodBlock, 'ARG' + x, Blockly.Yail.ORDER_NONE));
   }
 
   return callPrefix
