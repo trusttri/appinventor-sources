@@ -525,8 +525,6 @@ Blockly.Blocks.component_method = {
       }
 
       if(this.methodName == "CreateJavaScriptFunction") {
-        // this.removeInput("ARG1");
-        // this.removeInput("ARG2");
         for(var i = 0; i < this.itemCount_; i++) {
           this.addInput(i);
         }

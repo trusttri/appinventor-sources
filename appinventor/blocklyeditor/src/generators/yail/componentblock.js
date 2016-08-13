@@ -176,15 +176,17 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
   if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "CreateJavaScriptFunction") {
 
     // For now, assuming inputs are string format mimicking JavaScript
-    // var inputString = "";
-    // for (var x = 0; x < methodBlock.inputList.length - 4; x++) {
-    //   inputString += methodBlock.getInputTargetBlock('input' + x).toString();
-    //
-    //   if(x < methodBlock.inputList.length - 5) {
-    //     inputString += ",";
-    //   }
-    // }
-    // inputString += "";
+    var inputString = "";
+    for (var x = 0; x < methodBlock.inputList.length - 4; x++) {
+      inputString += methodBlock.getInputTargetBlock('input' + x).toString();
+
+      if(x < methodBlock.inputList.length - 5) {
+        inputString += ",";
+      }
+    }
+
+    methodBlock.getInputTargetBlock('ARG2').inputList[0].fieldRow[1].text_ = inputString;
+
 
   }else if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "RunJavaScript") {
     //IDEA: create method somewhere that can concatenate a list of all blocks with repeating names

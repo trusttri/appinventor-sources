@@ -485,7 +485,7 @@ public final class WebViewer extends AndroidViewComponent {
    * Create a function in JavaScript. Inputs are separated by commas.
    */
   @SimpleFunction(description = "Create JavaScript function.")
-  public void CreateJavaScriptFunction(String functionName, String inputs, String function) {
+  public void CreateJavaScriptFunction(String functionName, String function, String inputs) {
     webview.loadUrl("javascript: function " + functionName + "(" + inputs + ") { " + function + "; }");
   }
 
