@@ -190,11 +190,34 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
 
 
   }else if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "RunJavaScript") {
-    //IDEA: create method somewhere that can concatenate a list of all blocks with repeating names
-    //then, create another method that will replace the contents of a block with name with that list
+    var inputString = "";
+
+    for (var x = 0; x < methodBlock.inputList.length - 3; x++) {
+      var input = methodBlock.getInputTargetBlock('input' + x).toString();
+      inputString += input.substring(1, input.length - 1);
+
+      if(x < methodBlock.inputList.length - 4) {
+        inputString += ",";
+      }
+    }
+
+    methodBlock.getInputTargetBlock('ARG1').inputList[0].fieldRow[1].text_ = inputString;
 
   }else if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "CreateJavaScriptObject")  {
+    var inputString = "";
 
+    for (var x = 0; x < (methodBlock.inputList.length - 3)/2; x++) {
+      var attr = methodBlock.getInputTargetBlock('ATTR' + x).toString();
+      var attrVal = methodBlock.getInputTargetBlock('ATTRVAL' + x).toString();
+
+      inputString += attr.substring(1, attr.length - 1) + ": " + attrVal.substring(1, attrVal.length - 1);
+
+      if(x < methodBlock.inputList.length - 5) {
+        inputString += ",";
+      }
+    }
+
+    methodBlock.getInputTargetBlock('ARG1').inputList[0].fieldRow[1].text_ = inputString;
   }
 
   for (var x = 0; x < numOfParams; x++) {

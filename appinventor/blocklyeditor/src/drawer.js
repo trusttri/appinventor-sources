@@ -516,6 +516,28 @@ Blockly.Drawer.defaultBlockXMLStrings = {
           Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
           '<value name="ARG2"><block type="text"><field name="TEXT"></field></block></value>' +
           '</block>' +
+          '</xml>';}},
+
+      {matchingMutatorAttributes:{component_type:"WebViewer", method_name:"RunJavaScript"},
+       mutatorXMLStringFunction: function(mutatorAttributes) {
+         return '' +
+           '<xml>' +
+           '<block type="component_method">' +
+           //mutator generator
+           Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
+           '<value name="ARG1"><block type="text"><field name="TEXT"></field></block></value>' +
+           '</block>' +
+           '</xml>';}},
+
+     {matchingMutatorAttributes:{component_type:"WebViewer", method_name:"CreateJavaScriptObject"},
+      mutatorXMLStringFunction: function(mutatorAttributes) {
+        return '' +
+          '<xml>' +
+          '<block type="component_method">' +
+          //mutator generator
+          Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes) +
+          '<value name="ARG1"><block type="text"><field name="TEXT"></field></block></value>' +
+          '</block>' +
           '</xml>';}}
   ]
 };

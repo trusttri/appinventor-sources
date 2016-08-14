@@ -507,26 +507,8 @@ public final class WebViewer extends AndroidViewComponent {
    * Split up attributes and values by a comma and a space - i.e. 1, 2, 3, 4
    */
   @SimpleFunction(description = "Create a JavaScript object.")
-  public void CreateJavaScriptObject(String variableName, String attributes, String attributeValues) {
-    String[] attributesList = attributes.split(", ");
-    String[] attributeValuesList = attributeValues.split(", ");
-
-    if(attributesList.length != attributeValuesList.length) {
-      return;
-    }
-
-    String attributesString = "{";
-
-    for(int i = 0; i < attributesList.length; i++) {
-      attributesString += attributesList[i] + ": " + attributeValuesList[i];
-      if(i != attributesList.length - 1) {
-        attributesString += ", ";
-      }
-    }
-
-    attributesString += "}";
-
-    webview.loadUrl("javascript: var " + variableName + " = " + attributesString + ";");
+  public void CreateJavaScriptObject(String variableName, String attributes) {
+    webview.loadUrl("javascript: var " + variableName + " = {" + attributes + "};");
   }
 
   /**
