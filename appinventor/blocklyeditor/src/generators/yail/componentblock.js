@@ -179,9 +179,9 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
     // For now, assuming inputs are string format mimicking JavaScript
     var inputString = "";
     for (var x = 0; x < methodBlock.inputList.length - 4; x++) {
-      // var input = methodBlock.getInputTargetBlock('input' + x).toString();
+      var input = methodBlock.getInputTargetBlock('input' + x).toString();
 
-      var input = Blockly.JavaScript.valueToCode(methodBlock, 'input' + x, Blockly.JavaScript.ORDER_ADDITION || "");
+      // var input = Blockly.JavaScript.valueToCode(methodBlock, 'input' + x, Blockly.JavaScript.ORDER_ADDITION || "");
 
       inputString += input.substring(1, input.length - 1);
 
