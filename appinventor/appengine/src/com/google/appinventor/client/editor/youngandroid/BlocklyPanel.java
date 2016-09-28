@@ -1,6 +1,6 @@
 // -*- mode: java; c-basic-offset: 2; -*-
-// Copyright 2009-2011 Google, All Rights reserved
-// Copyright 2011-2012 MIT, All rights reserved
+// Copyright © 2009-2011 Google, All Rights reserved
+// Copyright © 2011-2016 Massachusetts Institute of Technology, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -21,8 +21,12 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.common.collect.Maps;
 
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
+
+import com.google.gwt.query.client.builders.JsniBundle;
+import com.google.gwt.query.client.builders.JsniBundle.LibrarySource;
 
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.ClickListener;
@@ -54,6 +58,19 @@ import static com.google.appinventor.client.Ode.MESSAGES;
 public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeListener{
   public static enum OpType {ADD, REMOVE, RENAME}
 
+  public static interface BlocklySource extends JsniBundle {
+    @LibrarySource(value="blockly.js",
+		   prepend="(function(window, document, console){\nthis.goog = goog = {};\n",
+		   postpend="\n}.apply(window, [$wnd, $doc, $wnd.console]));\n" +
+		   "for(var ns in window.goog.implicitNamespaces_) {\n" +
+		   "  if(ns.indexOf('.') !== false) ns = ns.split('.')[0];\n" +
+		   "  $wnd[ns] = window.goog.global[ns];\n" +
+		   "}")
+    public void initBlockly();
+  }
+
+  private static BlocklySource BLOCKLY = null;
+
   // The currently displayed form (project/screen)
   private static String currentForm;
   private static String languageSetting;
@@ -74,15 +91,7 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
 
   private final SimpleComponentDatabase COMPONENT_DATABASE;
 
-  private static final String EDITOR_HTML =
-    "<style>\n" +
-    ".svg {\n" +
-    "  height: 100%;\n" +
-    "  width: 100%;\n" +
-    "  border: solid black 1px;\n" +
-    "}\n" +
-    "</style>\n" +
-    "<iframe src=\"blocklyframe.html#FORM_NAME\" class=\"svg\">";
+  private static final String EDITOR_HTML = "<div id=\"FORM_NAME\" class=\"svg\"></div>";
 
   // Keep track of component additions/removals/renames that happen before
   // blocks editor is inited for the first time, or before reinitialization
@@ -135,6 +144,10 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
 
   public BlocklyPanel(YaBlocksEditor blocksEditor, String formName) {
     super(EDITOR_HTML.replace("FORM_NAME", formName));
+    if (BLOCKLY == null) {
+      BLOCKLY = GWT.create(BlocklySource.class);
+      BLOCKLY.initBlockly();
+    }
     this.formName = formName;
     this.myBlocksEditor = blocksEditor;
     COMPONENT_DATABASE = SimpleComponentDatabase.getInstance(blocksEditor.getProjectId());
@@ -819,11 +832,22 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
     return TranslationDesignerPallete.getCorrespondingString(key);
   }
 
+  public static String getOdeMessage(String message) {
+    // TODO(ewpatton): Investigate using a generator to work around
+    // lack of reflection
+    if ("deleteButton".equals(message)) {
+      return Ode.getMessages().deleteButton();
+    } else if ("cancelButton".equals(message)) {
+      return Ode.getMessages().cancelButton();
+    } else {
+      throw new IllegalArgumentException("Unexpected argument in getOdeMessage: " + message);
+    }
+  }
+
   @Override
   public void onComponentTypeAdded(List<String> componentTypes) {
     populateComponentTypes(formName);
     verifyAllBlocks();
-
   }
 
   @Override
@@ -902,12 +926,34 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
       $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getBackpack());
     $wnd.BlocklyPanel_setBackpack =
       $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::setBackpack(Ljava/lang/String;));
+    $wnd.BlocklyPanel_getOdeMessage =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getOdeMessage(Ljava/lang/String;));
   }-*/;
 
   private native void initJS() /*-{
     $wnd.myBlocklyPanel = this;
     $wnd.Blockly = null;  // will be set to our iframe's Blockly object when
                           // the iframe finishes loading
+  }-*/;
+
+  native void callBlocklyInit(String formName) /*-{
+    var editor = this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::myBlocksEditor;
+    var callback = function() {
+      if ($wnd.Blocklies && formName in $wnd.Blocklies) {
+        $wnd.Blocklies[formName].init($entry(function() {
+          editor.@com.google.appinventor.client.editor.youngandroid.YaBlocksEditor::onInitialized()();
+        }));
+        return true;
+      } else {
+        // Some other form loaded first...
+        return false;
+      }
+    };
+    if (typeof $wnd.Blocklies === "object" && formName in $wnd.Blocklies) {
+      callback();
+    } else {
+      $wnd.DeferredBlocklyInit = callback;
+    }
   }-*/;
 
   private static native void doAddComponent(String formName, String typeDescription,
@@ -926,31 +972,31 @@ public class BlocklyPanel extends HTMLPanel implements ComponentDatabaseChangeLi
   }-*/;
 
   private static native void doShowComponentBlocks(String formName, String name) /*-{
-    $wnd.Blocklies[formName].Drawer.showComponent(name);
+    $wnd.Blocklies[formName].getMainWorkspace().showComponent(name);
   }-*/;
 
   public static native void doHideComponentBlocks(String formName) /*-{
-    $wnd.Blocklies[formName].Drawer.hide();
+    $wnd.Blocklies[formName].getMainWorkspace().hideDrawer();
   }-*/;
 
   private static native void doShowBuiltinBlocks(String formName, String drawerName) /*-{
     var myBlockly = $wnd.Blocklies[formName];
-    myBlockly.Drawer.hide();
-    myBlockly.Drawer.showBuiltin(drawerName);
+    myBlockly.getMainWorkspace().hideDrawer();
+    myBlockly.getMainWorkspace().showBuiltin(drawerName);
   }-*/;
 
   public static native void doHideBlocks(String formName) /*-{
-    $wnd.Blocklies[formName].Drawer.hide();
+    $wnd.Blocklies[formName].getMainWorkspace().hideDrawer();
   }-*/;
 
   private static native void doShowGenericBlocks(String formName, String drawerName) /*-{
     var myBlockly = $wnd.Blocklies[formName];
-    myBlockly.Drawer.hide();
-    myBlockly.Drawer.showGeneric(drawerName);
+    myBlockly.getMainWorkspace().hideDrawer();
+    myBlockly.getMainWorkspace().showGeneric(drawerName);
   }-*/;
 
   public static native boolean doDrawerShowing(String formName) /*-{
-    return $wnd.Blocklies[formName].Drawer.isShowing();
+    return $wnd.Blocklies[formName].getMainWorkspace().isDrawerShowing();
   }-*/;
 
   // [lyn, 2014/10/27] added formJson for upgrading

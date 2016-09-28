@@ -803,7 +803,7 @@ public class Ode implements EntryPoint {
                 uri += separator + "locale=" + locale;
                 separator = "&";
               }
-              if (repo != null & !repo.equals("")) {
+              if (repo != null && !repo.equals("")) {
                 uri += separator + "repo=" + repo;
                 separator = "&";
               }

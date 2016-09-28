@@ -1,5 +1,5 @@
 // -*- mode: java; c-basic-offset: 2; -*-
-// Copyright 2012 Massachusetts Institute of Technology. All rights reserved.
+// Copyright © 2012-2016 Massachusetts Institute of Technology. All rights reserved.
 
 /**
  * @license
@@ -8,38 +8,72 @@
  *
  * @author mckinney@mit.edu (Andrew F. McKinney)
  * @author sharon@google.com (Sharon Perl)
+ * @author ewpatton@mit.edu (Evan W. Patton)
  */
 
 'use strict';
 
-goog.provide('Blockly.BlocklyEditor');
+goog.provide('AI.Blockly.BlocklyEditor');
 
-goog.require('Blockly.Drawer');
+goog.require('AI.Blockly.Drawer');
+
+// App Inventor extensions to Blockly
 goog.require('Blockly.TypeBlock');
 
-Blockly.BlocklyEditor.startup = function(documentBody, formName) {
-  var typeblock_config = {
-    frame: 'ai_frame',
-    typeBlockDiv: 'ai_type_block',
-    inputText: 'ac_input_text'
-  };
+if (Blockly.BlocklyEditor === undefined) {
+  Blockly.BlocklyEditor = {};
+}
 
-  //This is what Blockly's init function does when passing options.
-  //We are overriding the init process so putting it here
-  goog.mixin(Blockly, {
+Blockly.configForTypeBlock = {
+  frame: 'ai_frame',
+  typeBlockDiv: 'ai_type_block',
+  inputText: 'ac_input_text'
+};
+
+Blockly.BlocklyEditor.prestart = function(opt_readonly) {
+  Blockly.mainWorkspace = new Blockly.WorkspaceSvg(new Blockly.Options({
+    readOnly: !!opt_readonly,
     collapse : true,
-    hasScrollbars: true,
-    hasTrashcan: true,
-    hasBackpack: true,
+    scrollbars: true,
+    trashcan: true,
+    backpack: true,
     comments: true,
     disable: true,
-    configForTypeBlock: typeblock_config
+    media: './media/',
+    warningIndicator: true,
+    configForTypeBlock: Blockly.configForTypeBlock,
+    grid: {spacing: '20', length: '5', snap: false, colour: '#ccc'},
+    zoom: {controls: true, wheel: true, scaleSpeed: 1.1}
+  }));
+};
+
+Blockly.BlocklyEditor.startup = function(documentBody, formName, opt_readonly) {
+  // Consider moving this to blocklyeditor/src/blockly.js
+  var workspace = Blockly.inject(documentBody, {
+    readOnly: !!opt_readonly,
+    collapse : true,
+    scrollbars: true,
+    trashcan: true,
+    backpack: true,
+    comments: true,
+    disable: true,
+    media: './media/',
+    warningIndicator: true,
+    configForTypeBlock: Blockly.configForTypeBlock,
+    grid: {spacing: '20', length: '5', snap: false, colour: '#ccc'},
+    zoom: {controls: true, wheel: true, scaleSpeed: 1.1}
+  });
+  workspace.drawer_ = new Blockly.Drawer(workspace, {
+      scrollbars: true
+    });
+  workspace.backpack_ = new Blockly.Backpack(workspace);
+  workspace.addChangeListener(function(event) {
+    var block = Blockly.getMainWorkspace().getBlockById(event.blockId);
+    if ( block && event.name == Blockly.ComponentBlock.COMPONENT_SELECTOR ) {
+      block.rename(event.oldValue, event.newValue);
+    }
   });
 
-  Blockly.inject(documentBody);
-
-  Blockly.Drawer.createDom();
-  Blockly.Drawer.init();
   //This would also be done in Blockly init, but we need to do it here cause of
   //the different init process in drawer (it'd be undefined at the time it hits
   //init in Blockly)
@@ -48,100 +82,10 @@ Blockly.BlocklyEditor.startup = function(documentBody, formName) {
 
   Blockly.BlocklyEditor.formName = formName;
 
-  /* [Added by paulmw in patch 15]
-  There are three ways that you can change how lexical variables
-  are handled:
-
-  1. Show prefixes to users, and separate namespace in yail
-  Blockly.showPrefixToUser = true;
-  Blockly.usePrefixInYail = true;
-
-  2. Show prefixes to users, lexical variables share namespace yail
-  Blockly.showPrefixToUser = true;
-  Blockly.usePrefixInYail = false;
-
-  3. Hide prefixes from users, lexical variables share namespace yail
-  //The default (as of 12/21/12)
-  Blockly.showPrefixToUser = false;
-  Blockly.usePrefixInYail = false;
-
-  It is not possible to hide the prefix and have separate namespaces
-  because Blockly does not allow to items in a list to have the same name
-  (plus it would be confusing...)
-
-  */
-
-  Blockly.showPrefixToUser = false;
-  Blockly.usePrefixInYail = false;
-
-  /******************************************************************************
-   [lyn, 12/23-27/2012, patch 16]
-     Prefix labels for parameters, locals, and index variables,
-     Might want to experiment with different combintations of these. E.g.,
-     + maybe all non global parameters have prefix "local" or all have prefix "param".
-     + maybe index variables have prefix "index", or maybe instead they are treated as "param"
-   */
-
-  Blockly.globalNamePrefix = "global"; // For names introduced by global variable declarations
-  Blockly.procedureParameterPrefix = "input"; // For names introduced by procedure/function declarations
-  Blockly.handlerParameterPrefix = "input"; // For names introduced by event handlers
-  Blockly.localNamePrefix = "local"; // For names introduced by local variable declarations
-  Blockly.loopParameterPrefix = "item"; // For names introduced by for loops
-  Blockly.loopRangeParameterPrefix = "counter"; // For names introduced by for range loops
-
-  Blockly.menuSeparator = " "; // Separate prefix from name with this. E.g., space in "param x"
-  Blockly.yailSeparator = "_"; // Separate prefix from name with this. E.g., underscore "param_ x"
-
-  // Curried for convenient use in field_lexical_variable.js
-  Blockly.possiblyPrefixMenuNameWith = // e.g., "param x" vs "x"
-    function (prefix) {
-      return function (name) {
-        return (Blockly.showPrefixToUser ? (prefix + Blockly.menuSeparator) : "") + name;
-      }
-    };
-
-  // Curried for convenient use in generators/yail/variables.js
-  Blockly.possiblyPrefixYailNameWith = // e.g., "param_x" vs "x"
-    function (prefix) {
-      return function (name) {
-        return (Blockly.usePrefixInYail ? (prefix + Blockly.yailSeparator) : "") + name;
-      }
-    };
-
-  Blockly.prefixGlobalMenuName = function (name) {
-    return Blockly.globalNamePrefix + Blockly.menuSeparator + name;
-  };
-
-  // Return a list of (1) prefix (if it exists, "" if not) and (2) unprefixed name
-  Blockly.unprefixName = function (name) {
-    if (name.indexOf(Blockly.globalNamePrefix + Blockly.menuSeparator) == 0) {
-      // Globals always have prefix, regardless of flags. Handle these specially
-      return [Blockly.globalNamePrefix, name.substring(Blockly.globalNamePrefix.length + Blockly.menuSeparator.length)];
-    } else if (!Blockly.showPrefixToUser) {
-      return ["", name];
-    } else {
-      var prefixes = [Blockly.procedureParameterPrefix,
-                      Blockly.handlerParameterPrefix,
-                      Blockly.localNamePrefix,
-                      Blockly.loopParameterPrefix,
-                      Blockly.loopRangeParameterPrefix]
-      for (i=0; i < prefixes.length; i++) {
-        if (name.indexOf(prefixes[i]) == 0) {
-          // name begins with prefix
-          return [prefixes[i], name.substring(prefixes[i].length + Blockly.menuSeparator.length)]
-        }
-      }
-      // Really an error if get here ...
-      return ["", name];
-    }
-  }
-
-  /******************************************************************************/
-
-  Blockly.bindEvent_(Blockly.mainWorkspace.getCanvas(), 'blocklyWorkspaceChange', this,
+  Blockly.getMainWorkspace().addChangeListener(
       function() {
-        if (window.parent.BlocklyPanel_blocklyWorkspaceChanged){
-          window.parent.BlocklyPanel_blocklyWorkspaceChanged(Blockly.BlocklyEditor.formName);
+        if (top.BlocklyPanel_blocklyWorkspaceChanged){
+          top.BlocklyPanel_blocklyWorkspaceChanged(Blockly.BlocklyEditor.formName);
         }
         // [lyn 12/31/2013] Check for duplicate component event handlers before
         // running any error handlers to avoid quadratic time behavior.
@@ -152,7 +96,8 @@ Blockly.BlocklyEditor.startup = function(documentBody, formName) {
 Blockly.BlocklyEditor.render = function() {
   var start = new Date().getTime();
   Blockly.Instrument.initializeStats("Blockly.BlocklyEditor.render");
-  Blockly.mainWorkspace.render();
+  Blockly.getMainWorkspace().render();
+  Blockly.getMainWorkspace().resizeContents();
   Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
   var stop = new Date().getTime();
   var timeDiff = stop - start;
@@ -197,7 +142,7 @@ Blockly.Block.prototype.customContextMenu = function(options) {
     if (window.parent.ReplState.state != Blockly.ReplMgr.rsState.CONNECTED) {
       dialog = new goog.ui.Dialog(null, true);
       dialog.setTitle(Blockly.Msg.CAN_NOT_DO_IT);
-      dialog.setContent(Blockly.Msg.CONNECT_TO_DO_IT);
+      dialog.setTextContent(Blockly.Msg.CONNECT_TO_DO_IT);
       dialog.setButtonSet(new goog.ui.Dialog.ButtonSet().
         addButton(goog.ui.Dialog.ButtonSet.DefaultButtons.OK,
           false, true));
@@ -226,3 +171,93 @@ Blockly.Block.prototype.customContextMenu = function(options) {
     myBlock.procCustomContextMenu(options);
   }
 };
+
+/* [Added by paulmw in patch 15]
+   There are three ways that you can change how lexical variables
+   are handled:
+
+   1. Show prefixes to users, and separate namespace in yail
+   Blockly.showPrefixToUser = true;
+   Blockly.usePrefixInYail = true;
+
+   2. Show prefixes to users, lexical variables share namespace yail
+   Blockly.showPrefixToUser = true;
+   Blockly.usePrefixInYail = false;
+
+   3. Hide prefixes from users, lexical variables share namespace yail
+   //The default (as of 12/21/12)
+   Blockly.showPrefixToUser = false;
+   Blockly.usePrefixInYail = false;
+
+   It is not possible to hide the prefix and have separate namespaces
+   because Blockly does not allow to items in a list to have the same name
+   (plus it would be confusing...)
+
+*/
+
+Blockly.showPrefixToUser = false;
+Blockly.usePrefixInYail = false;
+
+/******************************************************************************
+   [lyn, 12/23-27/2012, patch 16]
+     Prefix labels for parameters, locals, and index variables,
+     Might want to experiment with different combintations of these. E.g.,
+     + maybe all non global parameters have prefix "local" or all have prefix "param".
+     + maybe index variables have prefix "index", or maybe instead they are treated as "param"
+*/
+
+Blockly.globalNamePrefix = "global"; // For names introduced by global variable declarations
+Blockly.procedureParameterPrefix = "input"; // For names introduced by procedure/function declarations
+Blockly.handlerParameterPrefix = "input"; // For names introduced by event handlers
+Blockly.localNamePrefix = "local"; // For names introduced by local variable declarations
+Blockly.loopParameterPrefix = "item"; // For names introduced by for loops
+Blockly.loopRangeParameterPrefix = "counter"; // For names introduced by for range loops
+
+Blockly.menuSeparator = " "; // Separate prefix from name with this. E.g., space in "param x"
+Blockly.yailSeparator = "_"; // Separate prefix from name with this. E.g., underscore "param_ x"
+
+// Curried for convenient use in field_lexical_variable.js
+Blockly.possiblyPrefixMenuNameWith = // e.g., "param x" vs "x"
+function (prefix) {
+  return function (name) {
+    return (Blockly.showPrefixToUser ? (prefix + Blockly.menuSeparator) : "") + name;
+  }
+};
+
+// Curried for convenient use in generators/yail/variables.js
+Blockly.possiblyPrefixYailNameWith = // e.g., "param_x" vs "x"
+function (prefix) {
+  return function (name) {
+    return (Blockly.usePrefixInYail ? (prefix + Blockly.yailSeparator) : "") + name;
+  }
+};
+
+Blockly.prefixGlobalMenuName = function (name) {
+  return Blockly.globalNamePrefix + Blockly.menuSeparator + name;
+};
+
+// Return a list of (1) prefix (if it exists, "" if not) and (2) unprefixed name
+Blockly.unprefixName = function (name) {
+  if (name.indexOf(Blockly.globalNamePrefix + Blockly.menuSeparator) == 0) {
+    // Globals always have prefix, regardless of flags. Handle these specially
+    return [Blockly.globalNamePrefix, name.substring(Blockly.globalNamePrefix.length + Blockly.menuSeparator.length)];
+  } else if (!Blockly.showPrefixToUser) {
+    return ["", name];
+  } else {
+    var prefixes = [Blockly.procedureParameterPrefix,
+                    Blockly.handlerParameterPrefix,
+                    Blockly.localNamePrefix,
+                    Blockly.loopParameterPrefix,
+                    Blockly.loopRangeParameterPrefix]
+    for (i=0; i < prefixes.length; i++) {
+      if (name.indexOf(prefixes[i]) == 0) {
+        // name begins with prefix
+        return [prefixes[i], name.substring(prefixes[i].length + Blockly.menuSeparator.length)]
+      }
+    }
+    // Really an error if get here ...
+    return ["", name];
+  }
+}
+
+/******************************************************************************/

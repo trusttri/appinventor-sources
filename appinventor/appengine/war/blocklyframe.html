@@ -1,4 +1,4 @@
-<!-- Copyright 2012 Massachusetts Institute of Technology. All Rights Reserved. -->
+<!-- Copyright © 2012-2016 Massachusetts Institute of Technology. All Rights Reserved. -->
 
 <!-- The contents of a blocks editor iframe in App Inventor -->
 <!DOCTYPE html>
@@ -6,6 +6,7 @@
   <head>
     <script type="text/javascript" src="closure-library/closure/goog/base.js"></script>
     <link type="text/css" rel="stylesheet" href="media/blockly.css">
+    <link type="text/css" rel="stylesheet" href="media/ai2blockly.css">
     <link type="text/css" rel="stylesheet" href="closure-library/closure/goog/css/dialog.css">
     <script type="text/javascript" src="blockly-@GUID@.js"></script>
     <style>
@@ -56,6 +57,7 @@
         // projectId_formName, and to be unique among
         // all the Blockly instances created in this App Inventor session.
         var formName = window.location.hash.substr(1);
+        Blockly.BlocklyEditor.formName = formName;
         if (!window.parent.Blocklies) {
           // We keep a set of Blockly objects indexed by name
           // of the form for which they are the blocks editor
@@ -67,12 +69,54 @@
           window.parent.ReplState = new Blockly.ReplStateObj(); // There should be one of these for the whole system
         }
         window.parent.ReplState.phoneState = {}; <!-- Reset the phone state when we are reloaded -->
-        Blockly.BlocklyEditor.startup(document.body, formName);
+        Blockly.BlocklyEditor.prestart();  // Initialize the workspace object without generating DOM elements
         // Tell populateTypes the projectId, which is in the top
         // window's hash
         Blockly.ComponentTypes.populateTypes(top.location.hash.substr(1));
+        // Verify blocks after init in case of extensions
+        Blockly.Component.verifyAllBlocks();
+
+        // If Blockly is slow to load, the BlocklyPanel will set
+        // DeferredBlocklyInit to a callback function to be evaluated
+        // once Blocklies is created above.
+        if (typeof window.parent.DeferredBlocklyInit === "function") {
+          var callbackResult = window.parent.DeferredBlocklyInit();
+          if (callbackResult) {
+            // Initialized successfully
+            delete window.parent.DeferredBlocklyInit;
+          }
+        }
         window.parent.BlocklyPanel_initBlocksArea(formName);
-        window.parent.BlocklyPanel_checkWarningState(formName);
+      }
+      Blockly.init = function(completion) {
+        var formName = window.location.hash.substr(1);
+        Blockly.BlocklyEditor.startup(document.body, formName);
+        var callback = function() {
+          var width;  // Not used in LTR.
+          var workspace = Blockly.mainWorkspace;
+          if (workspace.RTL) {
+            width = workspace.getWidth();
+          }
+          Blockly.mainWorkspace.rendered = true;
+          Blockly.getMainWorkspace().addWarningIndicator();
+          Blockly.getMainWorkspace().addBackpack();
+          window.parent.BlocklyPanel_checkWarningState(formName);
+          var blocks = Blockly.mainWorkspace.getAllBlocks();
+          for (var i = blocks.length - 1; i >= 0; i--) {
+            var block = blocks[i];
+            block.initSvg();
+            if (!isNaN(block.x) && !isNaN(block.y)) {
+              block.moveBy(workspace.RTL ? width - block.x : block.x, block.y);
+            }
+          }
+          Blockly.BlocklyEditor.render();
+          completion();
+        };
+        if (document.readyState != "complete") {
+          document.addEventListener('DOMContentLoaded', callback);
+        } else {
+          callback();
+        }
       }
     </script>
   </head>

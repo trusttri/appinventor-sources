@@ -1,5 +1,5 @@
 // -*- mode: java; c-basic-offset: 2; -*-
-// Copyright 2013-2014 MIT, All rights reserved
+// Copyright © 2013-2016 MIT, All rights reserved
 // Released under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 /**
@@ -7,15 +7,21 @@
  * @fileoverview Component blocks for Blockly, modified for MIT App Inventor.
  * @author mckinney@mit.edu (Andrew F. McKinney)
  * @author sharon@google.com (Sharon Perl)
+ * @author ewpatton@mit.edu (Evan W. Patton)
  */
 
 'use strict';
 
-goog.provide('Blockly.Blocks.components');
-goog.provide('Blockly.ComponentBlock');
+goog.provide('AI.Blockly.Blocks.components');
+goog.provide('AI.Blockly.ComponentBlock');
 goog.require('Blockly.Blocks.Utilities');
+
+// App Inventor extensions to Blockly
+goog.require('AI.Blockly.ComponentTypes');
 goog.require('Blockly.TypeBlock');
-goog.require('Blockly.ComponentTypes');
+
+Blockly.Blocks.components = {};
+Blockly.ComponentBlock = {};
 
 /*
  * All component blocks have category=='Component'. In addition to the standard blocks fields,
@@ -31,9 +37,11 @@ goog.require('Blockly.ComponentTypes');
  */
 Blockly.ComponentBlock.COLOUR_EVENT = Blockly.CONTROL_CATEGORY_HUE;
 Blockly.ComponentBlock.COLOUR_METHOD = Blockly.PROCEDURE_CATEGORY_HUE;
-Blockly.ComponentBlock.COLOUR_GET = [67, 153, 112];
-Blockly.ComponentBlock.COLOUR_SET = [38, 102, 67];
-Blockly.ComponentBlock.COLOUR_COMPONENT = [67, 153, 112];
+Blockly.ComponentBlock.COLOUR_GET = '#439970';  // [67, 153, 112]
+Blockly.ComponentBlock.COLOUR_SET = '#266643';  // [38, 102, 67]
+Blockly.ComponentBlock.COLOUR_COMPONENT = '#439970';  // [67, 153, 112]
+
+Blockly.ComponentBlock.COMPONENT_SELECTOR = "COMPONENT_SELECTOR";
 
 //TODO(): add I18N
 
@@ -82,7 +90,7 @@ Blockly.Blocks.component_event = {
     }
 
     this.appendDummyInput('WHENTITLE').appendField(Blockly.Msg.LANG_COMPONENT_BLOCK_TITLE_WHEN)
-        .appendField(this.componentDropDown, "COMPONENT_SELECTOR")
+        .appendField(this.componentDropDown, Blockly.ComponentBlock.COMPONENT_SELECTOR)
         .appendField('.' + localizedEventName);
     this.componentDropDown.setValue(this.instanceName);
     this.setParameterOrientation(horizParams);
@@ -392,7 +400,7 @@ Blockly.Blocks.component_method = {
         var timeUnitDropDown = Blockly.ComponentBlock.createClockAddDropDown();
         this.appendDummyInput()
           .appendField(Blockly.Msg.LANG_COMPONENT_BLOCK_METHOD_TITLE_CALL)
-          .appendField(this.componentDropDown, "COMPONENT_SELECTOR")
+          .appendField(this.componentDropDown, Blockly.ComponentBlock.COMPONENT_SELECTOR)
           .appendField('.Add')
           .appendField(timeUnitDropDown, "TIME_UNIT");
         switch (this.methodName){
@@ -424,7 +432,7 @@ Blockly.Blocks.component_method = {
       } else {
         this.appendDummyInput()
           .appendField(Blockly.Msg.LANG_COMPONENT_BLOCK_METHOD_TITLE_CALL)
-          .appendField(this.componentDropDown, "COMPONENT_SELECTOR")
+          .appendField(this.componentDropDown, Blockly.ComponentBlock.COMPONENT_SELECTOR)
           .appendField('.' + localizedMethodName);
       }
       this.componentDropDown.setValue(this.instanceName);
@@ -604,7 +612,7 @@ Blockly.Blocks.component_method = {
           modifiedReturnType = true; // missing return type
         }
         else {
-          this.changeOutput(Blockly.Blocks.Utilities.YailTypeToBlocklyType(method.returnType,Blockly.Blocks.Utilities.OUTPUT));
+          this.outputConnection.setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType(method.returnType,Blockly.Blocks.Utilities.OUTPUT));
         }
       }
       else if (!method.returnType) {
@@ -708,7 +716,7 @@ Blockly.Blocks.component_set_get = {
       if(!this.isGeneric) {
         //non-generic get
         this.appendDummyInput()
-          .appendField(this.componentDropDown, "COMPONENT_SELECTOR")
+          .appendField(this.componentDropDown, Blockly.ComponentBlock.COMPONENT_SELECTOR)
           .appendField('.')
           .appendField(dropdown, "PROP");
       } else {
@@ -729,7 +737,7 @@ Blockly.Blocks.component_set_get = {
       if(!this.isGeneric) {
         this.appendValueInput("VALUE")
           .appendField(Blockly.Msg.LANG_COMPONENT_BLOCK_SETTER_TITLE_SET)
-          .appendField(this.componentDropDown, "COMPONENT_SELECTOR")
+          .appendField(this.componentDropDown, Blockly.ComponentBlock.COMPONENT_SELECTOR)
           .appendField('.')
           .appendField(dropdown, "PROP")
           .appendField(Blockly.Msg.LANG_COMPONENT_BLOCK_SETTER_TITLE_TO);
@@ -970,7 +978,7 @@ Blockly.Blocks.component_component_block = {
     this.componentDropDown = Blockly.ComponentBlock.createComponentDropDown(this);
     this.componentDropDown.setValue(this.instanceName);
 
-    this.appendDummyInput().appendField(this.componentDropDown, "COMPONENT_SELECTOR");
+    this.appendDummyInput().appendField(this.componentDropDown, Blockly.ComponentBlock.COMPONENT_SELECTOR);
     //this.componentDropDown.setValue(this.instanceName);
     this.setOutput(true, [this.typeName,"COMPONENT"]);
     this.errors = [{name:"checkIfUndefinedBlock"},{name:"checkIsInDefinition"},{name:"checkComponentNotExistsError"}];
@@ -1050,12 +1058,6 @@ Blockly.ComponentBlock.createComponentDropDown = function(block){
   var componentDropDown = new Blockly.FieldDropdown([["",""]]);
   componentDropDown.block = block;
   componentDropDown.menuGenerator_ = function(){ return Blockly.Component.getComponentNamesByType(this.block.typeName);};
-  componentDropDown.changeHandler_ = function(value){
-    if (value !== null && value != "") {
-      var oldValue = this.getValue();
-      this.block.rename(oldValue, value);
-    }
-  };
   return componentDropDown;
 }
 
@@ -1063,9 +1065,6 @@ Blockly.ComponentBlock.createClockAddDropDown = function(block){
   var componentDropDown = new Blockly.FieldDropdown([["",""]]);
   componentDropDown.block = block;
   componentDropDown.menuGenerator_ = function(){ return Blockly.ComponentBlock.timeUnitsMenu; };
-  componentDropDown.changeHandler_ = function(value){
-    // Lyn thinks nothing special happens here.
-  };
   return componentDropDown;
 }
 
