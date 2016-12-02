@@ -67,7 +67,7 @@ Blockly.Versioning.log = function log(string) { // Display feedback on upgrade i
  * which is defined at the end of this file.
  *
  */
-Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent) {
+Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent, opt_workspace) {
   var preUpgradeFormJsonObject = JSON.parse(preUpgradeFormJsonString);
   var dom = Blockly.Xml.textToDom(blocksContent); // Initial blocks rep is dom for blocksContent
 
@@ -120,8 +120,8 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent) 
   // --------------------------------------------------------------------------------
   // Upgrade language based on language version
 
-  var systemLanguageVersion = window.parent.BlocklyPanel_getBlocksLanguageVersion();
-  var systemYoungAndroidVersion = window.parent.BlocklyPanel_getYaVersion();
+  var systemLanguageVersion = top.BLOCKS_VERSION;
+  var systemYoungAndroidVersion = top.YA_VERSION;
   var versionTags = dom.getElementsByTagName('yacodeblocks');
 
   // if there is no version in the file, then this is an early ai2 project, prior to
@@ -135,7 +135,7 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent) 
   }
   else {
     if (systemYoungAndroidVersion == parseInt(versionTags[0].getAttribute('ya-version'), 10)) {
-      Blockly.Versioning.ensureWorkspace(dom);
+      Blockly.Versioning.ensureWorkspace(dom, opt_workspace);
       return;
     }
     preUpgradeLanguageVersion = parseInt(versionTags[0].getAttribute('language-version'), 10);
@@ -155,7 +155,7 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent) 
 
   // Ensure that final blocks rep is Blockly.mainWorkspace
   Blockly.Versioning.log("Blockly.Versioning.upgrade: Final conversion to Blockly.mainWorkspace");
-  Blockly.Versioning.ensureWorkspace(blocksRep); // No need to use result; does work by side effect on Blockly.mainWorkspace
+  Blockly.Versioning.ensureWorkspace(blocksRep, opt_workspace); // No need to use result; does work by side effect on Blockly.mainWorkspace
 
 }
 
@@ -244,14 +244,15 @@ Blockly.Versioning.getBlockChildren = function (dom) {
 /**
  * If blocksRep is a workspace, returns it; otherwise converts the workspace to a dom
  */
-Blockly.Versioning.ensureWorkspace = function (blocksRep) {
+Blockly.Versioning.ensureWorkspace = function (blocksRep, opt_workspace) {
   if (Blockly.Versioning.isWorkspace(blocksRep)) {
     return blocksRep; // already a workspace
   } else if (Blockly.Versioning.isDom(blocksRep)) {
+    var workspace = opt_workspace || Blockly.mainWorkspace;
     Blockly.Versioning.log("Blockly.Versioning.ensureWorkspace: converting dom to Blockly.mainWorkspace");
-    Blockly.mainWorkspace.clear(); // Remove any existing blocks before we add new ones.
-    Blockly.Xml.domToWorkspaceHeadless(blocksRep, Blockly.mainWorkspace);
-    return Blockly.mainWorkspace;
+    workspace.clear(); // Remove any existing blocks before we add new ones.
+    Blockly.Xml.domToWorkspaceHeadless(blocksRep, workspace);
+    return workspace;
   } else {
     throw "Blockly.Versioning.ensureWorkspace: blocksRep is neither workspace nor dom -- " + blocksRep;
   }

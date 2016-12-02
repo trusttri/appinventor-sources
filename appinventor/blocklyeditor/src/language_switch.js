@@ -50,18 +50,17 @@ Blockly.language_switch = {
       case 'ru':
         Blockly.Msg.ru.switch_language_to_russian.init();
         break;
-      case 'en_US':
-        Blockly.Msg.en.switch_language_to_english.init();
-        break;
-      case 'en':
-      default:
-        Blockly.Msg.en.switch_language_to_english.init();
-        break;
       case 'sv':
         Blockly.Msg.sv.switch_language_to_swedish.init();
         break;
       case 'pt_BR':
         Blockly.Msg.pt_br.switch_language_to_portuguese_br.init();
+        break;
+      case 'en_US':
+      case 'en':
+      default:
+        Blockly.Msg.en.switch_language_to_english.init();
+        break;
     }
     if (Blockly.mainWorkspace) {
       Blockly.Xml.domToWorkspace(Blockly.mainWorkspace, xml);

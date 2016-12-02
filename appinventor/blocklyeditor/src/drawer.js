@@ -21,6 +21,7 @@ goog.provide('AI.Blockly.Drawer');
 
 goog.require('Blockly.Flyout');
 goog.require('Blockly.Options');
+goog.require('goog.object');
 
 // Some block drawers need to be initialized after all the javascript source is loaded because they
 // use utility functions that may not yet be defined at the time their source is read in. They
@@ -91,12 +92,10 @@ Blockly.Drawer.prototype.showBuiltin = function(drawerName) {
     var newBlockSet = [];
     for(var i=0;i<blockSet.length;i++) {
       if(!(blockSet[i] == "procedures_callnoreturn" // Include callnoreturn only if at least one defnoreturn declaration
-           && JSON.stringify(Blockly.AIProcedure.getProcedureNames(false))
-              == JSON.stringify([Blockly.FieldProcedure.defaultValue]))
+           && this.workspace_.getProcedureDatabase().voidProcedures > 0)
          &&
          !(blockSet[i] == "procedures_callreturn" // Include callreturn only if at least one defreturn declaration
-           && JSON.stringify(Blockly.AIProcedure.getProcedureNames(true))
-              == JSON.stringify([Blockly.FieldProcedure.defaultValue]))){
+           && this.workspace_.getProcedureDatabase().returnProcedures > 0)){
         newBlockSet.push(blockSet[i]);
       }
     }
@@ -106,7 +105,7 @@ Blockly.Drawer.prototype.showBuiltin = function(drawerName) {
   if (!blockSet) {
     throw "no such drawer: " + drawerName;
   }
-  var xmlList = Blockly.Drawer.blockListToXMLArray(blockSet);
+  var xmlList = this.blockListToXMLArray(blockSet);
   this.flyout_.show(xmlList);
 };
 
@@ -116,10 +115,11 @@ Blockly.Drawer.prototype.showBuiltin = function(drawerName) {
  * and do nothing.
  */
 Blockly.Drawer.prototype.showComponent = function(instanceName) {
-  if (Blockly.ComponentInstances[instanceName]) {
+  var component = this.workspace_.getComponentDatabase().getInstance(instanceName);
+  if (component) {
     this.flyout_.hide();
 
-    var xmlList = Blockly.Drawer.instanceNameToXMLArray(instanceName);
+    var xmlList = this.instanceRecordToXMLArray(component);
     this.flyout_.show(xmlList);
   } else {
     console.log("Got call to Blockly.Drawer.showComponent(" +  instanceName +
@@ -135,10 +135,10 @@ Blockly.Drawer.prototype.showComponent = function(instanceName) {
  * @param drawerName
  */
 Blockly.Drawer.prototype.showGeneric = function(typeName) {
-  if (Blockly.ComponentTypes[typeName]) {
+  if (this.workspace_.getComponentDatabase().hasType(typeName)) {
     this.flyout_.hide();
 
-    var xmlList = Blockly.Drawer.componentTypeToXMLArray(typeName);
+    var xmlList = this.componentTypeToXMLArray(typeName);
     this.flyout_.show(xmlList);
   } else {
     console.log("Got call to Blockly.Drawer.showGeneric(" +  typeName +
@@ -160,96 +160,106 @@ Blockly.Drawer.prototype.isShowing = function() {
   return this.flyout_.isVisible();
 };
 
-Blockly.Drawer.blockListToXMLArray = function(blockList) {
+Blockly.Drawer.prototype.blockListToXMLArray = function(blockList) {
   var xmlArray = [];
   for(var i=0;i<blockList.length;i++) {
-    xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray(blockList[i],null));
+    Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray(blockList[i],null));
   }
   return xmlArray;
 };
 
-Blockly.Drawer.instanceNameToXMLArray = function(instanceName) {
+/**
+ * @param {{name: string, typeName: string}} instanceRecord
+ */
+Blockly.Drawer.prototype.instanceRecordToXMLArray = function(instanceRecord) {
   var xmlArray = [];
-  var typeName = Blockly.Component.instanceNameToTypeName(instanceName);
-  var mutatorAttributes;
+  var typeName = instanceRecord.typeName;
+  var componentInfo = this.workspace_.getComponentDatabase().getType(typeName);
 
   //create event blocks
-  var eventObjects = Blockly.ComponentTypes[typeName].componentInfo.events;
-  for(var i=0;i<eventObjects.length;i++) {
-    if (eventObjects[i].deprecated === "true") continue;
-    mutatorAttributes = {component_type: typeName, instance_name: instanceName, event_name : eventObjects[i].name};
-    xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_event",mutatorAttributes));
-  }
+  goog.object.forEach(componentInfo.eventDictionary, function(event, name) {
+    if (event.deprecated != 'true') {
+      Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_event', {
+	'component_type': typeName, 'instance_name': instanceRecord.name, 'event_name': name
+      }));
+    }
+  }, this);
+
   //create non-generic method blocks
-  var methodObjects = Blockly.ComponentTypes[typeName].componentInfo.methods;
-  for(var i=0;i<methodObjects.length;i++) {
-    if (methodObjects[i].deprecated === "true") continue;
-    mutatorAttributes = {component_type: typeName, instance_name: instanceName, method_name: methodObjects[i].name, is_generic:"false"};
-    xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_method",mutatorAttributes));
-  }
+  goog.object.forEach(componentInfo.methodDictionary, function(method, name) {
+    if (method.deprecated != 'true') {
+      Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_method', {
+	'component_type': typeName, 'instance_name': instanceRecord.name, 'method_name': name
+      }));
+    }
+  }, this);
 
   //for each property
-  var propertyObjects = Blockly.ComponentTypes[typeName].componentInfo.blockProperties;
-  for(var i=0;i<propertyObjects.length;i++) {
-    //create non-generic get block
-    if (propertyObjects[i].deprecated === "true") continue;
-    if(propertyObjects[i].rw == "read-write" || propertyObjects[i].rw == "read-only") {
-      mutatorAttributes = {set_or_get:"get", component_type: typeName, instance_name: instanceName, property_name: propertyObjects[i].name, is_generic: "false"};
-      xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_set_get",mutatorAttributes));
+  goog.object.forEach(componentInfo.properties, function(property, name) {
+    if (property.deprecated != 'true') {
+      var params = {'component_type': typeName, 'instance_name': instanceRecord.name,
+		    'property_name': name};
+      if (property.mutability & Blockly.PROPERTY_READABLE) {
+	params['set_or_get'] = 'get';
+	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+      }
+      if (property.mutability & Blockly.PROPERTY_WRITEABLE) {
+	params['set_or_get'] = 'set';
+	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+      }
     }
-    //create non-generic set block
-    if(propertyObjects[i].rw == "read-write" || propertyObjects[i].rw == "write-only") {
-      mutatorAttributes = {set_or_get:"set", component_type: typeName, instance_name: instanceName, property_name: propertyObjects[i].name, is_generic: "false"};
-      xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_set_get",mutatorAttributes));
-    }
-  }
+  }, this);
 
   //create component literal block
-  mutatorAttributes = {component_type: typeName, instance_name: instanceName};
-  xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_component_block",mutatorAttributes));
+  mutatorAttributes = {component_type: typeName, instance_name: instanceRecord.name};
+  Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray("component_component_block",mutatorAttributes));
 
   return xmlArray;
 };
 
-Blockly.Drawer.componentTypeToXMLArray = function(typeName) {
+Blockly.Drawer.prototype.componentTypeToXMLArray = function(typeName) {
   var xmlArray = [];
-  var mutatorAttributes;
+  var componentInfo = this.workspace_.getComponentDatabase().getType(typeName);
 
   //create generic method blocks
-  var methodObjects = Blockly.ComponentTypes[typeName].componentInfo.methods;
-  for(var i=0;i<methodObjects.length;i++) {
-    if (methodObjects[i].deprecated === "true") continue;
-    mutatorAttributes = {component_type: typeName, method_name: methodObjects[i].name, is_generic:"true"};
-    xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_method",mutatorAttributes));
-  }
+  goog.object.forEach(componentInfo.methodDictionary, function(method, name) {
+    if (method.deprecated) {
+      Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_method', {
+	component_type: typeName, method_name: methodObjects
+      }));
+    }
+  }, this);
 
   //for each property
-  var propertyObjects = Blockly.ComponentTypes[typeName].componentInfo.blockProperties;
-  for(var i=0;i<propertyObjects.length;i++) {
-    //create generic get block
-    if (propertyObjects[i].deprecated === "true") continue;
-    if(propertyObjects[i].rw == "read-write" || propertyObjects[i].rw == "read-only") {
-      mutatorAttributes = {set_or_get: "get", component_type: typeName, property_name: propertyObjects[i].name, is_generic: "true"};
-      xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_set_get",mutatorAttributes));
+  goog.object.forEach(componentInfo.properties, function(property, name) {
+    if (property.deprecated) {
+      var params = {component_type: typeName, instance_name: instanceRecord.name, property_name: name};
+      if (property.mutability & 1) {
+	params.set_or_get = 'get';
+	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+      }
+      if (property.mutability & 2) {
+	params.set_or_get = 'set';
+	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+      }
     }
-    //create generic set block
-    if(propertyObjects[i].rw == "read-write" || propertyObjects[i].rw == "write-only") {
-      mutatorAttributes = {set_or_get: "set", component_type: typeName, property_name: propertyObjects[i].name, is_generic: "true"};
-      xmlArray = xmlArray.concat(Blockly.Drawer.blockTypeToXMLArray("component_set_get",mutatorAttributes));
-    }
-  }
+  }, this);
+
   return xmlArray;
 };
 
-Blockly.Drawer.blockTypeToXMLArray = function(blockType,mutatorAttributes) {
+Blockly.Drawer.prototype.blockTypeToXMLArray = function(blockType,mutatorAttributes) {
   var xmlString = Blockly.Drawer.getDefaultXMLString(blockType,mutatorAttributes);
   if(xmlString == null) {
     // [lyn, 10/23/13] Handle procedure calls in drawers specially
     if (blockType == 'procedures_callnoreturn' || blockType == 'procedures_callreturn') {
-      xmlString = Blockly.Drawer.procedureCallersXMLString(blockType == 'procedures_callreturn');
+      xmlString = this.procedureCallersXMLString(blockType == 'procedures_callreturn');
     } else {
       xmlString = '<xml><block type="' + blockType + '">';
       if(mutatorAttributes) {
+	if (mutatorAttributes['is_generic'] === undefined) {
+	  mutatorAttributes['is_generic'] = !mutatorAttributes['instance_name']
+	}
         xmlString += Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes);
       }
       xmlString += '</block></xml>';
@@ -278,9 +288,9 @@ Blockly.Drawer.mutatorAttributesToXMLString = function(mutatorAttributes){
 // [lyn, 10/22/13] return an XML string including one procedure caller for each procedure declaration
 // in main workspace.
 // [jos, 10/18/15] if we pass a proc_name, we only want one procedure returned as xmlString
-Blockly.Drawer.procedureCallersXMLString = function(returnsValue, proc_name) {
+Blockly.Drawer.prototype.procedureCallersXMLString = function(returnsValue, proc_name) {
   var xmlString = '<xml>'  // Used to accumulate xml for each caller
-  var decls = Blockly.AIProcedure.getProcedureDeclarationBlocks(returnsValue);
+  var decls = this.workspace_.getProcedureDatabase().getDeclarationBlocks(returnsValue);
 
   if (proc_name) {
     for (var i = 0; i < decls.length; i++) {

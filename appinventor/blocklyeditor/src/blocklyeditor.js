@@ -30,79 +30,7 @@ Blockly.configForTypeBlock = {
   inputText: 'ac_input_text'
 };
 
-Blockly.BlocklyEditor.prestart = function(opt_readonly) {
-  Blockly.mainWorkspace = new Blockly.WorkspaceSvg(new Blockly.Options({
-    readOnly: !!opt_readonly,
-    collapse : true,
-    scrollbars: true,
-    trashcan: true,
-    backpack: true,
-    comments: true,
-    disable: true,
-    media: './media/',
-    warningIndicator: true,
-    configForTypeBlock: Blockly.configForTypeBlock,
-    grid: {spacing: '20', length: '5', snap: false, colour: '#ccc'},
-    zoom: {controls: true, wheel: true, scaleSpeed: 1.1}
-  }));
-};
-
-Blockly.BlocklyEditor.startup = function(documentBody, formName, opt_readonly) {
-  // Consider moving this to blocklyeditor/src/blockly.js
-  var workspace = Blockly.inject(documentBody, {
-    readOnly: !!opt_readonly,
-    collapse : true,
-    scrollbars: true,
-    trashcan: true,
-    backpack: true,
-    comments: true,
-    disable: true,
-    media: './media/',
-    warningIndicator: true,
-    configForTypeBlock: Blockly.configForTypeBlock,
-    grid: {spacing: '20', length: '5', snap: false, colour: '#ccc'},
-    zoom: {controls: true, wheel: true, scaleSpeed: 1.1}
-  });
-  workspace.drawer_ = new Blockly.Drawer(workspace, {
-      scrollbars: true
-    });
-  workspace.backpack_ = new Blockly.Backpack(workspace);
-  workspace.addChangeListener(function(event) {
-    var block = Blockly.getMainWorkspace().getBlockById(event.blockId);
-    if ( block && event.name == Blockly.ComponentBlock.COMPONENT_SELECTOR ) {
-      block.rename(event.oldValue, event.newValue);
-    }
-  });
-
-  //This would also be done in Blockly init, but we need to do it here cause of
-  //the different init process in drawer (it'd be undefined at the time it hits
-  //init in Blockly)
-  if (!Blockly.readOnly)
-    Blockly.TypeBlock(Blockly.configForTypeBlock);
-
-  Blockly.BlocklyEditor.formName = formName;
-
-  Blockly.getMainWorkspace().addChangeListener(
-      function() {
-        if (top.BlocklyPanel_blocklyWorkspaceChanged){
-          top.BlocklyPanel_blocklyWorkspaceChanged(Blockly.BlocklyEditor.formName);
-        }
-        // [lyn 12/31/2013] Check for duplicate component event handlers before
-        // running any error handlers to avoid quadratic time behavior.
-        Blockly.WarningHandler.determineDuplicateComponentEventHandlers();
-  });
-};
-
 Blockly.BlocklyEditor.render = function() {
-  var start = new Date().getTime();
-  Blockly.Instrument.initializeStats("Blockly.BlocklyEditor.render");
-  Blockly.getMainWorkspace().render();
-  Blockly.getMainWorkspace().resizeContents();
-  Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
-  var stop = new Date().getTime();
-  var timeDiff = stop - start;
-  Blockly.Instrument.stats.totalTime = timeDiff;
-  Blockly.Instrument.displayStats("Blockly.BlocklyEditor.render");
 }
 
 /**
@@ -259,5 +187,133 @@ Blockly.unprefixName = function (name) {
     return ["", name];
   }
 }
+
+Blockly.BlocklyEditor.create = function(container, readOnly, rtl) {
+  var workspace = new Blockly.WorkspaceSvg(new Blockly.Options({
+    readOnly: readOnly,
+    rtl: rtl,
+    collapse: true,
+    scrollbars: true,
+    trashcan: true,
+    comments: true,
+    disable: true,
+    media: './media/',
+    grid: {spacing: '20', length: '5', snap: false, colour: '#ccc'},
+    zoom: {controls: true, wheel: true, scaleSpeed: 1.1}
+  }));
+  workspace.componentDb_ = new Blockly.ComponentDatabase();
+  workspace.procedureDb_ = new Blockly.ProcedureDatabase();
+  workspace.variableDb_ = new Blockly.VariableDatabase();
+  if (!readOnly) {
+    var ai_type_block = goog.dom.createElement('div'),
+	p = goog.dom.createElement('p'),
+	ac_input_text = goog.dom.createElement('input'),
+	typeblockOpts = {
+	  frame: container,
+	  typeBlockDiv: ai_type_block,
+	  inputText: ac_input_text
+	};
+    // build dom for typeblock (adapted from blocklyframe.html)
+    goog.style.setElementShown(ai_type_block, false);
+    goog.dom.classlist.add(ai_type_block, "ai_type_block");
+    goog.dom.appendChild(container, ai_type_block);
+    goog.dom.appendChild(ai_type_block, p);
+    goog.dom.appendChild(p, ac_input_text);
+    workspace.typeBlock_ = new Blockly.TypeBlock(typeblockOpts, workspace);
+  }
+  return workspace;
+};
+
+/**
+ * Inject a previously constructed workspace into the designated
+ * container. This implementation is adapted from Blockly's
+ * implementation and is required due to the fact that browsers such as
+ * Firefox do not initialize SVG elements unless they are visible.
+ *
+ * @param {!Element|string} container
+ * @param {!Blockly.WorkspaceSvg} workspace
+ */
+Blockly.ai_inject = function(container, workspace) {
+  if (workspace.injected) {
+    return;
+  } else if (!workspace.injecting) {
+    workspace.injecting = true;
+    // inject after allowing DOM to redraw, otherwise metrics are wrong.
+    setTimeout(function() { Blockly.ai_inject(container, workspace); });
+    return workspace;
+  }
+  Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
+  var options = workspace.options;
+  var subContainer = goog.dom.createDom('div', 'injectionDiv');
+  container.appendChild(subContainer);
+  var svg = Blockly.createDom_(subContainer, options);
+  svg.appendChild(workspace.createDom('blocklyMainBackground'));
+  workspace.translate(0, 0);
+  if (!options.readOnly && !options.hasScrollbars) {
+    var workspaceChanged = function() {
+      if (Blockly.dragMode_ == Blockly.DRAG_NONE) {
+        var metrics = workspace.getMetrics();
+        var edgeLeft = metrics.viewLeft + metrics.absoluteLeft;
+        var edgeTop = metrics.viewTop + metrics.absoluteTop;
+        if (metrics.contentTop < edgeTop ||
+            metrics.contentTop + metrics.contentHeight >
+            metrics.viewHeight + edgeTop ||
+            metrics.contentLeft <
+                (options.RTL ? metrics.viewLeft : edgeLeft) ||
+            metrics.contentLeft + metrics.contentWidth > (options.RTL ?
+                metrics.viewWidth : metrics.viewWidth + edgeLeft)) {
+          // One or more blocks may be out of bounds.  Bump them back in.
+          var MARGIN = 25;
+          var blocks = workspace.getTopBlocks(false);
+          for (var b = 0, block; block = blocks[b]; b++) {
+            var blockXY = block.getRelativeToSurfaceXY();
+            var blockHW = block.getHeightWidth();
+            // Bump any block that's above the top back inside.
+            var overflowTop = edgeTop + MARGIN - blockHW.height - blockXY.y;
+            if (overflowTop > 0) {
+              block.moveBy(0, overflowTop);
+            }
+            // Bump any block that's below the bottom back inside.
+            var overflowBottom =
+                edgeTop + metrics.viewHeight - MARGIN - blockXY.y;
+            if (overflowBottom < 0) {
+              block.moveBy(0, overflowBottom);
+            }
+            // Bump any block that's off the left back inside.
+            var overflowLeft = MARGIN + edgeLeft -
+                blockXY.x - (options.RTL ? 0 : blockHW.width);
+            if (overflowLeft > 0) {
+              block.moveBy(overflowLeft, 0);
+            }
+            // Bump any block that's off the right back inside.
+            var overflowRight = edgeLeft + metrics.viewWidth - MARGIN -
+                blockXY.x + (options.RTL ? blockHW.width : 0);
+            if (overflowRight < 0) {
+              block.moveBy(overflowRight, 0);
+            }
+          }
+        }
+      }
+    };
+    workspace.addChangeListener(workspaceChanged);
+  }
+  // The SVG is now fully assembled.
+  Blockly.WidgetDiv.createDom();
+  Blockly.Tooltip.createDom();
+  workspace.drawer_ = new Blockly.Drawer(workspace, { scrollbars: true });
+  workspace.addWarningIndicator();
+  workspace.addBackpack();
+  Blockly.init_(workspace);
+  workspace.markFocused();
+  Blockly.bindEvent_(svg, 'focus', workspace, workspace.markFocused);
+  Blockly.svgResize(workspace);
+  workspace.render();
+  workspace.resize();
+  workspace.drawer_.flyout_.reflow();
+  workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
+  workspace.injecting = false;
+  workspace.injected = true;
+  return workspace;
+};
 
 /******************************************************************************/

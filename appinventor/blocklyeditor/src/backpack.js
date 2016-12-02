@@ -152,7 +152,7 @@ Blockly.Backpack.prototype.resizeTask_ = 0;
  * @type {number}
  * @private
  */
-Blockly.Trashcan.prototype.openTask_ = 0;
+Blockly.Backpack.prototype.openTask_ = 0;
 
 /**
  * Left coordinate of the backpack.
@@ -187,19 +187,25 @@ Blockly.Backpack.prototype.top_ = 0;
 // Blockly.Backpack.prototype.startY = 0;
 
 /**
+ * Shared backpack contents across projects/screens.
+ */
+Blockly.Backpack.shared_contents = [];
+
+/**
  * Create the backpack SVG elements.
  * @return {!Element} The backpack's SVG group.
  */
-Blockly.Backpack.prototype.createDom = function() {
+Blockly.Backpack.prototype.createDom = function(opt_workspace) {
+  var workspace = opt_workspace || Blockly.getMainWorkspace();
   // insert the flyout after the main workspace (except, there's no
   // svg.insertAfter method, so we need to insert before the thing following
   // the main workspace. Neil Fraser says: this is "less hacky than it looks".
   var flyoutGroup = this.flyout_.createDom();
   this.flyout_.svgBackground_.setAttribute('class', 'blocklybackpackFlyoutBackground');
-  if (Blockly.getMainWorkspace().svgGroup_.nextSibling) {
-    Blockly.getMainWorkspace().getParentSvg().insertBefore(flyoutGroup, Blockly.getMainWorkspace().svgGroup_.nextSibling);
+  if (workspace.svgGroup_.nextSibling) {
+    workspace.getParentSvg().insertBefore(flyoutGroup, workspace.svgGroup_.nextSibling);
   } else {
-    Blockly.getMainWorkspace().getParentSvg().appendChild(flyoutGroup);
+    workspace.getParentSvg().appendChild(flyoutGroup);
   }
 
   this.svgGroup_ = Blockly.createSvgElement('g',null, null);
@@ -227,10 +233,10 @@ Blockly.Backpack.prototype.init = function() {
   // load files for sound effect
   Blockly.getMainWorkspace().loadAudio_(['media/backpack.mp3', 'media/backpack.ogg', 'media/backpack.wav'], 'backpack');
 
-  if (this.getBackpack() == undefined)
+  var bp_contents = this.getBackpack();
+  if (!bp_contents)
     return;
 
-  var bp_contents = JSON.parse(this.getBackpack());
   var len = bp_contents.length;
 
   if (len == 0)
@@ -257,10 +263,10 @@ Blockly.Backpack.prototype.dispose = function() {
  *  Pastes the backpack contents to the current workspace.
  */
 Blockly.Backpack.prototype.pasteBackpack = function() {
-  if (this.getBackpack() == undefined)
+  var bp_contents = JSON.parse(this.getBackpack());
+  if (!bp_contents)
     return;
 
-  bp_contents = JSON.parse(this.getBackpack());
   var len = bp_contents.length;
   for (var i = 0; i < len; i++) {
     var xml = Blockly.Xml.textToDom(bp_contents[i]);
@@ -320,7 +326,7 @@ Blockly.Backpack.prototype.addAllToBackpack = function() {
  */
 Blockly.Backpack.prototype.addToBackpack = function(block) {
   if (this.getBackpack() == undefined) {
-    this.setBackpack(JSON.stringify([]));
+    this.setBackpack([]);
   }
 
   // Copy is made of the expanded block.
@@ -335,12 +341,11 @@ Blockly.Backpack.prototype.addToBackpack = function(block) {
   block.setCollapsed(isCollapsed);
 
   // Add the block to the backpack
-  var backpack = this.getBackpack();
-  var bp_contents = JSON.parse(backpack);
+  var bp_contents = this.getBackpack();
   var len = bp_contents.length;
   var newBlock = "<xml>" + Blockly.Xml.domToText(xmlBlock) + "</xml>";
   bp_contents[len] = newBlock;
-  this.setBackpack(JSON.stringify(bp_contents));
+  this.setBackpack(bp_contents);
   this.grow();
   Blockly.getMainWorkspace().playAudio('backpack');
 
@@ -407,7 +412,7 @@ Blockly.Backpack.prototype.openBackpack = function(e){
   if (!this.isAdded && this.flyout_.isVisible()) {
     this.flyout_.hide();
   } else {
-    var backpack = JSON.parse(this.getBackpack());
+    var backpack = this.getBackpack();
     //get backpack contents from java
 
     var len = backpack.length;
@@ -553,7 +558,7 @@ Blockly.Backpack.prototype.shrink = function() {
  */
 Blockly.Backpack.prototype.clear = function() {
   if (Blockly.mainWorkspace.backpack.confirmClear()) {
-    this.setBackpack(JSON.stringify([]));
+    this.setBackpack([]);
     this.shrink();
   }
 }
@@ -566,17 +571,15 @@ Blockly.Backpack.prototype.confirmClear = function() {
  * Returns count of the number of entries in the backpack.
  */
 Blockly.Backpack.prototype.count = function() {
-  if (this.getBackpack() == null)
-    return 0;
-  var bp_contents = JSON.parse(this.getBackpack());
-  return bp_contents.length;
+  var bp_contents = this.getBackpack();
+  return bp_contents ? bp_contents.length : 0;
 }
 
 Blockly.Backpack.prototype.getBackpack = function() {
-  return window.parent.BlocklyPanel_getBackpack();
+  return Blockly.Backpack.shared_contents;
 }
 
 Blockly.Backpack.prototype.setBackpack = function(backpack) {
-  window.parent.BlocklyPanel_setBackpack(backpack);
+  Blockly.Backpack.shared_contents = backpack;
 }
 

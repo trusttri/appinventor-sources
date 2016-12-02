@@ -1056,14 +1056,12 @@ Blockly.ComponentBlock.isClockMethodName =  function  (name) {
 
 Blockly.ComponentBlock.createComponentDropDown = function(block){
   var componentDropDown = new Blockly.FieldDropdown([["",""]]);
-  componentDropDown.block = block;
-  componentDropDown.menuGenerator_ = function(){ return Blockly.Component.getComponentNamesByType(this.block.typeName);};
+  componentDropDown.menuGenerator_ = function(){ return block.workspace.getComponentDatabase().getComponentUidNameMapByType(block.typeName); };
   return componentDropDown;
 }
 
 Blockly.ComponentBlock.createClockAddDropDown = function(block){
   var componentDropDown = new Blockly.FieldDropdown([["",""]]);
-  componentDropDown.block = block;
   componentDropDown.menuGenerator_ = function(){ return Blockly.ComponentBlock.timeUnitsMenu; };
   return componentDropDown;
 }

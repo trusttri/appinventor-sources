@@ -119,7 +119,7 @@ Blockly.BlockSvg.prototype.onMouseUp_ = (function(func) {
         if (! Blockly.Instrument.avoidRenderWorkspaceInMouseUp) {
           Blockly.mainWorkspace.render();
         }
-        Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
+        this.workspace_.getWarningHandler().checkAllBlocksForWarningsAndErrors();
         var stop = new Date().getTime();
         var timeDiff = stop - start;
         Blockly.Instrument.stats.totalTime = timeDiff;
@@ -410,11 +410,14 @@ Blockly.BlockSvg.prototype.dispose = (function(func) {
       return func;
     } else {
       var wrappedFunc = function() {
+	var workspace = this.workspace_;
         try {
           func.call(this);
         } finally {
           // Remove any associated errors or warnings.
-          Blockly.WarningHandler.checkDisposedBlock.call(this);
+	  if (workspace) {  // Blocks in drawers do not have a workspace
+	    workspace.getWarningHandler().checkDisposedBlock(this);
+	  }
         }
       };
       wrappedFunc.isWrapped = true;

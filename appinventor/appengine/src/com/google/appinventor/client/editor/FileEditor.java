@@ -156,17 +156,6 @@ public abstract class FileEditor extends Composite {
   }
 
   /**
-   * Update the language setting within BlocklyPanel.java and switch to
-   * the desired language.
-   *
-   * @param newLanguage
-   *          The desired new language setting
-   * @param formName
-   */
-  public void switchLanguage(String newLanguage) {
-  }
-
-  /**
    * Trigger and Update of the Companion.
    *
    */
@@ -174,7 +163,7 @@ public abstract class FileEditor extends Composite {
   public void updateCompanion() {
   }
 
-  public void getBlocksImage(Callback callback) {
+  public void getBlocksImage(Callback<String, String> callback) {
   }
 
 }

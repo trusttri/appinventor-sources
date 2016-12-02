@@ -212,8 +212,8 @@ goog.require('goog.Timer');
  * Call to initiate blockly SVG conversion to PNG
  *
  */
-Blockly.ExportBlocksImage.onclickExportBlocks = function(metrics) {
-  saveSvgAsPng(Blockly.getMainWorkspace().svgBlockCanvas_, "blocks.png", metrics);
+Blockly.ExportBlocksImage.onclickExportBlocks = function(metrics, opt_workspace) {
+  saveSvgAsPng((opt_workspace || Blockly.getMainWorkspace()).svgBlockCanvas_, "blocks.png", metrics);
 }
 
 
@@ -221,13 +221,14 @@ Blockly.ExportBlocksImage.onclickExportBlocks = function(metrics) {
  * Get the workspace as an image URI
  *
  */
-  Blockly.ExportBlocksImage.getUri = function(callback) {
+  Blockly.ExportBlocksImage.getUri = function(callback, opt_workspace) {
     var theUri;
-    var metrics = Blockly.mainWorkspace.getMetrics();
+    var workspace = opt_workspace || Blockly.mainWorkspace;
+    var metrics = workspace.getMetrics();
     if (metrics == null || metrics.viewHeight == 0) {
       return null;
     }
-    svgAsDataUri(document.getElementById("blockly_Svg"), metrics, {},
+    svgAsDataUri(workspace.svgBlockCanvas_, metrics, {},
       function(uri) {
         var image = new Image();
         image.onload = function() {

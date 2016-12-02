@@ -100,9 +100,10 @@ Blockly.Yail.FLONUM_REGEXP = "^[\\s]*[-+]?([0-9]*)((\\.[0-9]+)|[0-9]\\.)[\\s]*$"
  *    content from the ".scm" file for this form.
  * @param {String} packageName the name of the package (to put in the define-form call)
  * @param {Boolean} forRepl  true if the code is being generated for the REPL, false if for an apk
+ * @param {Blockly.WorkspaceSvg} workspace Workspace to use for generating code.
  * @returns {String} the generated code if there were no errors.
  */
-Blockly.Yail.getFormYail = function(formJson, packageName, forRepl) {
+Blockly.Yail.getFormYail = function(formJson, packageName, forRepl, workspace) {
   var jsonObject = JSON.parse(formJson); 
   // TODO: check for JSON parse error
   var componentNames = [];
@@ -126,7 +127,7 @@ Blockly.Yail.getFormYail = function(formJson, packageName, forRepl) {
     code.push(Blockly.Yail.getYailPrelude(packageName, formName));
   }
     
-  var componentMap = Blockly.Component.buildComponentMap([], [], false, false);
+  var componentMap = workspace.buildComponentMap([], [], false, false);
   
   for (var comp in componentMap.components)
     componentNames.push(comp);

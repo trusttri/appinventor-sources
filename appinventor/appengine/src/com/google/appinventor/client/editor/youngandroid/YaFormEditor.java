@@ -139,9 +139,9 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
 
     // Create UI elements for the designer panels.
     nonVisibleComponentsPanel = new SimpleNonVisibleComponentsPanel();
-    addComponentDatabaseChangeListener(nonVisibleComponentsPanel);
+    componentDatabaseChangeListeners.add(nonVisibleComponentsPanel);
     visibleComponentsPanel = new SimpleVisibleComponentsPanel(this, nonVisibleComponentsPanel);
-    addComponentDatabaseChangeListener(visibleComponentsPanel);
+    componentDatabaseChangeListeners.add(visibleComponentsPanel);
     DockPanel componentsPanel = new DockPanel();
     componentsPanel.setHorizontalAlignment(DockPanel.ALIGN_CENTER);
     componentsPanel.add(visibleComponentsPanel, DockPanel.NORTH);
@@ -163,7 +163,7 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
       }
     });
     palettePanel.setSize("100%", "100%");
-    addComponentDatabaseChangeListener(palettePanel);
+    componentDatabaseChangeListeners.add(palettePanel);
 
     // Create designProperties, which will be used as the content of the PropertiesBox.
     designProperties = new PropertiesPanel();
@@ -569,7 +569,7 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
   }
 
   @Override
-  public void getBlocksImage(Callback callback) {
+  public void getBlocksImage(Callback<String, String> callback) {
     YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
     YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
     blockEditor.getBlocksImage(callback);
@@ -749,19 +749,7 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
   private void updatePhone() {
     YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
     YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
-    blockEditor.onBlocksAreaChanged(getProjectId() + "_" + formNode.getFormName());
-  }
-
-  private void addComponentDatabaseChangeListener(ComponentDatabaseChangeListener cdbChangeListener) {
-    componentDatabaseChangeListeners.add(cdbChangeListener);
-  }
-
-  private void removeComponentDatabaseChangeListener(ComponentDatabaseChangeListener cdbChangeListener) {
-    componentDatabaseChangeListeners.remove(cdbChangeListener);
-  }
-
-  private void clearComponentDatabaseChangeListener() {
-    componentDatabaseChangeListeners.clear();
+    blockEditor.sendComponentData();
   }
 
   @Override

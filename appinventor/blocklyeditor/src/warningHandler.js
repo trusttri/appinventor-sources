@@ -14,41 +14,43 @@
 
 goog.provide('AI.Blockly.WarningHandler');
 
-if (Blockly.WarningHandler === undefined) Blockly.WarningHandler = {};
+Blockly.WarningHandler = function(workspace) {
+  this.workspace = workspace;
+  this.allBlockErrors = [{name:'checkReplErrors'}];
+  this.allBlockWarnings = [{name:'checkBlockAtRoot'},{name:'checkEmptySockets'}];
+  this.cachedGlobalNames = [];
+  this.showWarningsToggle = false;
+};
 
-Blockly.WarningHandler.allBlockErrors = [{name:"checkReplErrors"}];
-Blockly.WarningHandler.allBlockWarnings = [{name:"checkBlockAtRoot"},{name:"checkEmptySockets"}];
-Blockly.WarningHandler.showWarningsToggle = false;
+Blockly.WarningHandler.prototype.cacheGlobalNames = false;
+Blockly.WarningHandler.prototype.errorCount = 0;
+Blockly.WarningHandler.prototype.warningCount = 0;
+Blockly.WarningHandler.WarningState = {
+  NO_ERROR: 0,
+  WARNING: 1,
+  ERROR: 2
+};
 
-Blockly.WarningHandler.errorCount = 0;
-Blockly.WarningHandler.warningCount = 0;
-
-Blockly.WarningHandler.warningState = {
-  NO_ERROR : 0,
-  WARNING : 1,
-  ERROR : 2
-}
-
-Blockly.WarningHandler.updateWarningErrorCount = function() {
+Blockly.WarningHandler.prototype.updateWarningErrorCount = function() {
   //update the error and warning count in the UI
-  Blockly.getMainWorkspace().getWarningIndicator().updateWarningAndErrorCount();
+  this.workspace.getWarningIndicator().updateWarningAndErrorCount();
 }
 
 //Call to toggle the visibility of the warnings on the blocks
-Blockly.WarningHandler.warningToggle = function() {
-  if(Blockly.WarningHandler.showWarningsToggle) {
-    Blockly.WarningHandler.showWarningsToggle = false;
-    Blockly.WarningHandler.hideWarnings();
+Blockly.WarningHandler.prototype.warningToggle = function() {
+  if(this.showWarningsToggle) {
+    this.showWarningsToggle = false;
+    this.hideWarnings();
   } else {
-    Blockly.WarningHandler.showWarningsToggle = true;
-    Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors(); // [lyn, 12/31/2013] Removed unnecessary false arg
+    this.showWarningsToggle = true;
+    this.checkAllBlocksForWarningsAndErrors(); // [lyn, 12/31/2013] Removed unnecessary false arg
   }
-  Blockly.getMainWorkspace().getWarningIndicator().updateWarningToggleText();
+  this.workspace.getWarningIndicator().updateWarningToggleText();
 }
 
 //Hide warnings on the blocks
-Blockly.WarningHandler.hideWarnings = function() {
-  var blockArray = Blockly.getMainWorkspace().getAllBlocks();
+Blockly.WarningHandler.prototype.hideWarnings = function() {
+  var blockArray = this.workspace.getAllBlocks();
   for(var i=0;i<blockArray.length;i++) {
     if(blockArray[i].warning) {
       blockArray[i].setWarningText(null);
@@ -56,146 +58,144 @@ Blockly.WarningHandler.hideWarnings = function() {
   }
 }
 
-Blockly.WarningHandler.cacheGlobalNames = false;
-Blockly.WarningHandler.cachedGlobalNames = [];
-
-Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors = function() {
+Blockly.WarningHandler.prototype.checkAllBlocksForWarningsAndErrors = function() {
   // Do not attempt to update blocks before they are rendered.
-  if (!Blockly.mainWorkspace || !Blockly.mainWorkspace.rendered) {
+  if (!this.workspace.rendered) {
     return;
   }
-  var start = new Date().getTime();
-  var topBlocks = Blockly.getMainWorkspace().getTopBlocks();
-  var allBlocks = Blockly.getMainWorkspace().getAllBlocks();
+  if (Blockly.Instrument.isOn) {
+    var start = new Date().getTime();
+    var topBlocks = this.workspace.getTopBlocks();
+  }
+  var allBlocks = this.workspace.getAllBlocks();
   try {
     if (Blockly.Instrument.useLynCacheGlobalNames) {
       // Compute and cache the list of global names once only
       // so that each call to checkDropDownContainsValidValue needn't recalculate this.
-      Blockly.WarningHandler.cacheGlobalNames = false; // Set to false to actually compute names in next line.
-      Blockly.WarningHandler.cachedGlobalNames = Blockly.FieldLexicalVariable.getGlobalNames();
-      Blockly.WarningHandler.cacheGlobalNames = true;
+      this.cacheGlobalNames = false; // Set to false to actually compute names in next line.
+      this.cachedGlobalNames = Blockly.FieldLexicalVariable.getGlobalNames();
+      this.cacheGlobalNames = true;
     }
     for(var i=0;i<allBlocks.length;i++) {
-      var blockErrorResult = Blockly.WarningHandler.checkErrors.call(allBlocks[i]);
+      var blockErrorResult = this.checkErrors(allBlocks[i]);
     }
   } finally {
     // [lyn, 04/13/14] Ensure that these are reset no matter what:
-    Blockly.WarningHandler.cacheGlobalNames = false;
-    Blockly.WarningHandler.cachedGlobalNames = [];
+    this.cacheGlobalNames = false;
+    this.cachedGlobalNames = [];
   }
-  var stop = new Date().getTime();
-  var timeDiff = stop - start;
-  Blockly.Instrument.stats.topBlockCount = topBlocks.length;
-  Blockly.Instrument.stats.blockCount = allBlocks.length;
-  Blockly.Instrument.stats.checkAllBlocksForWarningsAndErrorsCalls++;
-  Blockly.Instrument.stats.checkAllBlocksForWarningsAndErrorsTime += timeDiff;
+  if (Blockly.Instrument.isOn) {
+    var stop = new Date().getTime();
+    var timeDiff = stop - start;
+    Blockly.Instrument.stats.topBlockCount = topBlocks.length;
+    Blockly.Instrument.stats.blockCount = allBlocks.length;
+    Blockly.Instrument.stats.checkAllBlocksForWarningsAndErrorsCalls++;
+    Blockly.Instrument.stats.checkAllBlocksForWarningsAndErrorsTime += timeDiff;
+  }
 }
 
 //Takes a block as the context (this), puts
 //the appropriate error or warning on the block,
 //and returns the corresponding warning state
-Blockly.WarningHandler.checkErrors = function() {
+Blockly.WarningHandler.prototype.checkErrors = function(block) {
   // [lyn, 11/11/2013] Special case: ignore blocks in flyout for purposes of error handling
   //   Otherwise, blocks in drawer having connected subblocks (see Blockly.Drawer.defaultBlockXMLStrings)
   //   will increment warning indicator.
-  if (this.isInFlyout) {
-    return Blockly.WarningHandler.warningState.NO_ERROR;
+  if (block.isInFlyout) {
+    return Blockly.WarningHandler.WarningState.NO_ERROR;
   }
-  if(typeof showWarnings == "undefined") {
-    var showWarnings = Blockly.WarningHandler.showWarningsToggle;
-  }
+  var showWarnings = this.showWarningsToggle;
 
-  if(!this.getSvgRoot() || this.readOnly){
+  if(!block.getSvgRoot() || block.readOnly){
     //remove from error count
-    if(this.hasWarning) {
-      this.hasWarning = false;
-      Blockly.WarningHandler.warningCount--;
-      Blockly.WarningHandler.updateWarningErrorCount();
+    if(block.hasWarning) {
+      block.hasWarning = false;
+      this.warningCount--;
+      this.updateWarningErrorCount();
     }
-    if(this.hasError) {
-      this.hasError = false;
-      Blockly.WarningHandler.errorCount--;
-      Blockly.WarningHandler.updateWarningErrorCount();
+    if(block.hasError) {
+      block.hasError = false;
+      this.errorCount--;
+      this.updateWarningErrorCount();
     }
-    return Blockly.WarningHandler.warningState.NO_ERROR;
+    return Blockly.WarningHandler.WarningState.NO_ERROR;
   }
 
   //give the block empty arrays of errors and warnings to check if they aren't defined.
-  if(!this.errors){
-    this.errors = [];
+  if(!block.errors){
+    block.errors = [];
   }
-  if(!this.warnings){
-    this.warnings = [];
+  if(!block.warnings){
+    block.warnings = [];
   }
 
   //add warnings and errors that are on every block
-  var errorTestArray = this.errors.concat(Blockly.WarningHandler.allBlockErrors);
-  var warningTestArray = this.warnings.concat(Blockly.WarningHandler.allBlockWarnings);
+  var errorTestArray = block.errors.concat(Blockly.WarningHandler.allBlockErrors);
+  var warningTestArray = block.warnings.concat(Blockly.WarningHandler.allBlockWarnings);
 
   //check if there are any errors
   for(var i=0;i<errorTestArray.length;i++){
-    if(Blockly.WarningHandler[errorTestArray[i].name].call(this,errorTestArray[i])){
+    if(this[errorTestArray[i].name].call(this,block,errorTestArray[i])){
 
       //remove warning marker, if present
-      if(this.warning) {
-        this.setWarningText(null);
+      if(block.warning) {
+        block.setWarningText(null);
       }
       //If the block doesn't have an error already,
       //add one to the error count
-      if(!this.hasError) {
-        this.hasError = true;
-        Blockly.WarningHandler.errorCount++;
-        Blockly.WarningHandler.updateWarningErrorCount();
+      if(!block.hasError) {
+        block.hasError = true;
+        this.errorCount++;
+        this.updateWarningErrorCount();
       }
       //If the block has a warning,
       //subtract from the error count
-      if(this.hasWarning) {
-        this.hasWarning = false;
-        Blockly.WarningHandler.warningCount--;
-        Blockly.WarningHandler.updateWarningErrorCount();
+      if(block.hasWarning) {
+        block.hasWarning = false;
+        this.warningCount--;
+        this.updateWarningErrorCount();
       }
 
-      return Blockly.WarningHandler.warningState.ERROR;
+      return Blockly.WarningHandler.WarningState.ERROR;
     }
   }
 
   //remove the error icon, if there is one
-  if(this.error) {
-    this.setErrorIconText(null);
+  if(block.error) {
+    block.setErrorIconText(null);
   }
   //If the block has an error,
   //subtract from the error count
-  if(this.hasError) {
-    this.hasError = false;
-    Blockly.WarningHandler.errorCount--;
-    Blockly.WarningHandler.updateWarningErrorCount();
+  if(block.hasError) {
+    block.hasError = false;
+    this.errorCount--;
+    this.updateWarningErrorCount();
   }
   //if there are no errors, check for warnings
   for(var i=0;i<warningTestArray.length;i++){
-    if(Blockly.WarningHandler[warningTestArray[i].name].call(this,warningTestArray[i])){
-      if(!this.hasWarning) {
-        this.hasWarning = true;
-        Blockly.WarningHandler.warningCount++;
-        Blockly.WarningHandler.updateWarningErrorCount();
+    if(this[warningTestArray[i].name].call(this,block,warningTestArray[i])){
+      if(!block.hasWarning) {
+        block.hasWarning = true;
+        this.warningCount++;
+        this.updateWarningErrorCount();
       }
-      return Blockly.WarningHandler.warningState.WARNING;
+      return Blockly.WarningHandler.WarningState.WARNING;
     }
   }
 
   //remove the warning icon, if there is one
-  if(this.warning) {
-    this.setWarningText(null);
+  if(block.warning) {
+    block.setWarningText(null);
   }
-  if(this.hasWarning) {
-    this.hasWarning = false;
-    Blockly.WarningHandler.warningCount--;
-    Blockly.WarningHandler.updateWarningErrorCount();
+  if(block.hasWarning) {
+    block.hasWarning = false;
+    this.warningCount--;
+    this.updateWarningErrorCount();
   }
 
   //return no error
-  return Blockly.WarningHandler.warningState.NO_ERROR;
-
-}
+  return Blockly.WarningHandler.WarningState.NO_ERROR;
+};
 
 
 //Errors
@@ -204,28 +204,27 @@ Blockly.WarningHandler.checkErrors = function() {
 //Each function returns true if there is an error, and sets the error text on the block
 
 //Check if the block is inside of a variable declaration block, if so, create an error
-Blockly.WarningHandler.checkIsInDefinition = function(){
-  var rootBlock = this.getRootBlock();
+Blockly.WarningHandler.prototype["checkIsInDefinition"] = function(block){
+  var rootBlock = block.getRootBlock();
   if(rootBlock.type == "global_declaration"){
     var errorMessage = Blockly.ERROR_BLOCK_CANNOT_BE_IN_DEFINTION;
-    this.setErrorIconText(errorMessage);
+    block.setErrorIconText(errorMessage);
     return true;
   } else {
     return false;
   }
-
-}
+};
 
 // Check if block is undefined and unplug
-Blockly.WarningHandler.checkIfUndefinedBlock = function() {
-  if (this.isBadBlock() === true) {
+Blockly.WarningHandler.prototype['checkIfUndefinedBlock'] = function(block) {
+  if (block.isBadBlock() === true) {
     var errorMessage = Blockly.ERROR_BLOCK_IS_NOT_DEFINED;
     var healStack = true;
-    if (this.type == "component_event") {
+    if (block.type == "component_event") {
       healStack = false; // unplug all blocks inside
     }
-    this.isolate(healStack, true);
-    this.setErrorIconText(errorMessage);
+    block.isolate(healStack, true);
+    block.setErrorIconText(errorMessage);
     return true;
   } else {
     return false;
@@ -234,9 +233,9 @@ Blockly.WarningHandler.checkIfUndefinedBlock = function() {
 
 
 //Check if the block has an invalid drop down value, if so, create an error
-Blockly.WarningHandler.checkDropDownContainsValidValue = function(params){
+Blockly.WarningHandler.prototype['checkDropDownContainsValidValue'] = function(params){
   for(var i=0;i<params.dropDowns.length;i++){
-    var dropDown = this.getField(params.dropDowns[i]);
+    var dropDown = block.getField(params.dropDowns[i]);
     var dropDownList = dropDown.menuGenerator_();
     var text = dropDown.text_;
     var textInDropDown = false;
@@ -248,7 +247,7 @@ Blockly.WarningHandler.checkDropDownContainsValidValue = function(params){
     }
     if(!textInDropDown) {
       var errorMessage = Blockly.ERROR_SELECT_VALID_ITEM_FROM_DROPDOWN;
-      this.setErrorIconText(errorMessage);
+      block.setErrorIconText(errorMessage);
       return true;
     }
   }
@@ -259,14 +258,14 @@ Blockly.WarningHandler.checkDropDownContainsValidValue = function(params){
 // - originally written by @evanrthomas
 // - added by @graceRyu
 
-Blockly.WarningHandler.checkComponentNotExistsError = function() {
-  if (this.isGeneric == true) { // Generic blocks take a component as an arg
+Blockly.WarningHandler.prototype['checkComponentNotExistsError'] = function(block) {
+  if (block.isGeneric == true) { // Generic blocks take a component as an arg
     return false;               // So we cannot check for existence
   }
-  var component_names = Blockly.ComponentInstances.getInstanceNames();
-  if (component_names.indexOf(this.instanceName) == -1) {
+  var component_names = this.workspace.componentDb_.getInstanceNames();
+  if (component_names.indexOf(block.instanceName) == -1) {
     var errorMessage = Blockly.ERROR_COMPONENT_DOES_NOT_EXIST;
-    this.setErrorIconText(errorMessage);
+    block.setErrorIconText(errorMessage);
     return true;
   }
   return false;
@@ -290,8 +289,8 @@ Blockly.WarningHandler.checkComponentNotExistsError = function() {
 // block independently determined the duplicate blocks, that behavior would be
 // quadratic, and based on empirical tests could significantly slow down error
 // checking for screens with lots (many dozens) of handlers.
-Blockly.WarningHandler.determineDuplicateComponentEventHandlers = function(){
-  var topBlocks = Blockly.getMainWorkspace().getTopBlocks(false);
+Blockly.WarningHandler.prototype['determineDuplicateComponentEventHandlers'] = function(){
+  var topBlocks = this.workspace.getTopBlocks(false);
   var len = topBlocks.length;
   var eventHandlers = {}; // Object for storing event handler info
   for (var i = 0; i < len; i++) {
@@ -328,9 +327,9 @@ Blockly.WarningHandler.determineDuplicateComponentEventHandlers = function(){
 // [lyn, 12/31/2013] Function called by each component event handler to check
 // if it's a duplicate, using the IAmADuplicate flag preiously set
 // by determineDuplicateComponentEventHandlers
-Blockly.WarningHandler.checkIfIAmADuplicateEventHandler = function() {
-  if (this.IAmADuplicate) {
-    this.setErrorIconText(Blockly.ERROR_DUPLICATE_EVENT_HANDLER);
+Blockly.WarningHandler.prototype['checkIfIAmADuplicateEventHandler'] = function(block) {
+  if (block.IAmADuplicate) {
+    block.setErrorIconText(Blockly.ERROR_DUPLICATE_EVENT_HANDLER);
     return true;
   } else {
     return false;
@@ -417,40 +416,40 @@ Blockly.WarningHandler.checkDuplicateErrorHandler = function(params){
 //    ]
 
 //This is the error that can be set from the REPL. It will be removed when the block changes.
-Blockly.WarningHandler.setBlockError = function(message){
-  if(this.warning) {
-    this.setWarningText(null);
+Blockly.WarningHandler.prototype.setBlockError = function(block, message){
+  if(block.warning) {
+    block.setWarningText(null);
   }
-  if(this.hasWarning) {
-    this.hasWarning = false;
-    Blockly.WarningHandler.warningCount--;
-    Blockly.WarningHandler.updateWarningErrorCount();
+  if(block.hasWarning) {
+    block.hasWarning = false;
+    this.warningCount--;
+    this.updateWarningErrorCount();
   }
-  if(!this.hasError) {
-    this.hasError = true;
-    Blockly.WarningHandler.errorCount++;
-    Blockly.WarningHandler.updateWarningErrorCount();
+  if(!block.hasError) {
+    block.hasError = true;
+    this.errorCount++;
+    this.updateWarningErrorCount();
   }
-  this.setErrorIconText(message);
+  block.setErrorIconText(message);
 }
 
 // Check a disposed block for any errors or warnings and update state accordingly.
-Blockly.WarningHandler.checkDisposedBlock = function(){
-  if(this.warning) {
-    this.setWarningText(null);
+Blockly.WarningHandler.prototype.checkDisposedBlock = function(block){
+  if(block.warning) {
+    block.setWarningText(null);
   }
-  if(this.error) {
-    this.setErrorIconText(null);
+  if(block.error) {
+    block.setErrorIconText(null);
   }
-  if(this.hasWarning) {
-    this.hasWarning = false;
-    Blockly.WarningHandler.warningCount--;
-    Blockly.WarningHandler.updateWarningErrorCount();
+  if(block.hasWarning) {
+    block.hasWarning = false;
+    this.warningCount--;
+    this.updateWarningErrorCount();
   }
-  if(this.hasError) {
-    this.hasError = false;
-    Blockly.WarningHandler.errorCount--;
-    Blockly.WarningHandler.updateWarningErrorCount();
+  if(block.hasError) {
+    block.hasError = false;
+    this.errorCount--;
+    this.updateWarningErrorCount();
   }
 }
 
@@ -460,20 +459,20 @@ Blockly.WarningHandler.checkDisposedBlock = function(){
 //Each function returns true if there is an warning, and sets the warning text on the block
 
 //Check if the block contains any empty sockets
-Blockly.WarningHandler.checkEmptySockets = function(){
+Blockly.WarningHandler.prototype['checkEmptySockets'] = function(block){
   var containsEmptySockets = false;
-  for(var i=0;i<this.inputList.length;i++){
-    var inputName = this.inputList[i].name;
-    if(this.inputList[i].type == Blockly.INPUT_VALUE && this.inputList[i].connection && !this.getInputTargetBlock(inputName)){
+  for(var i=0;i<block.inputList.length;i++){
+    var inputName = block.inputList[i].name;
+    if(block.inputList[i].type == Blockly.INPUT_VALUE && block.inputList[i].connection && !block.getInputTargetBlock(inputName)){
       containsEmptySockets = true;
       break;
     }
   }
 
   if(containsEmptySockets) {
-    if(Blockly.WarningHandler.showWarningsToggle) {
+    if(this.showWarningsToggle) {
       var warningMessage = Blockly.Msg.MISSING_SOCKETS_WARNINGS;
-      this.setWarningText(warningMessage);
+      block.setWarningText(warningMessage);
     }
     return true;
   } else {
@@ -482,13 +481,13 @@ Blockly.WarningHandler.checkEmptySockets = function(){
 }
 
 //Check if the block is a root block that isn't a procedure definition, variable declaration, or event
-Blockly.WarningHandler.checkBlockAtRoot = function(){
-  var rootBlock = this.getRootBlock();
-  if(this == rootBlock && this.blockType != "event" && this.type !="global_declaration" &&
-     this.type != "procedures_defnoreturn" && this.type != "procedures_defreturn"){
-    if(Blockly.WarningHandler.showWarningsToggle) {
+Blockly.WarningHandler.prototype['checkBlockAtRoot'] = function(block){
+  var rootBlock = block.getRootBlock();
+  if(block == rootBlock && block.blockType != "event" && block.type !="global_declaration" &&
+     block.type != "procedures_defnoreturn" && block.type != "procedures_defreturn"){
+    if(this.showWarningsToggle) {
       var warningMessage = Blockly.Msg.WRONG_TYPE_BLOCK_WARINGS;
-      this.setWarningText(warningMessage);
+      block.setWarningText(warningMessage);
     }
     return true;
   } else {
@@ -497,10 +496,10 @@ Blockly.WarningHandler.checkBlockAtRoot = function(){
 }
 
 //Check to see if the repl (Companion App) reported any errors.
-Blockly.WarningHandler.checkReplErrors = function() {
-    if (this.replError) {
-        this.setErrorIconText(this.replError);
-        return true;
-    }
-    return false;
+Blockly.WarningHandler.prototype['checkReplErrors'] = function(block) {
+  if (block.replError) {
+    block.setErrorIconText(block.replError);
+    return true;
+  }
+  return false;
 }

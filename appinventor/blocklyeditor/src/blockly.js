@@ -40,8 +40,7 @@ Blockly.hideChaff = (function(func) {
     var f = function() {
       func.apply(this, Array.prototype.slice.call(arguments));
       // [lyn, 10/06/13] for handling parameter & procedure flydowns
-      Blockly.FieldFlydown && Blockly.FieldFlydown.hide();
-      Blockly.TypeBlock && Blockly.TypeBlock.hide();
+      Blockly.getMainWorkspace().hideChaff();
     };
     f.isWrapped = true;
     return f;

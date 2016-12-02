@@ -63,13 +63,12 @@ Blockly.SaveFile.load = function(preUpgradeFormJson, blocksContent) {
  *   so now we write out every time
  *
 */
-Blockly.SaveFile.get = function() {  
-  var xml = Blockly.Xml.workspaceToDom(Blockly.mainWorkspace);
+Blockly.SaveFile.get = function(opt_workspace) {
+  var workspace = opt_workspace || Blockly.mainWorkspace;
+  var xml = Blockly.Xml.workspaceToDom(workspace);
   var element = goog.dom.createElement('yacodeblocks');
-  var yaversion = window.parent.BlocklyPanel_getYaVersion();
-  var languageVersion = window.parent.BlocklyPanel_getBlocksLanguageVersion();
-  element.setAttribute('ya-version',yaversion);
-  element.setAttribute('language-version',languageVersion);
+  element.setAttribute('ya-version',top.YA_VERSION);
+  element.setAttribute('language-version',top.BLOCKS_VERSION);
   xml.appendChild(element);
   return Blockly.Xml.domToPrettyText(xml);
 };

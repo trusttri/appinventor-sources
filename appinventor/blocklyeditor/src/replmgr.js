@@ -27,6 +27,7 @@ goog.require('goog.crypt.base64');
 // App Inventor extensions to Blockly
 goog.require('AI.Blockly.Component');
 goog.require('AI.Blockly.Util');
+goog.require('AI.Blockly.Events');
 
 if (Blockly.ReplMgr === undefined) Blockly.ReplMgr = {}
 Blockly.ReplMgr.yail = null;
@@ -70,6 +71,10 @@ Blockly.ReplStateObj.prototype = {
     'count' : 0,                        // Count of number of reads from rendezvous server
     'didversioncheck' : false
 };
+
+// Blockly is only loaded once now, so we can init this here.
+top.ReplState = new Blockly.ReplStateObj();
+top.ReplState.phoneState = {};
 
 // Blockly.mainWorkSpace --- hold the main workspace
 
