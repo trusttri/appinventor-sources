@@ -212,6 +212,7 @@ Blockly.WorkspaceSvg.prototype.isDrawerShowing = function() {
 
 // Override Blockly's render with optimized version from lyn
 Blockly.WorkspaceSvg.prototype.render = function() {
+  this.rendered = true;
   if (Blockly.Instrument.isOn) {
     var start = new Date().getTime();
   }
@@ -322,10 +323,11 @@ Blockly.WorkspaceSvg.prototype.renameComponent = function(oldName, newName, uid)
  * strComponentInfos.
  *
  * @param {string} strComponentInfos String containing JSON-encoded
+ * @param {Object.<string, string>} translations Translation dictionary provided by GWT
  * component information.
  */
-Blockly.WorkspaceSvg.prototype.populateComponentTypes = function(strComponentInfos) {
-  this.componentDb_.populateTypes(JSON.parse(strComponentInfos));
+Blockly.WorkspaceSvg.prototype.populateComponentTypes = function(strComponentInfos, translations) {
+  this.componentDb_.populateTypes(JSON.parse(strComponentInfos), translations);
 };
 
 /**
@@ -388,10 +390,18 @@ Blockly.WorkspaceSvg.prototype.getFormYail = function(formJson, packageName, opt
   return Blockly.Yail.getFormYail(formJson, packageName, !!opt_repl, this);
 };
 
+/**
+ * Get the warning handler for the workspace.
+ * @returns {Blockly.WarningHandler}
+ */
 Blockly.WorkspaceSvg.prototype.getWarningHandler = function() {
   return this.warningHandler_;
 };
 
+/**
+ * Get the warning indicator UI element.
+ * @returns {Blockly.WarningIndicator}
+ */
 Blockly.WorkspaceSvg.prototype.getWarningIndicator = function() {
   return this.warningIndicator_;
 };
@@ -400,8 +410,12 @@ Blockly.WorkspaceSvg.prototype.exportBlocksImageToUri = function(cb) {
   Blockly.ExportBlocksImage.getUri(cb, this);
 };
 
+Blockly.WorkspaceSvg.prototype.getFlydown = function() {
+  return this.flydown_;
+};
+
 Blockly.WorkspaceSvg.prototype.hideChaff = function() {
-  this.fieldFlydown_ && this.fieldFlydown_.hide();
+  this.flydown_ && this.flydown_.hide();
   this.typeBlock_ && this.typeBlock_.hide();
 };
 
@@ -432,3 +446,215 @@ Blockly.WorkspaceSvg.prototype.resize = (function(resize) {
     return this;
   };
 })(Blockly.WorkspaceSvg.prototype.resize);
+
+Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
+  function addResetArrangements(callback) {
+    return function() {
+      try {
+        callback.call();
+      } finally {
+        this.resetArrangements();
+      }
+    };
+  }
+  function instrument(callback) {
+    return function() {
+      Blockly.Instrument.initializeStats('expandAllCollapsedBlocks');
+      Blockly.Instrument.timer(
+        function() { callback(); },
+        function(result, timeDiff) {
+          Blockly.Instrument.stats.totalTime = timeDiff;
+          Blockly.Instrument.displayStats('expandAllCollapsedBlocks');
+        });
+    };
+  }
+  for (var i = 0; i < menuOptions.length; ++i) {
+    if (menuOptions[i].text == Blockly.Msg.COLLAPSE_ALL) {
+      menuOptions[i].callback = addResetArrangements(menuOptions[i].callback);
+    } else if (menuOptions[i].text == Blockly.Msg.EXPAND_ALL) {
+      menuOptions[i].callback = instrument(addResetArrangements(menuOptions[i].callback));
+    }
+  }
+
+  var exportOption = {enabled: true};
+  exportOption.text = Blockly.Msg.EXPORT_IMAGE;
+  exportOption.callback = function() {
+    Blockly.ExportBlocksImage.onclickExportBlocks(Blockly.getMainWorkspace().getMetrics());
+  }
+  menuOptions.splice(3, 0, exportOption);
+
+  // Arrange blocks in row order.
+  var arrangeOptionH = {enabled: (Blockly.workspace_arranged_position !== Blockly.BLKS_HORIZONTAL)};
+  arrangeOptionH.text = Blockly.Msg.ARRANGE_H;
+  arrangeOptionH.callback = function() {
+    Blockly.workspace_arranged_position = Blockly.BLKS_HORIZONTAL;
+    Blockly.workspace_arranged_latest_position= Blockly.BLKS_HORIZONTAL;
+    arrangeBlocks(Blockly.BLKS_HORIZONTAL);
+  };
+  menuOptions.push(arrangeOptionH);
+
+  // Arrange blocks in column order.
+  var arrangeOptionV = {enabled: (Blockly.workspace_arranged_position !== Blockly.BLKS_VERTICAL)};
+  arrangeOptionV.text = Blockly.Msg.ARRANGE_V;
+  arrangeOptionV.callback = function() {
+    Blockly.workspace_arranged_position = Blockly.BLKS_VERTICAL;
+    Blockly.workspace_arranged_latest_position = Blockly.BLKS_VERTICAL;
+    arrangeBlocks(Blockly.BLKS_VERTICAL);
+  };
+  menuOptions.push(arrangeOptionV);
+
+  /**
+   * Function that returns a name to be used to sort blocks.
+   * The general comparator is the block.category attribute.
+   * In the case of 'Components' the comparator is the instanceName of the component if it exists
+   * (it does not exist for generic components).
+   * In the case of Procedures the comparator is the NAME(for definitions) or PROCNAME (for calls)
+   * @param {!Blockly.Block} the block that will be compared in the sortByCategory function
+   * @returns {string} text to be used in the comparison
+   */
+  function comparisonName(block){
+    if (block.category === 'Component' && block.instanceName)
+      return block.instanceName;
+    if (block.category === 'Procedures')
+      return (block.getFieldValue('NAME') || block.getFieldValue('PROCNAME'));
+    return block.category;
+  }
+
+  /**
+   * Function used to sort blocks by Category.
+   * @param {!Blockly.Block} a first block to be compared
+   * @param {!Blockly.Block} b second block to be compared
+   * @returns {number} returns 0 if the blocks are equal, and -1 or 1 if they are not
+   */
+  function sortByCategory(a,b) {
+    var comparatorA = comparisonName(a).toLowerCase();
+    var comparatorB = comparisonName(b).toLowerCase();
+
+    if (comparatorA < comparatorB) return -1;
+    else if (comparatorA > comparatorB) return +1;
+    else return 0;
+  }
+
+  // Arranges block in layout (Horizontal or Vertical).
+  function arrangeBlocks(layout) {
+    var SPACER = 25;
+    var topblocks = Blockly.mainWorkspace.getTopBlocks(false);
+    // If the blocks are arranged by Category, sort the array
+    if (Blockly.workspace_arranged_type === Blockly.BLKS_CATEGORY){
+      topblocks.sort(sortByCategory);
+    }
+    var metrics = Blockly.mainWorkspace.getMetrics();
+    var viewLeft = metrics.viewLeft + 5;
+    var viewTop = metrics.viewTop + 5;
+    var x = viewLeft;
+    var y = viewTop;
+    var wsRight = viewLeft + metrics.viewWidth;
+    var wsBottom = viewTop + metrics.viewHeight;
+    var maxHgt = 0;
+    var maxWidth = 0;
+    for (var i = 0, len = topblocks.length; i < len; i++) {
+      var blk = topblocks[i];
+      var blkXY = blk.getRelativeToSurfaceXY();
+      var blockHW = blk.getHeightWidth();
+      var blkHgt = blockHW.height;
+      var blkWidth = blockHW.width;
+      switch (layout) {
+      case Blockly.BLKS_HORIZONTAL:
+        if (x < wsRight) {
+          blk.moveBy(x - blkXY.x, y - blkXY.y);
+          blk.select();
+          x += blkWidth + SPACER;
+          if (blkHgt > maxHgt) // Remember highest block
+            maxHgt = blkHgt;
+        } else {
+          y += maxHgt + SPACER;
+          maxHgt = blkHgt;
+          x = viewLeft;
+          blk.moveBy(x - blkXY.x, y - blkXY.y);
+          blk.select();
+          x += blkWidth + SPACER;
+        }
+        break;
+      case Blockly.BLKS_VERTICAL:
+        if (y < wsBottom) {
+          blk.moveBy(x - blkXY.x, y - blkXY.y);
+          blk.select();
+          y += blkHgt + SPACER;
+          if (blkWidth > maxWidth)  // Remember widest block
+            maxWidth = blkWidth;
+        } else {
+          x += maxWidth + SPACER;
+          maxWidth = blkWidth;
+          y = viewTop;
+          blk.moveBy(x - blkXY.x, y - blkXY.y);
+          blk.select();
+          y += blkHgt + SPACER;
+        }
+        break;
+      }
+    }
+  }
+
+  // Sort by Category.
+  var sortOptionCat = {enabled: (Blockly.workspace_arranged_type !== Blockly.BLKS_CATEGORY)};
+  sortOptionCat.text = Blockly.Msg.SORT_C;
+  sortOptionCat.callback = function() {
+    Blockly.workspace_arranged_type = Blockly.BLKS_CATEGORY;
+    rearrangeWorkspace();
+  };
+  menuOptions.push(sortOptionCat);
+
+  // Called after a sort or collapse/expand to redisplay blocks.
+  function rearrangeWorkspace() {
+    //default arrangement position set to Horizontal if it hasn't been set yet (is null)
+    if (Blockly.workspace_arranged_latest_position === null || Blockly.workspace_arranged_latest_position === Blockly.BLKS_HORIZONTAL)
+      arrangeOptionH.callback();
+    else if (Blockly.workspace_arranged_latest_position === Blockly.BLKS_VERTICAL)
+      arrangeOptionV.callback();
+  }
+
+  // Retrieve from backpack option.
+  var backpackRetrieve = {enabled: true};
+  backpackRetrieve.text = Blockly.Msg.BACKPACK_GET + " (" +
+    Blockly.getMainWorkspace().backpack.count() + ")";
+  backpackRetrieve.callback = function() {
+    if (Blockly.getMainWorkspace().backpack) {
+      Blockly.getMainWorkspace().backpack.pasteBackpack(this.backpack);
+    }
+  }
+  menuOptions.push(backpackRetrieve);
+
+  // Copy all blocks to backpack option.
+  var backpackCopyAll = {enabled: true};
+  backpackCopyAll.text = Blockly.Msg.COPY_ALLBLOCKS;
+  backpackCopyAll.callback = function() {
+    if (Blockly.getMainWorkspace().backpack) {
+      Blockly.getMainWorkspace().backpack.addAllToBackpack();
+    }
+  }
+  menuOptions.push(backpackCopyAll);
+
+  // Clear backpack.
+  var backpackClear = {enabled: true};
+  backpackClear.text = Blockly.Msg.BACKPACK_EMPTY;
+  backpackClear.callback = function() {
+    Blockly.getMainWorkspace().backpack.clear();
+    backpackRetrieve.text = Blockly.Msg.BACKPACK_GET;
+  }
+  menuOptions.push(backpackClear);
+
+  // Option to get help.
+  var helpOption = {enabled: false};
+  helpOption.text = Blockly.Msg.HELP;
+  helpOption.callback = function() {};
+  menuOptions.push(helpOption);
+};
+
+Blockly.WorkspaceSvg.prototype.recordDeleteAreas = function() {
+  if (this.trashcan) {
+    this.deleteAreaTrash_ = this.trashcan.getClientRect();
+  } else {
+    this.deleteAreaTrash_ = null;
+  }
+  this.deleteAreaToolbox_ = null;
+};

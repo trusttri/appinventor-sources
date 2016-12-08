@@ -14,21 +14,116 @@
 
 goog.provide('AI.Blockly.ComponentDatabase');
 
-goog.require('AI.Blockly.Component');
-
 Blockly.PROPERTY_READABLE = 1;
 Blockly.PROPERTY_WRITEABLE = 2;
 Blockly.PROPERTY_READWRITEABLE = 3;
+
+/**
+ * @typedef ComponentInfo
+ * @type {object}
+ * @property {string} type
+ * @property {string} name
+ * @property {string} external
+ * @property {string} version
+ * @property {string} categoryString
+ * @property {string} helpString
+ * @property {string} showOnPalette
+ * @property {string} nonVisible
+ * @property {string} iconName
+ * @property {Object.<string, Object<string, string>>} events
+ * @property {Object.<string, Object<string, string>>} properties
+ * @property {Object.<string, Object<string, string>>} blockProperties
+ * @property {Object.<string, Object<string, string>>} methods
+ */
+ComponentInfo;
+
+/**
+ * @typedef ParameterDescriptor
+ * @type {object}
+ * @property {!string} name
+ * @property {!type} type
+ */
+ParameterDescriptor;
+
+/*
+ * @typedef EventDescriptor
+ * @type {object}
+ * @property {!string} name
+ * @property {!string} description
+ * @property {?boolean} deprecated
+ * @property {!ParameterDescriptor[]} parameters
+ */
+/**
+ * @typedef {{name: !string, description: !string, deprecated: ?boolean, parameters: !ParameterDescriptor[]}}
+ */
+EventDescriptor;
+
+/*
+ * @typedef MethodDescriptor
+ * @type {object}
+ * @property {!string} name
+ * @property {!string} description
+ * @property {?boolean} deprecated
+ * @property {!ParameterDescriptor[]} parameters
+ * @property {?string} returnType
+ */
+/**
+ * @typedef {{name: !string, description: !string, deprecated: ?boolean, parameters: !ParameterDescriptor[], returnType: ?string}}
+ */
+MethodDescriptor;
+
+/**
+ * @typedef PropertyDescriptor
+ * @type {object}
+ * @property {!string} name
+ * @property {!string} description
+ * @property {!string} type
+ * @property {!string} rw
+ * @property {?boolean} deprecated
+ */
+PropertyDescriptor;
+
+/**
+ * @typedef ComponentTypeDescriptor
+ * @type {object}
+ * @property {!string} type
+ * @property {!string} external
+ * @property {!ComponentInfo} componentInfo
+ * @property {!Object.<string, EventDescriptor>} eventDictionary
+ * @property {!Object.<string, MethodDescriptor>} methodDictionary
+ * @property {!Object.<string, PropertyDescriptor>} properties
+ * @property {!string[]} setPropertyList
+ * @property {!string[]} getPropertyList
+ */
+ComponentTypeDescriptor;
+
+/**
+ * @typedef ComponentInstanceDescriptor
+ * @type {object}
+ * @property {!string} name
+ * @property {!string} typeName
+ */
+ComponentInstanceDescriptor;
 
 /**
  * Database for component type information and instances.
  * @constructor
  */
 Blockly.ComponentDatabase = function() {
+  /** @type {Object.<string, ComponentInstanceDescriptor>} */
   this.instances_ = {};
+  /** @type {Object.<string, ComponentTypeDescriptor>} */
   this.types_ = {};
   // For migration of old projects that are name based rather than uid based.
+  /** @type {Object.<string, string>} */
   this.instanceNameUid_ = {};
+
+  // Internationalization support
+  this.i18nComponentTypes_ = {};
+  this.i18nEventNames_ = {};
+  this.i18nMethodNames_ = {};
+  this.i18nParamNames_ = {};
+  this.i18nPropertyNames_ = {};
 };
 
 Blockly.ComponentDatabase.prototype.addInstance = function(uid, name, typeName) {
@@ -64,6 +159,16 @@ Blockly.ComponentDatabase.prototype.removeInstance = function(uid) {
   }
   delete this.instances_[uid];
   return true;
+};
+
+/**
+ * Iterate over all component instances calling the callback function with the
+ * instance and its UUID.
+ *
+ * @param {function(!ComponentInstanceDescriptor, !string)} callback
+ */
+Blockly.ComponentDatabase.prototype.forEachInstance = function(callback) {
+  goog.object.forEach(this.instances_, callback);
 };
 
 Blockly.ComponentDatabase.prototype.hasType = function(typeName) {
@@ -104,7 +209,7 @@ Blockly.ComponentDatabase.prototype.instanceNameToTypeName = function(instanceNa
 Blockly.ComponentDatabase.prototype.getComponentUidNameMapByType = function(componentType) {
   var componentNameArray = [];
   for (var uid in this.instances_) {
-    if (this.instances_[uid].typeName == componentType) {
+    if (this.instances_.hasOwnProperty(uid) && this.instances_[uid].typeName == componentType) {
       componentNameArray.push([this.instances_[uid].name, uid]);
     }
   }
@@ -112,29 +217,12 @@ Blockly.ComponentDatabase.prototype.getComponentUidNameMapByType = function(comp
 };
 
 /**
- * @typedef ComponentInfo
- * @type {object}
- * @property {string} type
- * @property {string} name
- * @property {string} external
- * @property {string} version
- * @property {string} categoryString
- * @property {string} helpString
- * @property {string} showOnPalette
- * @property {string} nonVisible
- * @property {string} iconName
- * @property {Object.<string, string>} events
- * @property {Object.<string, string>} properties
- * @property {Object.<string, string>} blockProperties
- * @property {Object.<string, string>} methods
- */
-
-/**
  * Populate the types database.
  *
  * @param {ComponentInfo[]} componentInfos
+ * @param {Object.<string, string>} translations
  */
-Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
+Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos, translations) {
   for (var i = 0, componentInfo; componentInfo = componentInfos[i]; ++i) {
     var info = this.types_[componentInfo.name] = {
       type: componentInfo.type,
@@ -147,13 +235,13 @@ Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
       getPropertyList: []
     };
     // parse type description and fill in all of the fields
-    for (var j = 0, event; event = componentInfo.events[j]; ++j) {
+    for (var j = 0, /** @type {EventDescriptor} */ event; event = componentInfo.events[j]; ++j) {
       if (typeof event['deprecated'] === 'string') {
         event['deprecated'] = JSON.parse(event['deprecated']);
       }
       info.eventDictionary[event.name] = event;
     }
-    for (var j = 0, method; method = componentInfo.methods[j]; ++j) {
+    for (var j = 0, /** @type {MethodDescriptor} */ method; method = componentInfo.methods[j]; ++j) {
       if (typeof method['deprecated'] === 'string') {
         method['deprecated'] = JSON.parse(method['deprecated']);
       }
@@ -178,4 +266,102 @@ Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
       }
     }
   }
+};
+
+/**
+ * Get the event type descriptor for a given type, event pair.
+ *
+ * @param {!string} typeName
+ * @param {!string} eventName
+ * @returns {EventDescriptor}
+ */
+Blockly.ComponentDatabase.prototype.getEventForType = function(typeName, eventName) {
+  if (typeName in this.types_) {
+    return this.types_[typeName].eventDictionary[eventName];
+  }
+  return undefined;
+};
+
+/**
+ * @callback EventIterationCallback
+ * @param {!EventDescriptor} eventDesc
+ * @param {!string} eventName
+ */
+
+/**
+ * Iterate over the events declared in typeName calling the provided callback.
+ *
+ * @param {!string} typeName
+ * @param {!EventIterationCallback} callback
+ */
+Blockly.ComponentDatabase.prototype.forEventInType = function(typeName, callback) {
+  if (typeName in this.types_) {
+    goog.object.map(this.types_[typeName].eventDictionary, callback);
+  }
+};
+
+/**
+ * Get the method type descriptor for a given type, method pair.
+ *
+ * @param {!string} typeName
+ * @param {!string} methodName
+ * @returns {(MethodDescriptor|undefined)}
+ */
+Blockly.ComponentDatabase.prototype.getMethodForType = function(typeName, methodName) {
+  if (typeName in this.types_) {
+    return this.types_[typeName].methodDictionary[methodName];
+  }
+  return undefined;
+};
+
+/**
+ * @callback MethodIterationCallback
+ * @param {!MethodDescriptor} methodDef
+ * @param {!string} methodName
+ */
+
+/**
+ * Iterate over the methods declared in typeName calling the provided callback.
+ *
+ * @param {!string} typeName
+ * @param {!MethodIterationCallback} callback
+ */
+Blockly.ComponentDatabase.prototype.forMethodInType = function(typeName, callback) {
+  if (typeName in this.types_) {
+    goog.object.map(this.types_[typeName].methodDictionary, callback);
+  }
+};
+
+/**
+ *
+ */
+Blockly.ComponentDatabase.prototype.getPropertyForType = function(typeName, propertyName) {
+};
+
+Blockly.ComponentDatabase.prototype.getSetterNamesForType = function(typeName) {
+  return this.types_[typeName].setPropertyList;
+};
+
+Blockly.ComponentDatabase.prototype.getGetterNamesForType = function(typeName) {
+  return this.types_[typeName].getPropertyList;
+};
+
+Blockly.ComponentDatabase.prototype.getInternationalizedComponentType = function(name) {
+  return this.i18nComponentTypes_[name] || name;
+};
+
+Blockly.ComponentDatabase.prototype.getInternationalizedEventName = function(name) {
+  return this.i18nEventNames_['EVENT-' + name] || name;
+};
+
+Blockly.ComponentDatabase.prototype.getInternationalizedMethodName = function(name) {
+  return this.i18nMethodNames_['METHOD-' + name] || name;
+};
+
+Blockly.ComponentDatabase.prototype.getInternationalizedParameterName = function(name) {
+  return this.i18nParamNames_['PARAM-' + name] || name;
+};
+
+Blockly.ComponentDatabase.prototype.getInternationalizedPropertyName = function(name) {
+  return this.i18nPropertyNames_['PROPERTY-' + name] || name;
 };

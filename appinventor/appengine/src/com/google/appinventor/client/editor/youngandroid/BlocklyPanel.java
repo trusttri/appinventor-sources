@@ -34,6 +34,8 @@ import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import static com.google.appinventor.client.Ode.MESSAGES;
@@ -60,6 +62,9 @@ public class BlocklyPanel extends HTMLPanel {
     public void initBlockly();
   }
 
+  private static final String EDITOR_HTML = "<div id=\"FORM_NAME\" class=\"svg\" tabindex=\"-1\"></div>";
+  private static final NativeTranslationMap SIMPLE_COMPONENT_TRANSLATIONS;
+
   static {
     ((BlocklySource) GWT.create(BlocklySource.class)).initBlockly();
     exportMethodsToJavascript();
@@ -70,9 +75,8 @@ public class BlocklyPanel extends HTMLPanel {
       addAcceptableCompanion(YaVersion.ACCEPTABLE_COMPANIONS[i]);
     }
     addAcceptableCompanionPackage(YaVersion.ACCEPTABLE_COMPANION_PACKAGE);
+    SIMPLE_COMPONENT_TRANSLATIONS = NativeTranslationMap.transform(ComponentsTranslation.myMap);
   }
-
-  private static final String EDITOR_HTML = "<div id=\"FORM_NAME\" class=\"svg\" tabindex=\"-1\"></div>";
 
   public interface BlocklyWorkspaceChangeListener {
     public void onWorkspaceChange(BlocklyPanel panel, BlocklyEvent event);
@@ -97,7 +101,9 @@ public class BlocklyPanel extends HTMLPanel {
   }
 
   public BlocklyPanel(YaBlocksEditor blocksEditor, String formName, boolean readOnly) {
-    super(EDITOR_HTML.replace("FORM_NAME", formName));
+    super("");
+    getElement().addClassName("svg");
+    getElement().setId(formName);
     this.formName = formName;
     initWorkspace(readOnly, LocaleInfo.getCurrentLocale().isRTL());
     OdeLog.log("Created BlocklyPanel for " + formName);
@@ -441,7 +447,7 @@ public class BlocklyPanel extends HTMLPanel {
   }-*/;
 
   private native void initWorkspace(boolean readOnly, boolean rtl)/*-{
-    var el = goog.dom.getFirstElementChild(this.@com.google.gwt.user.client.ui.UIObject::getElement()());
+    var el = this.@com.google.gwt.user.client.ui.UIObject::getElement()();
     var workspace = Blockly.BlocklyEditor.create(el, readOnly, rtl);
     var BlocklyPanel$this = this;
     workspace.addChangeListener(function(e) {
@@ -452,7 +458,7 @@ public class BlocklyPanel extends HTMLPanel {
       BlocklyPanel$this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspaceChanged(Lcom/google/appinventor/client/editor/youngandroid/events/BlocklyEvent;)(e);
       // [lyn 12/31/2013] Check for duplicate component event handlers before
       // running any error handlers to avoid quadratic time behavior.
-      this.determineDuplicateComponentEventHandlers();
+      this.getWarningHandler().determineDuplicateComponentEventHandlers();
     }.bind(workspace));
     this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace = workspace;
   }-*/;
@@ -461,7 +467,7 @@ public class BlocklyPanel extends HTMLPanel {
    * Inject the workspace into the &lt;div&gt; element.
    */
   native void injectWorkspace()/*-{
-    var el = goog.dom.getFirstElementChild(this.@com.google.gwt.user.client.ui.UIObject::getElement()());
+    var el = this.@com.google.gwt.user.client.ui.UIObject::getElement()();
     Blockly.ai_inject(el, this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace);
   }-*/;
 
@@ -663,7 +669,7 @@ public class BlocklyPanel extends HTMLPanel {
    */
   public native void populateComponentTypes(String jsonComponentsStr) /*-{
     this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace
-      .populateComponentTypes(jsonComponentsStr);
+      .populateComponentTypes(jsonComponentsStr, @com.google.appinventor.client.editor.youngandroid.BlocklyPanel::SIMPLE_COMPONENT_TRANSLATIONS);
   }-*/;
 
   /**
@@ -685,5 +691,25 @@ public class BlocklyPanel extends HTMLPanel {
     this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace
       .exportBlocksImageToUri(callb);
   }-*/;
+
+  private static class NativeTranslationMap extends JavaScriptObject {
+    protected NativeTranslationMap() {}
+
+    private static native NativeTranslationMap make()/*-{
+      return {};
+    }-*/;
+
+    private native void put(String key, String value)/*-{
+      this[key] = value;
+    }-*/;
+
+    public static NativeTranslationMap transform(Map<String, String> map) {
+      NativeTranslationMap result = make();
+      for(Entry<String, String> entry : map.entrySet()) {
+        result.put(entry.getKey(), entry.getValue());
+      }
+      return result;
+    }
+  }
 
 }

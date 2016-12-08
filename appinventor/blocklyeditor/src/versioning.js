@@ -26,10 +26,6 @@ goog.provide('AI.Blockly.Versioning');
 goog.require('goog.dom');
 goog.require('goog.dom.xml');
 
-// App Inventor extensions to Blockly
-goog.require('AI.Blockly.Component');
-goog.require('AI.Blockly.ComponentTypes');
-
 if (Blockly.Versioning === undefined) Blockly.Versioning = {};
 
 Blockly.Versioning.loggingFlag = true;
@@ -49,6 +45,8 @@ Blockly.Versioning.log = function log(string) { // Display feedback on upgrade i
  *
  * @param preUpgradeFormJsonString: JSON String from pre-upgrade Form associated with these blocks
  * @param blocksContent: String with XML representation of blocks for a screen
+ * @param {Blockly.WorkspaceSvg=} opt_workspace Optional workspace that will be populated with the
+ * blocks content. If not specified, Blockly.mainWorkspace is used.
  *
  * @author fturbak@wellesley.edu (Lyn Turbak)
  *
@@ -68,6 +66,7 @@ Blockly.Versioning.log = function log(string) { // Display feedback on upgrade i
  *
  */
 Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent, opt_workspace) {
+  opt_workspace = opt_workspace || Blockly.mainWorkspace;
   var preUpgradeFormJsonObject = JSON.parse(preUpgradeFormJsonString);
   var dom = Blockly.Xml.textToDom(blocksContent); // Initial blocks rep is dom for blocksContent
 
@@ -148,8 +147,9 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent, 
   // Upgrade components based on pre-upgrade version numbers
   var preUpgradeComponentVersionDict = Blockly.Versioning.makeComponentVersionDict(preUpgradeFormJsonObject);
   for (var componentType in preUpgradeComponentVersionDict) {
+    if (!preUpgradeComponentVersionDict.hasOwnProperty(componentType)) continue;
     var preUpgradeVersion = preUpgradeComponentVersionDict[componentType];
-    var systemVersion = Blockly.Versioning.getSystemComponentVersion(componentType);
+    var systemVersion = Blockly.Versioning.getSystemComponentVersion(componentType, opt_workspace);
     blocksRep = upgradeComponentType(componentType, preUpgradeVersion, systemVersion, blocksRep);
   }
 
@@ -157,7 +157,7 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent, 
   Blockly.Versioning.log("Blockly.Versioning.upgrade: Final conversion to Blockly.mainWorkspace");
   Blockly.Versioning.ensureWorkspace(blocksRep, opt_workspace); // No need to use result; does work by side effect on Blockly.mainWorkspace
 
-}
+};
 
 /**
  * [lyn, 2014/11/04]
@@ -182,14 +182,14 @@ Blockly.Versioning.checkUpgrader = function (upgrader) {
     throw "Blockly.Versioning.checkUpgrader: upgrader is not a function, special string, or array of upgraders -- "
         + upgrader;
   }
-}
+};
 
 /**
  * Returns true if blocksRep is a workspace; otherwise returns false
  */
 Blockly.Versioning.isWorkspace = function (blocksRep) {
   return blocksRep instanceof Blockly.Workspace;
-}
+};
 
 /*
 Blockly.Versioning.isWorkspace =
@@ -215,7 +215,7 @@ Blockly.Versioning.isDom = function (blocksRep) {
     // so handle it this way.
     return false;
   }
-}
+};
 
 /**
  * If blocksRep is a dom, returns it; otherwise converts the workspace to a dom
@@ -225,12 +225,11 @@ Blockly.Versioning.ensureDom = function (blocksRep) {
     return blocksRep; // already a dom
   } else if (Blockly.Versioning.isWorkspace(blocksRep)) {
     Blockly.Versioning.log("Blockly.Versioning.ensureDom: converting Blockly.mainWorkspace to dom");
-    var dom = Blockly.Xml.workspaceToDom(blocksRep);
-    return dom;
+    return Blockly.Xml.workspaceToDom(blocksRep);
   } else {
     throw "Blockly.Versioning.ensureDom: blocksRep is neither dom nor workspace -- " + blocksRep;
   }
-}
+};
 
 Blockly.Versioning.getBlockChildren = function (dom) {
     var result = [];
@@ -239,7 +238,7 @@ Blockly.Versioning.getBlockChildren = function (dom) {
       result.push(gdChild);
     }
     return result;
-}
+};
 
 /**
  * If blocksRep is a workspace, returns it; otherwise converts the workspace to a dom
@@ -256,7 +255,7 @@ Blockly.Versioning.ensureWorkspace = function (blocksRep, opt_workspace) {
   } else {
     throw "Blockly.Versioning.ensureWorkspace: blocksRep is neither workspace nor dom -- " + blocksRep;
   }
-}
+};
 
 /**
  * Apply an upgrder to a blocksRepresentation, possibly (1) changing it by side effect and
@@ -278,7 +277,7 @@ Blockly.Versioning.applyUpgrader = function (upgrader, blocksRep) {
   } else { // otherwise, versionUpgrader is "noUpgrade", and nothing is done, so acts like identity
     return blocksRep;
   }
-}
+};
 
 /**
  * Return a single upgrader that sequentially composes the upgraders in upgraderList
@@ -291,7 +290,7 @@ Blockly.Versioning.composeUpgraders = function (upgraderList) {
     }
     return blocksRep; // Return the final blocks rep
   }
-}
+};
 
 /******************************************************************************
  * Key functions for determining whether component upgrades are needed
@@ -382,20 +381,20 @@ Blockly.Versioning.makeComponentVersionDict = function (formJsonObject) {
         processComponents(subComponents);
       }
     }
-   };
+   }
 
    processComponents ([formJsonObject["Properties"]]); // Walk the component tree, updating versionDict along the way.
    return versionDict;
 };
 
-Blockly.Versioning.getSystemComponentVersion = function (componentType) {
-  var versionString = Blockly.ComponentTypes[componentType].componentInfo.version;
+Blockly.Versioning.getSystemComponentVersion = function (componentType, workspace) {
+  var versionString = workspace.getComponentDatabase().getType(componentType).componentInfo.version;
   if (versionString) {
     return parseInt(versionString);
   } else {
     throw "Blockly.Versioning.getSystemComponentVersion: No version for component type " + componentType;
   }
-}
+};
 
 /******************************************************************************
  * Details for specific upgrades go below, in reverse chronological order.
@@ -420,7 +419,7 @@ Blockly.Versioning.getSystemComponentVersion = function (componentType) {
  *    functions are used in the upgrade to YAVersion 17.
  ----------------------------------------------------------------------------*/
 
-Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile) {
+Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile, workspace) {
   // we loaded in something with no version, we need to translate
   var renameAlert = 0;
   var blocks = xmlFromFile.getElementsByTagName('block');
@@ -463,12 +462,13 @@ Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile) {
             // legal thing it could be is a (generic) component set/get
             //   but old programs allow instance names same as type names, so
             //   we can get a Accelerometer.Shaking which is really an instance event
-            if ((Blockly.ComponentTypes[splitComponent[0]] != null) &&
+            var componentDb = workspace.getComponentDatabase();
+            if (componentDb.hasType(splitComponent[0]) &&
                 (splitComponent[1] == 'setproperty' || splitComponent[1] == 'getproperty'))
               Blockly.Versioning.v17_translateComponentSetGetProperty(blockElem);
             else {
               var instance = splitComponent[0];
-              var componentType = Blockly.Component.instanceNameToTypeName(instance);
+              var componentType = componentDb.instanceNameToTypeName(instance);
               if (componentType == instance && renameAlert === 0) {
                 alert("Your app was created in an earlier version of App Inventor and may be loaded incorrectly."+
                     " The problem is that it names a component instance"+
@@ -486,10 +486,10 @@ Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile) {
               if (rightside == 'component')
                 Blockly.Versioning.v17_translateComponentGet(blockElem);
               else
-              if (Blockly.ComponentTypes[componentType].eventDictionary[rightside] != null)
+              if (componentDb.getEventForType(componentType, rightside))
                 Blockly.Versioning.v17_translateEvent(blockElem);
               else
-              if (Blockly.ComponentTypes[componentType].methodDictionary[rightside] != null)
+              if (componentDb.getMethodForType(componentType, rightside))
                 Blockly.Versioning.v17_translateMethod(blockElem);
             }
           }
@@ -507,10 +507,8 @@ Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile) {
 Blockly.Versioning.v17_translateEvent = function(blockElem) {
   //get the event type and instance name,
   // the type attribute is "component_event"
-  var blockType = blockElem.getAttribute('type');
-  var component_event = blockType;
   // event block types look like: <block type="Button1_Click" x="132" y="72">
-  var splitComponent = component_event.split('_');
+  var splitComponent = blockElem.getAttribute('type').split('_');
   if (splitComponent.length > 2) {
     // This happens when someone puts an _ in a block name!
     splitComponent = [splitComponent.slice(0, -1).join('_'), splitComponent.pop()];
@@ -792,15 +790,16 @@ Blockly.Versioning.renameBlockType = function(oldBlockType, newBlockType) {
     }
     return dom; // Return the modified dom, as required by the upgrading structure.
   }
-}
+};
 
 /**
  * @param componentType: name of component type for method
  * @param methodName: name of method
- * @argumentIndex: index of the default argument block
- * @defaultXMLArgumentBlockText: string with XML for argument block
- * @returns a function that maps a blocksRep (An XML DOM or workspace)
- *   to a modified DOM in which the default argument block has been added to every specified method call.
+ * @param argumentIndex: index of the default argument block
+ * @param defaultXMLArgumentBlockText: string with XML for argument block
+ * @returns {function(Element|Blockly.Workspace)} a function that maps a blocksRep (An XML DOM or
+ *   workspace) to a modified DOM in which the default argument block has been added to every
+ *   specified method call.
  *
  * @author fturbak@wellesley.edu (Lyn Turbak)
  *
@@ -844,15 +843,15 @@ Blockly.Versioning.addDefaultMethodArgument = function(componentType, methodName
     }
     return dom; // Return the modified dom, as required by the upgrading structure.
   }
-}
+};
 
 /**
  * Rename all method call blocks for a given component type and method name.
  * @param componentType: name of component type for method
  * @param oldMethodName: name of method
  * @param newMethodName: new name of method
- * @returns a function that maps a blocksRep (An XML DOM or workspace)
- *   to a modified DOM in which every specified method call has been renamed.
+ * @returns {function(Element|Blockly.Workspace)} a function that maps a blocksRep (An XML DOM or
+ *   workspace) to a modified DOM in which every specified method call has been renamed.
  *
  * @author lizlooney@google.com (Liz Looney)
  */
@@ -867,15 +866,15 @@ Blockly.Versioning.changeMethodName = function(componentType, oldMethodName, new
     }
     return dom; // Return the modified dom, as required by the upgrading structure.
   }
-}
+};
 
 /**
  * Rename all property get/set blocks for a given component type and property name.
  * @param componentType: name of component type for property
  * @param oldPropertyName: name of property
  * @param newPropertyName: new name of property
- * @returns a function that maps a blocksRep (An XML DOM or workspace)
- *   to a modified DOM in which every specified property get/set has been renamed.
+ * @returns {function(Element|Blockly.Workspace)} a function that maps a blocksRep (An XML DOM or
+ *   workspace) to a modified DOM in which every specified property get/set has been renamed.
  *
  * @author lizlooney@google.com (Liz Looney)
  */
@@ -900,13 +899,13 @@ Blockly.Versioning.changePropertyName = function(componentType, oldPropertyName,
     }
     return dom; // Return the modified dom, as required by the upgrading structure.
   }
-}
+};
 
 /**
  * @param dom: DOM for XML workspace
  * @param componentType: name of component type for method
  * @param methodName: name of method
- * @returns a list of HTML elements for the specfied method call blocks.
+ * @returns {Element[]} a list of HTML elements for the specfied method call blocks.
  *
  * @author fturbak@wellesley.edu (Lyn Turbak)
  *
@@ -930,13 +929,13 @@ Blockly.Versioning.findAllMethodCalls = function (dom, componentType, methodName
     }
   }
   return callBlocks;
-}
+};
 
 /**
  * @param dom: DOM for XML workspace
  * @param componentType: name of component type for property
  * @param propertyName: name of property
- * @returns a list of HTML elements for the specfied property blocks.
+ * @returns {Element[]} a list of HTML elements for the specfied property blocks.
  *
  * @author lizlooney@google.com (Liz Looney)
  *
@@ -960,7 +959,7 @@ Blockly.Versioning.findAllPropertyBlocks = function (dom, componentType, propert
     }
   }
   return propertyBlocks;
-}
+};
 
 /**
  * @param elem: an HTML element
@@ -980,7 +979,7 @@ Blockly.Versioning.firstChildWithTagName = function (elem, tag) {
     }
   }
   return null;
-}
+};
 
 /**
  * @param xmlBlockText: string specifying the XML for a single block
@@ -1001,7 +1000,7 @@ Blockly.Versioning.xmlBlockTextToDom = function(xmlBlockText) {
   } else {
     return children[0];
   }
-}
+};
 
 /******************************************************************************
  Define component upgrade maps here.
@@ -2381,4 +2380,4 @@ Blockly.Versioning.AllUpgradeMaps =
 
   } // End YandexTranslate upgraders
 
-}
+};

@@ -130,7 +130,8 @@ Blockly.Yail.getFormYail = function(formJson, packageName, forRepl, workspace) {
   var componentMap = workspace.buildComponentMap([], [], false, false);
   
   for (var comp in componentMap.components)
-    componentNames.push(comp);
+    if (componentMap.components.hasOwnProperty(comp))
+      componentNames.push(comp);
 
   var globalBlocks = componentMap.globals;
   for (var i = 0, block; block = globalBlocks[i]; i++) {
@@ -149,9 +150,8 @@ Blockly.Yail.getFormYail = function(formJson, packageName, forRepl, workspace) {
     // Fetch all of the components in the form, this may result in duplicates
     componentNames = Blockly.Yail.getDeepNames(formProperties, componentNames);
     // Remove the duplicates
-    var uniqueNames = componentNames.filter(function(elem, pos) {
+    componentNames = componentNames.filter(function(elem, pos) {
         return componentNames.indexOf(elem) == pos});
-    componentNames = uniqueNames;
 
     // Add runtime initializations
     code.push(Blockly.Yail.YAIL_INIT_RUNTIME);
@@ -180,7 +180,7 @@ Blockly.Yail.getDeepNames = function(componentJson, componentNames) {
     }
   }
   return componentNames;
-}
+};
 
 /**
  * Generate the beginning Yail code for an APK compilation (i.e., not the REPL)
@@ -199,7 +199,7 @@ Blockly.Yail.getYailPrelude = function(packageName, formName) {
      + formName
      + Blockly.Yail.YAIL_CLOSE_BLOCK
      + "(require <com.google.youngandroid.runtime>)\n";
-}
+};
 
 /**
  * Wraps Yail code for use in the REPL and returns the new code as an array of strings
@@ -226,11 +226,12 @@ Blockly.Yail.wrapForRepl = function(formName, code, componentNames) {
   replCode.push(Blockly.Yail.getComponentInitializationString(formName, componentNames));
   replCode.push(Blockly.Yail.YAIL_CLOSE_BLOCK);
   return replCode;
-}
+};
 
 /**
  * Return code to initialize all components in componentMap.
- * 
+ *
+ * @param {string} formName name of the current screen
  * @param {Array} componentNames array of names of components in the workspace
  * @returns {Array} code strings
  * @private
@@ -244,7 +245,7 @@ Blockly.Yail.getComponentInitializationString = function(formName, componentName
   }
   code = code + ")";
   return code;
-}
+};
 
 /**
  * Generate Yail code for the component described by componentJson, and all of its child
@@ -259,25 +260,28 @@ Blockly.Yail.getComponentInitializationString = function(formName, componentName
  * @param {Object} componentMap map from component names to the top-level blocks for that component
  *    in the workspace. See the Blockly.Component.buildComponentMap description for the structure.
  * @param {Boolean} forRepl true iff we're generating code for the REPL rather than an apk.
+ * @param {function(string): string} nameConverter function that converts fully-qualified
+ *    property names into YAIL names for invocation.
+ * @param {!Blockly.ComponentDatabase} componentDb Component database, for type information
  * @returns {Array} code strings
  * @private
  */
 Blockly.Yail.getComponentLines = function(formName, componentJson, parentName, componentMap, 
-  forRepl, propertyNameConverter) {
-  var code = [];
+  forRepl, nameConverter, componentDb) {
+  var code = [], i;
   var componentName = componentJson.$Name;
   if (componentJson.$Type == 'Form') {
     code = Blockly.Yail.getFormPropertiesLines(formName, componentJson, !forRepl);
   } else {
     code = Blockly.Yail.getComponentPropertiesLines(formName, componentJson, parentName, !forRepl,
-      propertyNameConverter);
+      nameConverter, componentDb);
   }
 
   if (!forRepl) {
     // Generate code for all top-level blocks related to this component
     if (componentMap.components && componentMap.components[componentName]) {
       var componentBlocks = componentMap.components[componentName];
-      for (var i = 0, block; block = componentBlocks[i]; i++) {
+      for (i = 0, block; block = componentBlocks[i]; i++) {
         code.push(Blockly.Yail.blockToCode(block));
       }
     }
@@ -286,9 +290,9 @@ Blockly.Yail.getComponentLines = function(formName, componentJson, parentName, c
   // Generate code for child components of this component
   if (componentJson.$Components) {
     var children = componentJson.$Components;
-    for (var i = 0, child; child = children[i]; i++) {
+    for (i = 0, child; child = children[i]; i++) {
       code = code.concat(Blockly.Yail.getComponentLines(formName, child, componentName,
-          componentMap, forRepl, propertyNameConverter));
+          componentMap, forRepl, nameConverter));
     }
   }
   return code;  
@@ -303,12 +307,15 @@ Blockly.Yail.getComponentLines = function(formName, componentJson, parentName, c
  * @param {String} componentJson JSON string describing the component
  * @param {String} parentName  the name of the component that contains this component (which may be
  *    its Form, for top-level components).
- * @param {Boolean} whether to include comments in the generated code
+ * @param {Boolean} includeComments whether to include comments in the generated code
+ * @param {function(string): string} nameConverter function that converts a fully-qualified
+ *    property name into a YAIL-compatible name.
+ * @param {Blockly.ComponentDatabase} componentDb Component database, for type information
  * @returns {Array} code strings
  * @private
  */
 Blockly.Yail.getComponentPropertiesLines = function(formName, componentJson, parentName, 
-  includeComments, propertyNameConverter) {
+  includeComments, nameConverter, componentDb) {
   var code = [];
   var componentName = componentJson.$Name;
   var componentType = componentJson.$Type;
@@ -317,24 +324,23 @@ Blockly.Yail.getComponentPropertiesLines = function(formName, componentJson, par
   if (includeComments) {
     code.push(Blockly.Yail.YAIL_COMMENT_MAJOR + componentName + Blockly.Yail.YAIL_LINE_FEED);
   }
-  // Send Blockly.ComponentTypes[componentType].type for full class path
-  // but first feed it to propertyNameConverter function passed in. This may
-  // trim it back to just the simple component name if we are sending this yail
+  // Send component type for full class path but first feed it to propertyNameConverter function
+  // passed in. This may trim it back to just the simple component name if we are sending this yail
   // to an older companion
   code.push(Blockly.Yail.YAIL_ADD_COMPONENT + parentName + Blockly.Yail.YAIL_SPACER +
-    propertyNameConverter(Blockly.ComponentTypes[componentType].type) +
+    nameConverter(componentDb.getType(componentType).type) +
     Blockly.Yail.YAIL_SPACER + componentName + Blockly.Yail.YAIL_SPACER);
   code = code.concat(Blockly.Yail.getPropertySettersLines(componentJson, componentName));
   code.push(Blockly.Yail.YAIL_CLOSE_BLOCK);
   return code;
-}
+};
 
 /**
  * Generate Yail to set the properties for the Form described by componentJson.
  * 
  * @param {String} formName
  * @param {String} componentJson JSON string describing the component
- * @param {Boolean} whether to include comments in the generated code
+ * @param {Boolean} includeComments whether to include comments in the generated code
  * @returns {Array} code strings
  * @private
  */
@@ -354,7 +360,7 @@ Blockly.Yail.getFormPropertiesLines = function(formName, componentJson, includeC
       Blockly.Yail.YAIL_CLOSE_BLOCK);
   }
   return code;
-}
+};
 
 /**
  * Generate the code to set property values for the specifed component.
@@ -374,28 +380,30 @@ Blockly.Yail.getPropertySettersLines = function(componentJson, componentName) {
     }
   }
   return code;
-}
+};
 
 /**
  * Generate the code to set a single property value.
  *
  * @param {String} componentName
+ * @param {String} componentType
  * @param {String} propertyName
  * @param {String} propertyValue
+ * @param {!Blockly.ComponentDatabase} componentDb Component database, for type information
  * @returns code string
  * @private
  */
 Blockly.Yail.getPropertySetterString = function(componentName, componentType, propertyName, 
-  propertyValue) {
+    propertyValue, componentDb) {
   var code = Blockly.Yail.YAIL_SET_AND_COERCE_PROPERTY + Blockly.Yail.YAIL_QUOTE + 
     componentName + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + propertyName + 
     Blockly.Yail.YAIL_SPACER;
-  var propType = Blockly.Yail.YAIL_QUOTE + 
-    Blockly.ComponentTypes[componentType].properties[propertyName].type;
+  var propType = Blockly.Yail.YAIL_QUOTE +
+    componentDb.getPropertyForType(typeName, propertyName).type;
   var value = Blockly.Yail.getPropertyValueString(propertyValue, propType);
   code = code.concat(value + Blockly.Yail.YAIL_SPACER + propType + Blockly.Yail.YAIL_CLOSE_BLOCK);
   return code;
-}
+};
 
 /**
  * Generate the Yail code for a property value. Special case handling when propertyType is
@@ -434,7 +442,7 @@ Blockly.Yail.getPropertyValueString = function(propertyValue, propertyType) {
     return "\"\"";
   }
   return Blockly.Yail.quotifyForREPL(propertyValue);
-}
+};
 
 /**
  * Generate the code to rename a component
@@ -448,7 +456,7 @@ Blockly.Yail.getComponentRenameString = function(oldName, newName) {
   return Blockly.Yail.YAIL_RENAME_COMPONENT + Blockly.Yail.quotifyForREPL(oldName)
     + Blockly.Yail.YAIL_SPACER + Blockly.Yail.quotifyForREPL(newName)
     + Blockly.Yail.YAIL_CLOSE_BLOCK;
-}
+};
 
 /**
  * Transform a string to the Kawa input representation of the string, for sending to
@@ -500,7 +508,7 @@ Blockly.Yail.quotifyForREPL = function(s) {
     sb.push('"');
     return sb.join("");
   }
-}
+};
 
 /**
  * Encode a string as a properly escaped Yail string, complete with quotes.
@@ -532,9 +540,9 @@ Blockly.Yail.scrubNakedValue = function(line) {
  * Calls any statements following this block.
  * @param {!Blockly.Block} block The current block.
  * @param {string} code The Yail code created for this block.
- * @param {thisOnly} if true, only return code for this block and not any following statements
- *   note that calls of scrub_ with no 3rd parameter are equivalent to thisOnly=false, which
- *   was the behavior before this parameter was added.
+ * @param {boolean} thisOnly if true, only return code for this block and not any following
+ *   statements note that calls of scrub_ with no 3rd parameter are equivalent to thisOnly=false,
+ *   which was the behavior before this parameter was added.
  * @return {string} Yail code with comments and subsequent blocks added.
  * @private
  */
@@ -576,13 +584,13 @@ Blockly.Yail.getDebuggingYail = function() {
   var componentMap = Blockly.Component.buildComponentMap([], [], false, false);
   
   var globalBlocks = componentMap.globals;
-  for (var i = 0, block; block = globalBlocks[i]; i++) {
-    code.push(Blockly.Yail.blockToCode(block));
+  for (var i = 0; i < globalBlocks.length; i++) {
+    code.push(Blockly.Yail.blockToCode(globalBlocks[i]));
   }
   
   var blocks = Blockly.mainWorkspace.getTopBlocks(true);
   for (var x = 0, block; block = blocks[x]; x++) {
-    
+
     // generate Yail for each top-level language block
     if (!block.category) {
       continue;

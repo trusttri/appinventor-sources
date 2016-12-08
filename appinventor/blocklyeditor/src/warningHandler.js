@@ -130,8 +130,8 @@ Blockly.WarningHandler.prototype.checkErrors = function(block) {
   }
 
   //add warnings and errors that are on every block
-  var errorTestArray = block.errors.concat(Blockly.WarningHandler.allBlockErrors);
-  var warningTestArray = block.warnings.concat(Blockly.WarningHandler.allBlockWarnings);
+  var errorTestArray = block.errors.concat(this.allBlockErrors);
+  var warningTestArray = block.warnings.concat(this.allBlockWarnings);
 
   //check if there are any errors
   for(var i=0;i<errorTestArray.length;i++){

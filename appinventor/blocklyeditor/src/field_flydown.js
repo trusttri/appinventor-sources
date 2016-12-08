@@ -35,15 +35,6 @@ Blockly.FieldFlydown = function(name, isEditable, displayLocation, opt_changeHan
 
   this.EDITABLE = isEditable; // This by itself does not control editability
   this.displayLocation = displayLocation; // [lyn, 10/27/13] Make flydown direction an instance variable
-
-  // Only want one flydown object and associated svg per workspace
-  if (! Blockly.mainWorkspace.FieldFlydown) {
-    var flydown = new Blockly.Flydown(new Blockly.Options({scrollbars: false}));
-    // ***** [lyn, 10/05/2013] NEED TO WORRY ABOUT MULTIPLE BLOCKLIES! *****
-    Blockly.mainWorkspace.FieldFlydown = flydown;
-    flydown.init(Blockly.mainWorkspace, false); // false means no scrollbar
-    flydown.autoClose = true; // Flydown closes after selecting a block
-  }
 };
 goog.inherits(Blockly.FieldFlydown, Blockly.FieldTextInput);
 
@@ -127,7 +118,6 @@ Blockly.FieldFlydown.prototype.onMouseOver_ = function(e) {
 Blockly.FieldFlydown.prototype.onMouseOut_ = function(e) {
   // Clear any pending timer event to show flydown
   window.clearTimeout(Blockly.FieldFlydown.showPid_);
-  var flydown = Blockly.mainWorkspace.FieldFlydown;
   e.stopPropagation();
 };
 
@@ -155,7 +145,7 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
   // alert("FieldFlydown show Flydown");
   Blockly.hideChaff(); // Hide open context menus, dropDowns, flyouts, and other flydowns
   Blockly.FieldFlydown.openFieldFlydown_ = this; // Remember field to which flydown is attached
-  var flydown = Blockly.mainWorkspace.FieldFlydown;
+  var flydown = Blockly.getMainWorkspace().getFlydown();
   var flydownSvg = flydown.createDom(this.flyoutCSSClassName);
   // Add flydown to top-level svg, *not* to main workspace svg
   // This is essential for correct positioning of flydown via translation
@@ -179,7 +169,7 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
   } else { // if (this.displayLocation === Blockly.FieldFlydown.DISPLAY_RIGHT) {
     x = x + borderBBox.width * flydown.workspace_.scale;
   }
-  Blockly.mainWorkspace.FieldFlydown.showAt(blocksXMLList, x, y);
+  flydown.showAt(blocksXMLList, x, y);
 };
 
 /**
@@ -189,7 +179,7 @@ Blockly.FieldFlydown.hide = function() {
   // Clear any pending timer event to show flydown
   window.clearTimeout(Blockly.FieldFlydown.showPid_);
   // Clear any displayed flydown
-  var flydown = Blockly.mainWorkspace.FieldFlydown;
+  var flydown = Blockly.getMainWorkspace().getFlydown();
   if (flydown) {
     flydown.hide();
   }

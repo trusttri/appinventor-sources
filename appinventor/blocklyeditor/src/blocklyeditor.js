@@ -238,7 +238,7 @@ Blockly.ai_inject = function(container, workspace) {
     return;
   } else if (!workspace.injecting) {
     workspace.injecting = true;
-    // inject after allowing DOM to redraw, otherwise metrics are wrong.
+    // inject after allowing DOM to redraw, otherwise metrics are invalid.
     setTimeout(function() { Blockly.ai_inject(container, workspace); });
     return workspace;
   }
@@ -300,16 +300,39 @@ Blockly.ai_inject = function(container, workspace) {
   // The SVG is now fully assembled.
   Blockly.WidgetDiv.createDom();
   Blockly.Tooltip.createDom();
-  workspace.drawer_ = new Blockly.Drawer(workspace, { scrollbars: true });
-  workspace.addWarningIndicator();
-  workspace.addBackpack();
   Blockly.init_(workspace);
   workspace.markFocused();
   Blockly.bindEvent_(svg, 'focus', workspace, workspace.markFocused);
-  Blockly.svgResize(workspace);
-  workspace.render();
+  //Blockly.svgResize(workspace);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  svg.cachedWidth_ = svg.clientWidth;
+  svg.cachedHeight_ = svg.clientHeight;
+  workspace.drawer_ = new Blockly.Drawer(workspace, { scrollbars: true });
+  //workspace.drawer_.flyout_.position();
+  workspace.flyout_ = workspace.drawer_.flyout_;
+  var flydown = new Blockly.Flydown(new Blockly.Options({scrollbars: false}));
+  // ***** [lyn, 10/05/2013] NEED TO WORRY ABOUT MULTIPLE BLOCKLIES! *****
+  workspace.flydown_ = flydown;
+  flydown.init(workspace, false); // false means no scrollbar
+  flydown.autoClose = true; // Flydown closes after selecting a block
+  workspace.addWarningIndicator();
+  workspace.addBackpack();
   workspace.resize();
-  workspace.drawer_.flyout_.reflow();
+  workspace.render();
+  // Render blocks created prior to the workspace being rendered.
+  var blocks = workspace.getAllBlocks();
+  for (var i = blocks.length - 1; i >= 0; i--) {
+    blocks[i].initSvg();
+  }
+  blocks = workspace.getTopBlocks();
+  for (var i = blocks.length - 1; i >= 0; i--) {
+    var block = blocks[i];
+    block.render(false);
+    if (!isNaN(block.x) && !isNaN(block.y)) {
+      block.moveBy(workspace.RTL ? width - block.x : block.x, block.y);
+    }
+  }
   workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
   workspace.injecting = false;
   workspace.injected = true;

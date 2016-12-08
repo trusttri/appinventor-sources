@@ -56,9 +56,9 @@ Blockly.BlockSvg.prototype.onMouseDown_ = (function(func) {
   } else {
     var wrappedFunc = function(e){
       if (Blockly.FieldFlydown.openFieldFlydown_) {
-        if (goog.dom.contains(Blockly.getMainWorkspace().FieldFlydown.svgGroup_, this.svgGroup_)) {
+        if (goog.dom.contains(Blockly.getMainWorkspace().flydown_.svgGroup_, this.svgGroup_)) {
           //prevent hiding the flyout if a child block is the target
-          Blockly.mainWorkspace.FieldFlydown.shouldHide = false;
+          Blockly.getMainWorkspace().flydown_.shouldHide = false;
         }
       }
       var retval = func.call(this, e);
@@ -119,7 +119,7 @@ Blockly.BlockSvg.prototype.onMouseUp_ = (function(func) {
         if (! Blockly.Instrument.avoidRenderWorkspaceInMouseUp) {
           Blockly.mainWorkspace.render();
         }
-        this.workspace_.getWarningHandler().checkAllBlocksForWarningsAndErrors();
+        this.workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
         var stop = new Date().getTime();
         var timeDiff = stop - start;
         Blockly.Instrument.stats.totalTime = timeDiff;
@@ -210,7 +210,7 @@ Blockly.BlockSvg.prototype.render = function(opt_bubble) {
  * This is in contrast to render(), which renders a block and all its antecedents.
  */
 Blockly.BlockSvg.prototype.renderDown = function() {
-  if (Blockly.Block.isRenderingOn) {
+  if (Blockly.BlockSvg.isRenderingOn) {
     goog.asserts.assertObject(this.svgGroup_,
       ' Uninitialized block cannot be renderedDown.  Call block.initSvg()');
     // Recursively renderDown all my children (as long as I'm not collapsed)
@@ -406,24 +406,24 @@ Blockly.BlockSvg.prototype.notBadBlock = function() {
  * Extend Blockly.BlockSvg.prototype.dispose with AI2-specific functionality.
  */
 Blockly.BlockSvg.prototype.dispose = (function(func) {
-    if (func.isWrapped) {
-      return func;
-    } else {
-      var wrappedFunc = function() {
-	var workspace = this.workspace_;
-        try {
-          func.call(this);
-        } finally {
-          // Remove any associated errors or warnings.
-	  if (workspace) {  // Blocks in drawers do not have a workspace
-	    workspace.getWarningHandler().checkDisposedBlock(this);
-	  }
+  if (func.isWrapped) {
+    return func;
+  } else {
+    var wrappedFunc = function() {
+      var workspace = this.workspace;
+      try {
+        func.call(this);
+      } finally {
+        // Remove any associated errors or warnings.
+        if (workspace && workspace.getWarningHandler()) {  // Blocks in drawers do not have a workspace
+          workspace.getWarningHandler().checkDisposedBlock(this);
         }
-      };
-      wrappedFunc.isWrapped = true;
-      return wrappedFunc;
-    }
-  })(Blockly.BlockSvg.prototype.dispose);
+      }
+    };
+    wrappedFunc.isWrapped = true;
+    return wrappedFunc;
+  }
+})(Blockly.BlockSvg.prototype.dispose);
 
 /**
  * Set this block's error text.
@@ -505,4 +505,10 @@ Blockly.BlockSvg.prototype.setErrorText = function(text, opt_id) {
     // Adding or removing a error icon will cause the block to change shape.
     this.bumpNeighbours_();
   }
+};
+
+Blockly.BlockSvg.prototype.getTopWorkspace = function() {
+  var workspace = this.workspace;
+  while (workspace.targetWorkspace) workspace = workspace.targetWorkspace;
+  return workspace;
 };

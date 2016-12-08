@@ -94,7 +94,6 @@
     "./src/translation_events.js",
     "./src/translation_methods.js",
     "./src/translation_params.js",
-    "./src/component.js",
     "./src/drawer.js",
     "./src/savefile.js",
     "./src/versioning.js",

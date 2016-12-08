@@ -179,7 +179,7 @@ function start() {
     document.getElementById('formFile').addEventListener('change', handleLoadForm, false);
     document.getElementById('blocksFile').addEventListener('change', handleLoadBlocks, false);
     initComponentTypes();
-    Blockly.ComponentTypes.populateTypes();
+    Blockly.mainWorkspace.getComponentDatabase().populateTypes(componentTypeJson);
 }
 
 function initComponentTypes() {

@@ -91,3 +91,27 @@ Blockly.confirmDeletion = function(callback) {
 Blockly.preinitMainWorkspace_ = function(options) {
   Blockly.mainWorkspace = new Blockly.WorkspaceSvg(options);
 }
+
+Blockly.svgResize = function(workspace) {
+  var mainWorkspace = workspace;
+  while (mainWorkspace.options.parentWorkspace) {
+    mainWorkspace = mainWorkspace.options.parentWorkspace;
+  }
+  var svg = mainWorkspace.getParentSvg();
+  var div = svg.parentNode;
+  if (!div) {
+    // Workspace deleted, or something.
+    return;
+  }
+  var width = div.offsetWidth;
+  var height = div.offsetHeight;
+  if (svg.cachedWidth_ != width) {
+    svg.setAttribute('width', '100%');
+    svg.cachedWidth_ = width;
+  }
+  if (svg.cachedHeight_ != height) {
+    svg.setAttribute('height', '100%');
+    svg.cachedHeight_ = height;
+  }
+  mainWorkspace.resize();
+};
