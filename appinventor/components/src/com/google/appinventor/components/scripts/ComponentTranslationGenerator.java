@@ -5,12 +5,9 @@
 
 package com.google.appinventor.components.scripts;
 
-import com.google.appinventor.common.utils.StringUtils;
-import com.google.appinventor.components.annotations.DesignerProperty;
-
 import java.io.IOException;
 import java.io.Writer;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.tools.Diagnostic;
@@ -24,7 +21,11 @@ public final class ComponentTranslationGenerator extends ComponentProcessor {
     if (component.getExternal()) { // Avoid adding entries for external components
       return;
     }
+    Map<String, Parameter> parameters = new LinkedHashMap<String, Parameter>();
     sb.append("\n\n/* Component: " + component.name + " */\n\n");
+    sb.append("    map.put(\"COMPONENT-" + component.name + "\", MESSAGES." +
+        Character.toLowerCase(component.name.charAt(0)) + component.name.substring(1) +
+        "ComponentPallette());\n\n");
     sb.append("\n\n/* Properties */\n\n");
     for (Property prop : component.properties.values()) {
       String propertyName = prop.name;
@@ -44,6 +45,9 @@ public final class ComponentTranslationGenerator extends ComponentProcessor {
                               // must translate property names so they can be displayed in bad blocks.
           ) {
         sb.append("    map.put(\"EVENT-" + propertyName + "\", MESSAGES." + propertyName + "Events());\n");
+        for (Parameter parameter : event.parameters) {
+          parameters.put(parameter.name, parameter);
+        }
       }
     }
     sb.append("\n\n/* Methods */\n\n");
@@ -54,7 +58,16 @@ public final class ComponentTranslationGenerator extends ComponentProcessor {
                                // must translate property names so they can be displayed in bad blocks.
           ) {
         sb.append("    map.put(\"METHOD-" + propertyName + "\", MESSAGES." + propertyName + "Methods());\n");
+        for (Parameter parameter : method.parameters) {
+          parameters.put(parameter.name, parameter);
+        }
       }
+    }
+    sb.append("\n\n/* Parameters */\n\n");
+    for (Parameter parameter : parameters.values()) {
+      sb.append("    map.put(\"PARAM-" + parameter.name + "\", MESSAGES." +
+          Character.toLowerCase(parameter.name.charAt(0)) + parameter.name.substring(1) +
+          "Params());\n");
     }
   }
 

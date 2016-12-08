@@ -2215,7 +2215,7 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("Form")
   @Description("")
-  String FormComponentPallette();
+  String formComponentPallette();
 
   @DefaultMessage("Math")
   @Description("Label on built-in-Math-blocks branch of block selector tree")
@@ -2289,6 +2289,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("PasswordTextBox")
   @Description("")
   String passwordTextBoxComponentPallette();
+
+  @DefaultMessage("Pedometer")
+  @Description("")
+  String pedometerComponentPallette();
 
   @DefaultMessage("Slider")
   @Description("")
@@ -2365,6 +2369,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String phoneNumberPickerComponentPallette();
 
+  @DefaultMessage("PhoneStatus")
+  @Description("")
+  String phoneStatusComponentPallette();
+
   @DefaultMessage("Sharing")
   @Description("")
   String sharingComponentPallette();
@@ -2393,6 +2401,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("LocationSensor")
   @Description("")
   String locationSensorComponentPallette();
+
+  @DefaultMessage("MediaStore")
+  @Description("")
+  String mediaStoreComponentPallette();
 
   @DefaultMessage("NearField")
   @Description("")
@@ -2522,6 +2534,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("File")
   @Description("")
   String fileComponentPallette();
+
+  @DefaultMessage("FirebaseDB")
+  @Description("")
+  String firebaseDBComponentPallette();
 
   @DefaultMessage("FusiontablesControl")
   @Description("")
@@ -3509,6 +3525,22 @@ public interface OdeMessages extends Messages {
   @Description("")
   String resultParams();
 
+  @DefaultMessage("tableId")
+  @Description("")
+  String tableIdParams();
+
+  @DefaultMessage("columns")
+  @Description("")
+  String columnsParams();
+
+  @DefaultMessage("conditions")
+  @Description("")
+  String conditionsParams();
+
+  @DefaultMessage("values")
+  @Description("")
+  String valuesParams();
+
   @DefaultMessage("other")
   @Description("")
   String otherParams();
@@ -3669,6 +3701,26 @@ public interface OdeMessages extends Messages {
   @Description("")
   String colorParams();
 
+  @DefaultMessage("year")
+  @Description("")
+  String yearParams();
+
+  @DefaultMessage("month")
+  @Description("")
+  String monthParams();
+
+  @DefaultMessage("day")
+  @Description("")
+  String dayParams();
+
+  @DefaultMessage("hour")
+  @Description("")
+  String hourParams();
+
+  @DefaultMessage("minute")
+  @Description("")
+  String minuteParams();
+
   @DefaultMessage("instant")
   @Description("")
   String instantParams();
@@ -3705,6 +3757,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String durationParams();
 
+  @DefaultMessage("pattern")
+  @Description("")
+  String patternParams();
+
   @DefaultMessage("years")
   @Description("")
   String yearsParams();
@@ -3732,6 +3788,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("message")
   @Description("")
   String messageParams();
+
+  @DefaultMessage("mediafileParams")
+  @Description("")
+  String mediafileParams();
 
   @DefaultMessage("otherScreenName")
   @Description("")
@@ -3808,6 +3868,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("provider")
   @Description("")
   String providerParams();
+
+  @DefaultMessage("phoneNumber")
+  @Description("")
+  String phoneNumberParams();
 
   @DefaultMessage("status")
   @Description("")
@@ -3961,9 +4025,17 @@ public interface OdeMessages extends Messages {
   @Description("")
   String tagParams();
 
+  @DefaultMessage("value")
+  @Description("")
+  String valueParams();
+
   @DefaultMessage("valueToStore")
   @Description("")
   String valueToStoreParams();
+
+  @DefaultMessage("valueToAdd")
+  @Description("")
+  String valueToAddParams();
 
   @DefaultMessage("tagFromWebDB")
   @Description("")
@@ -4025,6 +4097,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String encodingParams();
 
+  @DefaultMessage("xmlText")
+  @Description("")
+  String xmlTextParams();
+
   @DefaultMessage("name")
   @Description("")
   String nameParams();
@@ -4079,7 +4155,7 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("ImagePath")
   @Description("")
-  String ImagePathParams();
+  String imagePathParams();
 
   @DefaultMessage("ms")
   @Description("")
@@ -5289,7 +5365,7 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("XmlTextDecode")
   @Description("")
-  String XmlTextDecodeMethods();
+  String xmlTextDecodeMethods();
 
   @DefaultMessage("PostFile")
   @Description("")

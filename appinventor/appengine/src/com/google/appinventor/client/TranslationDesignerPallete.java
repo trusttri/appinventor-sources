@@ -60,7 +60,7 @@ public class TranslationDesignerPallete {
     } else if (key.equals("DatePicker")) {
       value = MESSAGES.datePickerComponentPallette();
     } else if (key.equals("Form")) {
-      value = MESSAGES.FormComponentPallette();
+      value = MESSAGES.formComponentPallette();
     } else if (key.equals("Image")) {
       value = MESSAGES.imageComponentPallette();
     } else if (key.equals("Label")) {
