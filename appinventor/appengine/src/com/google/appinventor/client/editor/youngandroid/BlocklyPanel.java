@@ -11,8 +11,6 @@ import com.google.appinventor.client.DesignToolbar;
 import com.google.appinventor.client.ErrorReporter;
 import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.TopToolbar;
-import com.google.appinventor.client.TranslationComponentParams;
-import com.google.appinventor.client.TranslationDesignerPallete;
 import com.google.appinventor.client.editor.youngandroid.events.BlocklyEvent;
 import com.google.appinventor.client.output.OdeLog;
 import com.google.appinventor.components.common.YaVersion;
@@ -364,26 +362,6 @@ public class BlocklyPanel extends HTMLPanel {
     doUpdateCompanion(formName);
   }
 
-  public static String getLocalizedPropertyName(String key) {
-    return ComponentsTranslation.getPropertyName(key);
-  }
-
-  public static String getLocalizedParameterName(String key) {
-    return TranslationComponentParams.getName(key);
-  }
-
-  public static String getLocalizedMethodName(String key) {
-    return ComponentsTranslation.getMethodName(key);
-  }
-
-  public static String getLocalizedEventName(String key) {
-    return ComponentsTranslation.getEventName(key);
-  }
-
-  public static String getLocalizedComponentType(String key) {
-    return TranslationDesignerPallete.getCorrespondingString(key);
-  }
-
   public static String getOdeMessage(String message) {
     // TODO(ewpatton): Investigate using a generator to work around
     // lack of reflection
@@ -432,16 +410,6 @@ public class BlocklyPanel extends HTMLPanel {
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentInfo(Ljava/lang/String;));
     $wnd.BlocklyPanel_getComponentsJSONString =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString(Ljava/lang/String;));
-    $wnd.BlocklyPanel_getLocalizedPropertyName =
-        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedPropertyName(Ljava/lang/String;));
-    $wnd.BlocklyPanel_getLocalizedParameterName =
-        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedParameterName(Ljava/lang/String;));
-    $wnd.BlocklyPanel_getLocalizedMethodName =
-        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedMethodName(Ljava/lang/String;));
-    $wnd.BlocklyPanel_getLocalizedEventName =
-        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedEventName(Ljava/lang/String;));
-    $wnd.BlocklyPanel_getLocalizedComponentType =
-        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedComponentType(Ljava/lang/String;));
     $wnd.BlocklyPanel_getOdeMessage =
       $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getOdeMessage(Ljava/lang/String;));
   }-*/;
@@ -585,7 +553,7 @@ public class BlocklyPanel extends HTMLPanel {
 
   public native void toggleWarning()/*-{
     this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace
-      .warningToggle();
+      .getWarningHandler().toggleWarning();
   }-*/;
 
   public native String doGetYailRepl(String formJson, String packageName) /*-{

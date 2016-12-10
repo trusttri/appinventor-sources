@@ -239,11 +239,19 @@ Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos, tra
       if (typeof event['deprecated'] === 'string') {
         event['deprecated'] = JSON.parse(event['deprecated']);
       }
+      if (event['parameters'] === undefined) {
+        event['parameters'] = event['params'];
+        delete event['params'];
+      }
       info.eventDictionary[event.name] = event;
     }
     for (var j = 0, /** @type {MethodDescriptor} */ method; method = componentInfo.methods[j]; ++j) {
       if (typeof method['deprecated'] === 'string') {
         method['deprecated'] = JSON.parse(method['deprecated']);
+      }
+      if (method['parameters'] === undefined) {
+        method['parameters'] = method['params'];
+        delete method['params'];
       }
       info.methodDictionary[method.name] = method;
     }

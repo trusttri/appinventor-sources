@@ -48,7 +48,7 @@ Blockly.WorkspaceSvg.prototype.typeBlock_ = null;
  * Initial position is 0,0
  * @type {{x: number, y: number}}
  */
-Blockly.WorkspaceSvg.prototype.latestClick = { x: 0, y: 0 }
+Blockly.WorkspaceSvg.prototype.latestClick = { x: 0, y: 0 };
 
 /**
  * Wrap the onMouseClick_ event to handle additional behaviors.
@@ -96,8 +96,7 @@ Blockly.WorkspaceSvg.prototype.createDom = (function(func) {
     return func;
   } else {
     var f = function() {
-      var svg = func.apply(this, Array.prototype.slice.call(arguments));
-      return svg;
+      return func.apply(this, Array.prototype.slice.call(arguments));
     };
     f.isWrapper = true;
     return f;
@@ -163,6 +162,7 @@ Blockly.WorkspaceSvg.prototype.setScale = (function(func) {
   }
 })(Blockly.WorkspaceSvg.prototype.setScale);
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 /**
  * Hide the blocks drawer.
  */
@@ -199,6 +199,7 @@ Blockly.WorkspaceSvg.prototype.showComponent = function(component) {
   return this;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 /**
  * Check whether the drawer is showing.
  */
@@ -213,36 +214,42 @@ Blockly.WorkspaceSvg.prototype.isDrawerShowing = function() {
 // Override Blockly's render with optimized version from lyn
 Blockly.WorkspaceSvg.prototype.render = function() {
   this.rendered = true;
-  if (Blockly.Instrument.isOn) {
-    var start = new Date().getTime();
-  }
-  // [lyn, 04/08/14] Get both top and all blocks for stats
-  var topBlocks = this.getTopBlocks();
-  var allBlocks = this.getAllBlocks();
-  if (Blockly.Instrument.useRenderDown) {
-    for (var t = 0, topBlock; topBlock = topBlocks[t]; t++) {
-      Blockly.Instrument.timer(
-          function () { topBlock.renderDown(); },
+  Blockly.Field.startCache();
+  try {
+    if (Blockly.Instrument.isOn) {
+      var start = new Date().getTime();
+    }
+    // [lyn, 04/08/14] Get both top and all blocks for stats
+    var topBlocks = this.getTopBlocks(/* ordered */ false);
+    var allBlocks = this.getAllBlocks();
+    if (Blockly.Instrument.useRenderDown) {
+      for (var t = 0, topBlock; topBlock = topBlocks[t]; t++) {
+        Blockly.Instrument.timer(
+          function () {
+            topBlock.renderDown();
+          },
           function (result, timeDiffInner) {
             Blockly.Instrument.stats.renderDownTime += timeDiffInner;
           }
-      );
-    }
-  } else {
-    var renderList = allBlocks;
-    for (var x = 0, block; block = renderList[x]; x++) {
-      if (!block.getChildren().length) {
-        block.render();
+        );
+      }
+    } else {
+      for (var x = 0, block; block = allBlocks[x]; x++) {
+        if (!block.getChildren().length) {
+          block.render();
+        }
       }
     }
-  }
-  if (Blockly.Instrument.isOn) {
-    var stop = new Date().getTime();
-    var timeDiffOuter = stop - start;
-    Blockly.Instrument.stats.blockCount = allBlocks.length;
-    Blockly.Instrument.stats.topBlockCount = topBlocks.length;
-    Blockly.Instrument.stats.workspaceRenderCalls++;
-    Blockly.Instrument.stats.workspaceRenderTime += timeDiffOuter;
+    if (Blockly.Instrument.isOn) {
+      var stop = new Date().getTime();
+      var timeDiffOuter = stop - start;
+      Blockly.Instrument.stats.blockCount = allBlocks.length;
+      Blockly.Instrument.stats.topBlockCount = topBlocks.length;
+      Blockly.Instrument.stats.workspaceRenderCalls++;
+      Blockly.Instrument.stats.workspaceRenderTime += timeDiffOuter;
+    }
+  } finally {
+    Blockly.Field.stopCache();  // must balance with startCache() call above
   }
 };
 
@@ -255,17 +262,22 @@ Blockly.WorkspaceSvg.prototype.getComponentDatabase = function() {
   return this.componentDb_;
 };
 
+/**
+ * Obtain the {@link Blockly.ProcedureDatabase} associated with the workspace.
+ * @returns {!Blockly.ProcedureDatabase}
+ */
 Blockly.WorkspaceSvg.prototype.getProcedureDatabase = function() {
   return this.procedureDb_;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 /**
  * Add a new component to the workspace.
  *
  * @param {string} uid
  * @param {string} instanceName
  * @param {string} typeName
- * @returns The workspace for chaining calls.
+ * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
 Blockly.WorkspaceSvg.prototype.addComponent = function(uid, instanceName, typeName) {
   if (this.componentDb_.addInstance(uid, instanceName, typeName)) {
@@ -275,11 +287,12 @@ Blockly.WorkspaceSvg.prototype.addComponent = function(uid, instanceName, typeNa
   return this;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 /**
  * Remove a component from the workspace.
  *
- * @param uid {string} The component's unique identifier
- * @returns The workspace for chaining calls.
+ * @param {string} uid The component's unique identifier
+ * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
 Blockly.WorkspaceSvg.prototype.removeComponent = function(uid) {
   if (!this.componentDb_.removeInstance(uid)) {
@@ -295,13 +308,14 @@ Blockly.WorkspaceSvg.prototype.removeComponent = function(uid) {
   return this;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 /**
  * Rename a component in the workspace.
  *
- * @param oldName {string} The previous name of the component.
- * @param newName {string} The new name of the component.
- * @param uid {string} The unique identifier of the component.
- * @returns The workspace for chaining calls.
+ * @param {!string} oldName The previous name of the component.
+ * @param {!string} newName The new name of the component.
+ * @param {!string} uid The unique identifier of the component.
+ * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
 Blockly.WorkspaceSvg.prototype.renameComponent = function(oldName, newName, uid) {
   if (!this.componentDb_.renameInstance(oldName, newName, uid)) {
@@ -318,6 +332,7 @@ Blockly.WorkspaceSvg.prototype.renameComponent = function(oldName, newName, uid)
   return this;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java.
 /**
  * Populate the component type database with the components encoded by
  * strComponentInfos.
@@ -330,12 +345,13 @@ Blockly.WorkspaceSvg.prototype.populateComponentTypes = function(strComponentInf
   this.componentDb_.populateTypes(JSON.parse(strComponentInfos), translations);
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java.
 /**
  * Loads the contents of a blocks file into the workspace.
  *
- * @param formJson {string} JSON string containing structure of the Form
- * @param blocksContent {string} XML serialization of the blocks
- * @returns The workspace for chaining calls.
+ * @param {!string} formJson JSON string containing structure of the Form
+ * @param {!string} blocksContent XML serialization of the blocks
+ * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
 Blockly.WorkspaceSvg.prototype.loadBlocksFile = function(formJson, blocksContent) {
   if (blocksContent.length != 0) {
@@ -352,11 +368,12 @@ Blockly.WorkspaceSvg.prototype.loadBlocksFile = function(formJson, blocksContent
   return this;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 /**
  * Verifies all of the blocks on the workspace and adds error icons if
  * any problems are identified.
  *
- * @returns The workspace for chaining calls.
+ * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
 Blockly.WorkspaceSvg.prototype.verifyAllBlocks = function() {
   var blocks = this.getAllBlocks();
@@ -368,6 +385,7 @@ Blockly.WorkspaceSvg.prototype.verifyAllBlocks = function() {
   return this;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 /**
  * Saves the workspace as an XML file and returns the contents as a
  * string.
@@ -406,6 +424,7 @@ Blockly.WorkspaceSvg.prototype.getWarningIndicator = function() {
   return this.warningIndicator_;
 };
 
+//noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java
 Blockly.WorkspaceSvg.prototype.exportBlocksImageToUri = function(cb) {
   Blockly.ExportBlocksImage.getUri(cb, this);
 };
@@ -425,14 +444,14 @@ Blockly.WorkspaceSvg.prototype.activate = function() {
 
 Blockly.WorkspaceSvg.prototype.buildComponentMap = function(warnings, errors, forRepl, compileUnattachedBlocks) {
   var map = {components: {}, globals: []};
-  var blocks = this.getTopBlocks(true);
+  var blocks = this.getTopBlocks(/* ordered */ true);
   for (var i = 0, block; block = blocks[i]; ++i) {
     if (block.type == 'procedures_defnoreturn' || block.type == 'procedures_defreturn' || block.type == 'global_declaration') {
       map.globals.push(block);
-    } else if (block.category == 'Component' && block.blockType == 'event') {
+    } else if (block.category == 'Component' && block.type == 'event') {
       var instanceName = block.instanceName;
       if (!map.components[instanceName]) {
-	map.components[instanceName] = [];
+	      map.components[instanceName] = [];
       }
       map.components[instanceName].push(block);
     }
@@ -443,17 +462,20 @@ Blockly.WorkspaceSvg.prototype.buildComponentMap = function(warnings, errors, fo
 Blockly.WorkspaceSvg.prototype.resize = (function(resize) {
   return function() {
     resize.call(this);
+    this.warningIndicator_.position_();
+    this.backpack_.position_();
     return this;
   };
 })(Blockly.WorkspaceSvg.prototype.resize);
 
 Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
+  var self = this;
   function addResetArrangements(callback) {
     return function() {
       try {
         callback.call();
       } finally {
-        this.resetArrangements();
+        self.resetArrangements();
       }
     };
   }
@@ -461,7 +483,7 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
     return function() {
       Blockly.Instrument.initializeStats('expandAllCollapsedBlocks');
       Blockly.Instrument.timer(
-        function() { callback(); },
+        function() { callback.call(self); },
         function(result, timeDiff) {
           Blockly.Instrument.stats.totalTime = timeDiff;
           Blockly.Instrument.displayStats('expandAllCollapsedBlocks');
@@ -480,7 +502,7 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
   exportOption.text = Blockly.Msg.EXPORT_IMAGE;
   exportOption.callback = function() {
     Blockly.ExportBlocksImage.onclickExportBlocks(Blockly.getMainWorkspace().getMetrics());
-  }
+  };
   menuOptions.splice(3, 0, exportOption);
 
   // Arrange blocks in row order.
@@ -509,7 +531,7 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
    * In the case of 'Components' the comparator is the instanceName of the component if it exists
    * (it does not exist for generic components).
    * In the case of Procedures the comparator is the NAME(for definitions) or PROCNAME (for calls)
-   * @param {!Blockly.Block} the block that will be compared in the sortByCategory function
+   * @param {!Blockly.Block} block the block that will be compared in the sortByCategory function
    * @returns {string} text to be used in the comparison
    */
   function comparisonName(block){
@@ -538,7 +560,7 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
   // Arranges block in layout (Horizontal or Vertical).
   function arrangeBlocks(layout) {
     var SPACER = 25;
-    var topblocks = Blockly.mainWorkspace.getTopBlocks(false);
+    var topblocks = Blockly.mainWorkspace.getTopBlocks(/* ordered */ false);
     // If the blocks are arranged by Category, sort the array
     if (Blockly.workspace_arranged_type === Blockly.BLKS_CATEGORY){
       topblocks.sort(sortByCategory);
@@ -616,31 +638,31 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
   // Retrieve from backpack option.
   var backpackRetrieve = {enabled: true};
   backpackRetrieve.text = Blockly.Msg.BACKPACK_GET + " (" +
-    Blockly.getMainWorkspace().backpack.count() + ")";
+    Blockly.getMainWorkspace().getBackpack().count() + ")";
   backpackRetrieve.callback = function() {
-    if (Blockly.getMainWorkspace().backpack) {
-      Blockly.getMainWorkspace().backpack.pasteBackpack(this.backpack);
+    if (Blockly.getMainWorkspace().hasBackpack()) {
+      Blockly.getMainWorkspace().getBackpack().pasteBackpack(this.backpack_);
     }
-  }
+  };
   menuOptions.push(backpackRetrieve);
 
   // Copy all blocks to backpack option.
   var backpackCopyAll = {enabled: true};
   backpackCopyAll.text = Blockly.Msg.COPY_ALLBLOCKS;
   backpackCopyAll.callback = function() {
-    if (Blockly.getMainWorkspace().backpack) {
-      Blockly.getMainWorkspace().backpack.addAllToBackpack();
+    if (this.backpack_) {
+      Blockly.getMainWorkspace().getBackpack().addAllToBackpack();
     }
-  }
+  };
   menuOptions.push(backpackCopyAll);
 
   // Clear backpack.
   var backpackClear = {enabled: true};
   backpackClear.text = Blockly.Msg.BACKPACK_EMPTY;
   backpackClear.callback = function() {
-    Blockly.getMainWorkspace().backpack.clear();
+    Blockly.getMainWorkspace().getBackpack().clear();
     backpackRetrieve.text = Blockly.Msg.BACKPACK_GET;
-  }
+  };
   menuOptions.push(backpackClear);
 
   // Option to get help.
@@ -657,4 +679,33 @@ Blockly.WorkspaceSvg.prototype.recordDeleteAreas = function() {
     this.deleteAreaTrash_ = null;
   }
   this.deleteAreaToolbox_ = null;
+};
+
+Blockly.WorkspaceSvg.prototype.getBackpack = function() {
+  return this.backpack_;
+};
+
+Blockly.WorkspaceSvg.prototype.hasBackpack = function() {
+  return this.backpack_ != null;
+};
+
+Blockly.WorkspaceSvg.prototype.onMouseWheel_ = function(e) {
+  Blockly.terminateDrag_();
+  if (e.eventPhase == 3) {
+
+  }
+  console.log("state = " + e.eventPhase);
+  console.log("deltaX = " + e.deltaX);
+  console.log("deltaY = " + e.deltaY);
+  console.log("ctrlKey = " + e.ctrlKey);
+  if (e.deltaY == 0) {
+    // Multi-stage wheel movement triggers jumpy zoom-in then zoom-out behavior
+    e.preventDefault();
+    return;
+  }
+  var delta = e.deltaY > 0 ? -1 : 1;
+  var position = Blockly.mouseToSvg(e, this.getParentSvg(),
+    this.getInverseScreenCTM());
+  this.zoom(position.x, position.y, delta);
+  e.preventDefault();
 };

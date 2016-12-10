@@ -2187,7 +2187,7 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("User Interface")
   @Description("")
-  String UIComponentPallette();
+  String userInterfaceComponentPallette();
 
   @DefaultMessage("Layout")
   @Description("")
@@ -2199,7 +2199,7 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("Drawing and Animation")
   @Description("")
-  String drawanimationComponentPallette();
+  String drawingAndAnimationComponentPallette();
 
   @DefaultMessage("Sensors")
   @Description("")
@@ -2212,6 +2212,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Storage")
   @Description("")
   String storageComponentPallette();
+
+  @DefaultMessage("For internal use only")
+  @Description("")
+  String forInternalUseOnlyComponentPallette();
 
   @DefaultMessage("Form")
   @Description("")
@@ -2227,7 +2231,7 @@ public interface OdeMessages extends Messages {
 
   @DefaultMessage("LEGO\u00AE MINDSTORMS\u00AE")
   @Description("")
-  String legoComponentPallette();
+  String legoMindstormsComponentPallette();
 
   @DefaultMessage("External")
   @Description("")
@@ -5807,6 +5811,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Non-visible component providing location information, including longitude, latitude, altitude (if supported by the device), speed (if supported by the device), and address.  This can also perform \"geocoding\", converting a given address (not necessarily the current one) to a latitude (with the <code>LatitudeFromAddress</code> method) and a longitude (with the <code>LongitudeFromAddress</code> method).</p>\n <p>In order to function, the component must have its <code>Enabled</code> property set to True, and the device must have location sensing enabled through wireless networks or GPS satellites (if outdoors).</p>\nLocation information might not be immediately available when an app starts.  You''ll have to wait a short time for a location provider to be found and used, or wait for the OnLocationChanged event")
   @Description("")
   String LocationSensorHelpStringComponentPallette();
+
+  @DefaultMessage("<p>The MediaStore component communicates with a web service to store media objects. This component has a single method that stores a media object in the services blob store, and returns a pointer to the object via a url.</p>")
+  @Description("")
+  String MediaStoreHelpStringComponentPallette();
 
   @DefaultMessage("<p>Non-visible component to provide NFC capabilities.  For now this component supports the reading and writing of text tags only (if supported by the device)</p><p>In order to read and write text tags, the component must have its <code>ReadMode</code> property set to True or False respectively.</p><p><strong>Note:</strong> This component will only work on Screen1 of any App Inventor app.</p>")
   @Description("")

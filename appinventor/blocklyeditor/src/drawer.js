@@ -65,6 +65,7 @@ Blockly.Drawer.buildTree_ = function() {
   var tree = {};
   // Populate the tree structure.
   for (var name in Blockly.Blocks) {
+    if (!Blockly.Blocks.hasOwnProperty(name)) continue;
     var block = Blockly.Blocks[name];
     // Blocks without a category are fragments used by the mutator dialog.
     if (block.category) {
@@ -118,9 +119,7 @@ Blockly.Drawer.prototype.showComponent = function(instanceName) {
   var component = this.workspace_.getComponentDatabase().getInstance(instanceName);
   if (component) {
     this.flyout_.hide();
-
-    var xmlList = this.instanceRecordToXMLArray(component);
-    this.flyout_.show(xmlList);
+    this.flyout_.show(this.instanceRecordToXMLArray(component));
   } else {
     console.log("Got call to Blockly.Drawer.showComponent(" +  instanceName +
                 ") - unknown component name");
@@ -132,7 +131,7 @@ Blockly.Drawer.prototype.showComponent = function(instanceName) {
  * "Any components" section in App Inventor). drawerName should be the name of a component type for
  * which we have at least one component instance in the blocks workspace. If no such component
  * type is found, currently we just log a message to the console and do nothing.
- * @param drawerName
+ * @param {!string} typeName
  */
 Blockly.Drawer.prototype.showGeneric = function(typeName) {
   if (this.workspace_.getComponentDatabase().hasType(typeName)) {
@@ -154,7 +153,7 @@ Blockly.Drawer.prototype.hide = function() {
 };
 
 /**
- * @returns  true if the Drawer flyout is currently open, false otherwise.
+ * @returns {boolean} true if the Drawer flyout is currently open, false otherwise.
  */
 Blockly.Drawer.prototype.isShowing = function() {
   return this.flyout_.isVisible();
@@ -180,7 +179,7 @@ Blockly.Drawer.prototype.instanceRecordToXMLArray = function(instanceRecord) {
   goog.object.forEach(componentInfo.eventDictionary, function(event, name) {
     if (event.deprecated != 'true') {
       Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_event', {
-	'component_type': typeName, 'instance_name': instanceRecord.name, 'event_name': name
+        'component_type': typeName, 'instance_name': instanceRecord.name, 'event_name': name
       }));
     }
   }, this);
@@ -189,7 +188,7 @@ Blockly.Drawer.prototype.instanceRecordToXMLArray = function(instanceRecord) {
   goog.object.forEach(componentInfo.methodDictionary, function(method, name) {
     if (method.deprecated != 'true') {
       Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_method', {
-	'component_type': typeName, 'instance_name': instanceRecord.name, 'method_name': name
+        'component_type': typeName, 'instance_name': instanceRecord.name, 'method_name': name
       }));
     }
   }, this);
@@ -199,19 +198,19 @@ Blockly.Drawer.prototype.instanceRecordToXMLArray = function(instanceRecord) {
     if (property.deprecated != 'true') {
       var params = {'component_type': typeName, 'instance_name': instanceRecord.name,
 		    'property_name': name};
-      if (property.mutability & Blockly.PROPERTY_READABLE) {
-	params['set_or_get'] = 'get';
-	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+      if ((property.mutability & Blockly.PROPERTY_READABLE) == Blockly.PROPERTY_READABLE) {
+        params['set_or_get'] = 'get';
+        Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
       }
-      if (property.mutability & Blockly.PROPERTY_WRITEABLE) {
-	params['set_or_get'] = 'set';
-	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+      if ((property.mutability & Blockly.PROPERTY_WRITEABLE) == Blockly.PROPERTY_WRITEABLE) {
+        params['set_or_get'] = 'set';
+        Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
       }
     }
   }, this);
 
   //create component literal block
-  mutatorAttributes = {component_type: typeName, instance_name: instanceRecord.name};
+  var mutatorAttributes = {component_type: typeName, instance_name: instanceRecord.name};
   Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray("component_component_block",mutatorAttributes));
 
   return xmlArray;
@@ -223,24 +222,24 @@ Blockly.Drawer.prototype.componentTypeToXMLArray = function(typeName) {
 
   //create generic method blocks
   goog.object.forEach(componentInfo.methodDictionary, function(method, name) {
-    if (method.deprecated) {
+    if (!method.deprecated) {
       Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_method', {
-	component_type: typeName, method_name: methodObjects
+        component_type: typeName, method_name: name
       }));
     }
   }, this);
 
   //for each property
   goog.object.forEach(componentInfo.properties, function(property, name) {
-    if (property.deprecated) {
-      var params = {component_type: typeName, instance_name: instanceRecord.name, property_name: name};
-      if (property.mutability & 1) {
-	params.set_or_get = 'get';
-	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+    if (!property.deprecated) {
+      var params = {component_type: typeName, property_name: name};
+      if ((property.mutability & Blockly.PROPERTY_READABLE) == Blockly.PROPERTY_READABLE) {
+        params.set_or_get = 'get';
+        Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
       }
-      if (property.mutability & 2) {
-	params.set_or_get = 'set';
-	Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
+      if ((property.mutability & Blockly.PROPERTY_WRITEABLE) == Blockly.PROPERTY_WRITEABLE) {
+        params.set_or_get = 'set';
+        Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));
       }
     }
   }, this);
@@ -257,9 +256,9 @@ Blockly.Drawer.prototype.blockTypeToXMLArray = function(blockType,mutatorAttribu
     } else {
       xmlString = '<xml><block type="' + blockType + '">';
       if(mutatorAttributes) {
-	if (mutatorAttributes['is_generic'] === undefined) {
-	  mutatorAttributes['is_generic'] = !mutatorAttributes['instance_name']
-	}
+        if (mutatorAttributes['is_generic'] === undefined) {
+          mutatorAttributes['is_generic'] = !mutatorAttributes['instance_name']
+        }
         xmlString += Blockly.Drawer.mutatorAttributesToXMLString(mutatorAttributes);
       }
       xmlString += '</block></xml>';
@@ -274,22 +273,23 @@ Blockly.Drawer.prototype.blockTypeToXMLArray = function(blockType,mutatorAttribu
     xmlBlockArray.push(children[i]);
   }
   return xmlBlockArray;
-}
+};
 
 Blockly.Drawer.mutatorAttributesToXMLString = function(mutatorAttributes){
   var xmlString = '<mutation ';
   for(var attributeName in mutatorAttributes) {
+    if (!mutatorAttributes.hasOwnProperty(attributeName)) continue;
     xmlString += attributeName + '="' + mutatorAttributes[attributeName] + '" ';
   }
   xmlString += '></mutation>';
   return xmlString;
-}
+};
 
 // [lyn, 10/22/13] return an XML string including one procedure caller for each procedure declaration
 // in main workspace.
 // [jos, 10/18/15] if we pass a proc_name, we only want one procedure returned as xmlString
 Blockly.Drawer.prototype.procedureCallersXMLString = function(returnsValue, proc_name) {
-  var xmlString = '<xml>'  // Used to accumulate xml for each caller
+  var xmlString = '<xml>';  // Used to accumulate xml for each caller
   var decls = this.workspace_.getProcedureDatabase().getDeclarationBlocks(returnsValue);
 
   if (proc_name) {
@@ -314,7 +314,7 @@ Blockly.Drawer.compareDeclarationsByName = function (decl1, decl2) {
   var name1 = decl1.getFieldValue('NAME').toLocaleLowerCase();
   var name2 = decl2.getFieldValue('NAME').toLocaleLowerCase();
   return name1.localeCompare(name2);
-}
+};
 
 // [lyn, 10/22/13] return an XML string for a caller block for the give procedure declaration block
 // Here's an example:
@@ -333,11 +333,10 @@ Blockly.Drawer.procedureCallerBlockString = function(procDeclBlock) {
   blockString += '<title name="PROCNAME">' + procName + '</title>';
   var mutationDom = procDeclBlock.mutationToDom();
   mutationDom.setAttribute('name', procName); // Decl doesn't have name attribute, but caller does
-  var mutationXmlString = Blockly.Xml.domToText(mutationDom);
-  blockString += mutationXmlString;
+  blockString += Blockly.Xml.domToText(mutationDom);
   blockString += '</block>';
   return blockString;
-}
+};
 
 /**
  * Given the blockType and a dictionary of the mutator attributes
@@ -368,8 +367,9 @@ Blockly.Drawer.getDefaultXMLString = function(blockType,mutatorAttributes) {
       //if one attribute does not match then move to the next possibility
       allMatch = true;
       for(var mutatorAttribute in matchingAttributes) {
+        if (!matchingAttributes.hasOwnProperty(mutatorAttribute)) continue;
         if(mutatorAttributes[mutatorAttribute] != matchingAttributes[mutatorAttribute]){
-          allMatch = false
+          allMatch = false;
           break;
         }
       }
@@ -382,7 +382,7 @@ Blockly.Drawer.getDefaultXMLString = function(blockType,mutatorAttributes) {
     return null;
   }
 
-}
+};
 
 Blockly.Drawer.defaultBlockXMLStrings = {
   controls_forRange: {xmlString:

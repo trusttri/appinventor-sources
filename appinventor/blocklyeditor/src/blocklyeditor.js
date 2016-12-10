@@ -31,7 +31,7 @@ Blockly.configForTypeBlock = {
 };
 
 Blockly.BlocklyEditor.render = function() {
-}
+};
 
 /**
  * Add a "Do It" option to the context menu for every block. If the user is an admin also
@@ -42,9 +42,9 @@ Blockly.BlocklyEditor.render = function() {
  */
 Blockly.Block.prototype.customContextMenu = function(options) {
   var myBlock = this;
-  var doitOption = { enabled: this.disabled?false : true};
+  var doitOption = { enabled: !this.disabled};
   if (window.parent.BlocklyPanel_checkIsAdmin()) {
-    var yailOption = {enabled: this.disabled?false : true};
+    var yailOption = {enabled: !this.disabled};
     yailOption.text = Blockly.Msg.GENERATE_YAIL;
     yailOption.callback = function() {
       var yailText;
@@ -91,8 +91,8 @@ Blockly.Block.prototype.customContextMenu = function(options) {
     clearDoitOption.text = Blockly.Msg.CLEAR_DO_IT_ERROR;
     clearDoitOption.callback = function() {
       myBlock.replError = null;
-      Blockly.WarningHandler.checkErrors.call(myBlock);
-    }
+      Blockly.getMainWorkspace().getWarningHandler().checkErrors(myBlock);
+    };
     options.push(clearDoitOption);
   }
   if(myBlock.procCustomContextMenu){
@@ -176,7 +176,7 @@ Blockly.unprefixName = function (name) {
                     Blockly.handlerParameterPrefix,
                     Blockly.localNamePrefix,
                     Blockly.loopParameterPrefix,
-                    Blockly.loopRangeParameterPrefix]
+                    Blockly.loopRangeParameterPrefix];
     for (i=0; i < prefixes.length; i++) {
       if (name.indexOf(prefixes[i]) == 0) {
         // name begins with prefix
@@ -186,7 +186,7 @@ Blockly.unprefixName = function (name) {
     // Really an error if get here ...
     return ["", name];
   }
-}
+};
 
 Blockly.BlocklyEditor.create = function(container, readOnly, rtl) {
   var workspace = new Blockly.WorkspaceSvg(new Blockly.Options({
@@ -206,13 +206,13 @@ Blockly.BlocklyEditor.create = function(container, readOnly, rtl) {
   workspace.variableDb_ = new Blockly.VariableDatabase();
   if (!readOnly) {
     var ai_type_block = goog.dom.createElement('div'),
-	p = goog.dom.createElement('p'),
-	ac_input_text = goog.dom.createElement('input'),
-	typeblockOpts = {
-	  frame: container,
-	  typeBlockDiv: ai_type_block,
-	  inputText: ac_input_text
-	};
+      p = goog.dom.createElement('p'),
+      ac_input_text = goog.dom.createElement('input'),
+      typeblockOpts = {
+        frame: container,
+        typeBlockDiv: ai_type_block,
+        inputText: ac_input_text
+      };
     // build dom for typeblock (adapted from blocklyframe.html)
     goog.style.setElementShown(ai_type_block, false);
     goog.dom.classlist.add(ai_type_block, "ai_type_block");
@@ -236,17 +236,16 @@ Blockly.BlocklyEditor.create = function(container, readOnly, rtl) {
 Blockly.ai_inject = function(container, workspace) {
   if (workspace.injected) {
     return;
-  } else if (!workspace.injecting) {
-    workspace.injecting = true;
-    // inject after allowing DOM to redraw, otherwise metrics are invalid.
-    setTimeout(function() { Blockly.ai_inject(container, workspace); });
-    return workspace;
   }
   Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
   var options = workspace.options;
   var subContainer = goog.dom.createDom('div', 'injectionDiv');
   container.appendChild(subContainer);
   var svg = Blockly.createDom_(subContainer, options);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  svg.cachedWidth_ = svg.clientWidth;
+  svg.cachedHeight_ = svg.clientHeight;
   svg.appendChild(workspace.createDom('blocklyMainBackground'));
   workspace.translate(0, 0);
   if (!options.readOnly && !options.hasScrollbars) {
@@ -300,42 +299,44 @@ Blockly.ai_inject = function(container, workspace) {
   // The SVG is now fully assembled.
   Blockly.WidgetDiv.createDom();
   Blockly.Tooltip.createDom();
-  Blockly.init_(workspace);
-  workspace.markFocused();
-  Blockly.bindEvent_(svg, 'focus', workspace, workspace.markFocused);
-  //Blockly.svgResize(workspace);
-  svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '100%');
-  svg.cachedWidth_ = svg.clientWidth;
-  svg.cachedHeight_ = svg.clientHeight;
   workspace.drawer_ = new Blockly.Drawer(workspace, { scrollbars: true });
-  //workspace.drawer_.flyout_.position();
   workspace.flyout_ = workspace.drawer_.flyout_;
   var flydown = new Blockly.Flydown(new Blockly.Options({scrollbars: false}));
   // ***** [lyn, 10/05/2013] NEED TO WORRY ABOUT MULTIPLE BLOCKLIES! *****
   workspace.flydown_ = flydown;
-  flydown.init(workspace, false); // false means no scrollbar
+  flydown.init(workspace);
   flydown.autoClose = true; // Flydown closes after selecting a block
   workspace.addWarningIndicator();
   workspace.addBackpack();
+  Blockly.init_(workspace);
+  workspace.markFocused();
+  Blockly.bindEvent_(svg, 'focus', workspace, workspace.markFocused);
   workspace.resize();
-  workspace.render();
   // Render blocks created prior to the workspace being rendered.
+  workspace.rendered = true;
   var blocks = workspace.getAllBlocks();
   for (var i = blocks.length - 1; i >= 0; i--) {
-    blocks[i].initSvg();
-  }
-  blocks = workspace.getTopBlocks();
-  for (var i = blocks.length - 1; i >= 0; i--) {
     var block = blocks[i];
-    block.render(false);
+    blocks[i].initSvg();
     if (!isNaN(block.x) && !isNaN(block.y)) {
       block.moveBy(workspace.RTL ? width - block.x : block.x, block.y);
     }
   }
+  workspace.render();
+  // blocks = workspace.getTopBlocks();
+  // for (var i = blocks.length - 1; i >= 0; i--) {
+  //   var block = blocks[i];
+  //   block.render(false);
+  // }
   workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
+  // center on blocks
+  workspace.setScale(1);
+  workspace.scrollCenter();
+  // done injection
   workspace.injecting = false;
   workspace.injected = true;
+  // Add pending resize event to fix positioning issue in Firefox.
+  setTimeout(function() { Blockly.svgResize(workspace); });
   return workspace;
 };
 

@@ -42,8 +42,8 @@ Blockly.TypeBlock = function( htmlConfig, workspace ){
 
   this.docKh_ = new goog.events.KeyHandler(goog.dom.getElement(frame));
   this.inputKh_ = new goog.events.KeyHandler(goog.dom.getElement(this.inputText_));
-
-  goog.events.listen(this.docKh_, 'key', this.handleKey);
+  this.handleKeyWrapper_ = this.handleKey.bind(this);
+  goog.events.listen(this.docKh_, 'key', this.handleKeyWrapper_);
   // Create the auto-complete panel
   this.createAutoComplete_(this.inputText_);
 };
@@ -165,15 +165,16 @@ Blockly.TypeBlock.prototype.hide = function(){
 //  if (this.typeBlockDiv_ == null)
 //    return;
   goog.style.showElement(goog.dom.getElement(this.typeBlockDiv_), false);
-  goog.events.unlisten(this.inputKh_, 'key', this.handleKey);
-  goog.events.listen(this.docKh_, 'key', this.handleKey);
+  goog.events.unlisten(this.inputKh_, 'key', this.handleKeyWrapper_);
+  this.handleKeyWrapper_ = this.handleKey.bind(this);
+  goog.events.listen(this.docKh_, 'key', this.handleKeyWrapper_);
   this.visible = false;
 };
 
 /**
  * function to show the auto-complete panel to start typing block names
  */
-Blockly.TypeBlock.show = function(){
+Blockly.TypeBlock.prototype.show = function(){
   this.lazyLoadOfOptions_();
   var panel = goog.dom.getElement(this.typeBlockDiv_);
   goog.style.setStyle(panel, 'top', this.workspace_.latestClick.y);
@@ -183,8 +184,9 @@ Blockly.TypeBlock.show = function(){
   // If the input gets cleaned before adding the handler, all keys are read
   // correctly (at times it was missing the first char)
   goog.dom.getElement(this.inputText_).value = '';
-  goog.events.unlisten(this.docKh_, 'key', this.handleKey);
-  goog.events.listen(this.inputKh_, 'key', this.handleKey);
+  goog.events.unlisten(this.docKh_, 'key', this.handleKeyWrapper_);
+  this.handleKeyWrapper_ = this.handleKey.bind(this);
+  goog.events.listen(this.inputKh_, 'key', this.handleKeyWrapper_);
   this.visible = true;
 };
 

@@ -33,7 +33,7 @@ Blockly.ProcedureDatabase.defaultValue = ['', 'none'];
  * @returns {!string[]}
  */
 Blockly.ProcedureDatabase.prototype.getNames = function(returnValue) {
-  return (returnValue ? this.returnProcedures_ : this.voidProcedures_).keys();
+  return Object.keys(returnValue ? this.returnProcedures_ : this.voidProcedures_);
 };
 
 /**
@@ -58,7 +58,7 @@ Blockly.ProcedureDatabase.prototype.getDeclarationsBlocksExcept = function(block
 };
 
 Blockly.ProcedureDatabase.prototype.getAllDeclarationNames = function() {
-  return this.procedures_.keys();
+  return Object.keys(this.procedures_);
 };
 
 /**
@@ -69,17 +69,17 @@ Blockly.ProcedureDatabase.prototype.getAllDeclarationNames = function() {
  * @returns {boolean} true if the definition was added, otherwise false.
  */
 Blockly.ProcedureDatabase.prototype.addProcedure = function(name, block) {
-  if (block.type != 'procedure_defnoreturn' && block.type != 'procedure_defreturn') {
+  if (block.type != 'procedures_defnoreturn' && block.type != 'procedures_defreturn') {
     // not a procedure block!
     console.warn('Attempt to addProcedure with block type ' + block.type);
     return false;
   }
-  if (newName in this.procedures_) {
+  if (name in this.procedures_) {
     return false;
   }
   this.procedures_[name] = block;
   this.length++;
-  if (block.type == 'procedure_defnoreturn') {
+  if (block.type == 'procedures_defnoreturn') {
     this.voidProcedures_[name] = block;
     this.voidProcedures++;
   } else {
@@ -97,7 +97,7 @@ Blockly.ProcedureDatabase.prototype.addProcedure = function(name, block) {
 Blockly.ProcedureDatabase.prototype.removeProcedure = function(name) {
   if (name in this.procedures_) {
     var block = this.procedures_[name];
-    if (block.type == 'procedure_defnoreturn') {
+    if (block.type == 'procedures_defnoreturn') {
       delete this.voidProcedures_[name];
       this.voidProcedures--;
     } else {
@@ -123,7 +123,7 @@ Blockly.ProcedureDatabase.prototype.renameProcedure = function(oldName, newName)
   }
   if (oldName in this.procedures_) {
     var block = this.procedures_[oldName];
-    if (block.type == 'procedure_defnoreturn') {
+    if (block.type == 'procedures_defnoreturn') {
       this.voidProcedures_[newName] = block;
       delete this.voidProcedures_[oldName];
     } else {
@@ -137,4 +137,8 @@ Blockly.ProcedureDatabase.prototype.renameProcedure = function(oldName, newName)
     console.warn('Attempt to renameProcedure not in the database.');
     return false;
   }
+};
+
+Blockly.ProcedureDatabase.prototype.getProcedure = function(name) {
+  return this.procedures_[name];
 };

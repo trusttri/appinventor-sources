@@ -157,11 +157,11 @@ Blockly.ReplMgr.buildYail = function(workspace) {
     var success = function() {
         if (this.block.replError)
             this.block.replError = null;
-        Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
+        this.block.workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
     };
     var failure = function(message) {
         this.block.replError = message;
-        Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
+        this.block.workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
     };
 
     for (var x = 0; (block = blocks[x]); x++) {
@@ -711,7 +711,7 @@ Blockly.ReplMgr.processRetvals = function(responses) {
             runtimeerr(escapeHTML(r.value) + Blockly.Msg.REPL_NO_ERROR_FIVE_SECONDS);
         }
     }
-    Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
+    Blockly.getMainWorkspace().getWarningHandler().checkAllBlocksForWarningsAndErrors();
 };
 
 Blockly.ReplMgr.setDoitResult = function(block, value) {

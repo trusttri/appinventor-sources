@@ -144,8 +144,9 @@ Blockly.FieldLexicalVariable.prototype.setCachedParent = function(parent) {
 // * Removed from prototype and stripped off "global" prefix (add it elsewhere)
 // * Add optional excluded block argument as in Neil's code to avoid global declaration being created
 Blockly.FieldLexicalVariable.getGlobalNames = function (optExcludedBlock) {
-  if (Blockly.Instrument.useLynCacheGlobalNames && Blockly.WarningHandler.cacheGlobalNames) {
-    return Blockly.WarningHandler.cachedGlobalNames;
+  if (Blockly.Instrument.useLynCacheGlobalNames && Blockly.getMainWorkspace() &&
+      Blockly.getMainWorkspace().getWarningHandler().cacheGlobalNames) {
+    return Blockly.getMainWorkspace().getWarningHandler().cachedGlobalNames;
   }
   var globals = [];
   if (Blockly.mainWorkspace) {
@@ -329,7 +330,7 @@ Blockly.FieldLexicalVariable.dropdownCreate = function() {
 Blockly.FieldLexicalVariable.dropdownChange = function(text) {
   if (text) {
     this.setText(text);
-    Blockly.WarningHandler.checkErrors.call(this.sourceBlock_);
+    this.sourceBlock_.getTopWorkspace().getWarningHandler().checkErrors(this.sourceBlock_);
   }
   // window.setTimeout(Blockly.Variables.refreshFlyoutCategory, 1);
 };
@@ -1011,9 +1012,10 @@ Blockly.LexicalVariable.getEventParam = function (block) {
     while (parent) {
        // Walk up ancestor tree to determine if name is an event parameter name.
        if (parent.type === "component_event") {
+         var componentDb = block.getTopWorkspace().getComponentDatabase();
          var untranslatedEventParams = parent.getParameters().map( function(param) {return param.name;});
          var translatedEventParams =  untranslatedEventParams.map(
-             function (name) {return window.parent.BlocklyPanel_getLocalizedParameterName(name); }
+             function (name) {return componentDb.getInternationalizedParameterName(name); }
          );
          var index = translatedEventParams.indexOf(name);
          if (index != -1) {

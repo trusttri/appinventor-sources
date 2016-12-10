@@ -189,8 +189,8 @@ Blockly.WarningIndicator.prototype.position_ = function() {
  *
  */
 Blockly.WarningIndicator.prototype.updateWarningAndErrorCount = function() {
-  this.errorCount_.textContent = Blockly.WarningHandler.errorCount;
-  this.warningCount_.textContent = Blockly.WarningHandler.warningCount;
+  this.errorCount_.textContent = this.workspace_.getWarningHandler().errorCount;
+  this.warningCount_.textContent = this.workspace_.getWarningHandler().warningCount;
 }
 
 /**
@@ -198,7 +198,7 @@ Blockly.WarningIndicator.prototype.updateWarningAndErrorCount = function() {
  *
  */
 Blockly.WarningIndicator.prototype.updateWarningToggleText = function() {
-  if(Blockly.WarningHandler.showWarningsToggle) {
+  if(this.workspace_.getWarningHandler().showWarningsToggle) {
     this.warningToggleText_.textContent = Blockly.Msg.HIDE_WARNINGS;
   } else {
     this.warningToggleText_.textContent = Blockly.Msg.SHOW_WARNINGS;

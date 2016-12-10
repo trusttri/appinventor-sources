@@ -18,7 +18,6 @@ goog.require('Blockly.BlockSvg');
 // App Inventor extensions to Blockly
 goog.require('AI.Blockly.Instrument');
 goog.require('AI.Blockly.Error');
-goog.require('AI.Blockly.WarningHandler');
 
 Blockly.BlockSvg.DISTANCE_45_INSIDE = (1 - Math.SQRT1_2) *
   (Blockly.BlockSvg.CORNER_RADIUS - 1) + 1;
@@ -80,8 +79,8 @@ Blockly.BlockSvg.prototype.onMouseMove_ = (function(func) {
     var wrappedFunc = function(e) {
       func.call(this, e);
       if (Blockly.dragMode_ == Blockly.DRAG_FREE) {
-        if (Blockly.getMainWorkspace().backpack) {
-          Blockly.getMainWorkspace().backpack.onMouseMove(e);
+        if (Blockly.getMainWorkspace().hasBackpack()) {
+          Blockly.getMainWorkspace().getBackpack().onMouseMove(e);
         }
       }
     };
@@ -97,7 +96,6 @@ Blockly.BlockSvg.prototype.onMouseMove_ = (function(func) {
  * @param {!Event} e Mouse up event.
  * @private
  */
-// This provides an instrumentation wrapper around the real onMouseUp_
 Blockly.BlockSvg.prototype.onMouseUp_ = (function(func) {
   if (func.isInstrumented) {
     return func;
@@ -108,9 +106,9 @@ Blockly.BlockSvg.prototype.onMouseUp_ = (function(func) {
       Blockly.getMainWorkspace().resetArrangements();
       try {
         var result = func.call(this, e);
-        if (Blockly.getMainWorkspace().backpack &&
-            Blockly.getMainWorkspace().backpack.isOpen) {
-          var backpack = Blockly.getMainWorkspace().backpack;
+        if (Blockly.getMainWorkspace().hasBackpack() &&
+            Blockly.getMainWorkspace().getBackpack().isOpen) {
+          var backpack = Blockly.getMainWorkspace().getBackpack();
           backpack.addToBackpack(Blockly.selected);
           backpack.onMouseUp(e, Blockly.selected.dragStartXY_);
         }
@@ -119,10 +117,11 @@ Blockly.BlockSvg.prototype.onMouseUp_ = (function(func) {
         if (! Blockly.Instrument.avoidRenderWorkspaceInMouseUp) {
           Blockly.mainWorkspace.render();
         }
-        this.workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
+        if (this.workspace && this.workspace.getWarningHandler()) {
+          this.workspace.getWarningHandler().checkAllBlocksForWarningsAndErrors();
+        }
         var stop = new Date().getTime();
-        var timeDiff = stop - start;
-        Blockly.Instrument.stats.totalTime = timeDiff;
+        Blockly.Instrument.stats.totalTime = stop - start;
         Blockly.Instrument.displayStats('onMouseUp');
       }
     };
@@ -507,8 +506,23 @@ Blockly.BlockSvg.prototype.setErrorText = function(text, opt_id) {
   }
 };
 
+/**
+ * Get the top-most workspace. Typically this is the current workspace except for flyout/flydowns.
+ * @returns {!Blockly.WorkspaceSvg}
+ */
 Blockly.BlockSvg.prototype.getTopWorkspace = function() {
   var workspace = this.workspace;
   while (workspace.targetWorkspace) workspace = workspace.targetWorkspace;
   return workspace;
+};
+
+Blockly.BlockSvg.prototype.addSelect = function() {
+  Blockly.addClass_(this.svgGroup_, 'blocklySelected');
+  var block_0 = this;
+  do {
+    var root = block_0.getSvgRoot();
+    if (!root.parentNode) break;  // not yet attached to DOM
+    root.parentNode.appendChild(root);
+    block_0 = block_0.getParent();
+  } while (block_0);
 };

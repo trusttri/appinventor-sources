@@ -105,12 +105,6 @@ Blockly.Blocks.component_event = {
     this.setPreviousStatement(false, null);
     this.setNextStatement(false, null);
 
-    // [lyn, 12/23/2013] checkIsInDefinition is bogus check that can never happen!
-    // this.errors = [{name:"checkIsInDefinition"}];
-
-    // [lyn, 12/23/2013] Move this out of domToMutation into top-level component_event
-    // this.onchange = Blockly.WarningHandler.checkErrors;
-
     if (eventType && eventType.deprecated === "true" && this.workspace === Blockly.mainWorkspace) {
       this.badBlock();
       this.setDisabled(true);
@@ -129,6 +123,7 @@ Blockly.Blocks.component_event = {
     if (!params)  {
       params = [];
     }
+    var componentDb = this.getTopWorkspace().getComponentDatabase();
     var oldDoInput = this.getInput("DO");
     if (!oldDoInput || (isHorizontal !== this.horizontalParameters && params.length > 0)) {
       this.horizontalParameters = isHorizontal;
@@ -153,7 +148,7 @@ Blockly.Blocks.component_event = {
                                .appendField(" ")
                                .setAlign(Blockly.ALIGN_LEFT);
           for (i = 0; param = params[i]; i++) {
-            paramInput.appendField(new Blockly.FieldParameterFlydown(window.parent.BlocklyPanel_getLocalizedParameterName(param.name), false), // false means not editable
+            paramInput.appendField(new Blockly.FieldParameterFlydown(componentDb.getInternationalizedParameterName(param.name), false), // false means not editable
                                    'VAR' + i)
                       .appendField(" ");
           }
@@ -178,7 +173,7 @@ Blockly.Blocks.component_event = {
         // Vertically aligned parameters
         for (i = 0; param = params[i]; i++) {
           this.appendDummyInput('VAR' + i)
-              .appendField(new Blockly.FieldParameterFlydown(window.parent.BlocklyPanel_getLocalizedParameterName(param.name), false),
+              .appendField(new Blockly.FieldParameterFlydown(componentDb.getInternationalizedPropertyName(param.name), false),
                            'VAR' + i)
               .setAlign(Blockly.ALIGN_RIGHT);
         }
@@ -392,11 +387,12 @@ Blockly.Blocks.component_method = {
     if(!this.isGeneric) {
       this.componentDropDown.setValue(this.instanceName);
     }
+    var componentDb = this.getTopWorkspace().getComponentDatabase();
     /** @type {MethodDescriptor} */
     var methodTypeObject = this.getMethodTypeObject();
     var localizedMethodName;
     if (methodTypeObject) {
-      localizedMethodName = window.parent.BlocklyPanel_getLocalizedMethodName(methodTypeObject.name);
+      localizedMethodName = componentDb.getInternationalizedMethodName(methodTypeObject.name);
     } else {
       localizedMethodName = this.methodName;
     }
@@ -462,7 +458,7 @@ Blockly.Blocks.component_method = {
       params = methodTypeObject.parameters;
     }
     for (var i = 0, param; param = params[i]; i++) {
-      var newInput = this.appendValueInput("ARG" + i).appendField(window.parent.BlocklyPanel_getLocalizedParameterName(param.name));
+      var newInput = this.appendValueInput("ARG" + i).appendField(componentDb.getInternationalizedParameterName(param.name));
       newInput.setAlign(Blockly.ALIGN_RIGHT);
       var blockyType = Blockly.Blocks.Utilities.YailTypeToBlocklyType(param.type,Blockly.Blocks.Utilities.INPUT);
       newInput.connection.setCheck(blockyType);
@@ -528,7 +524,7 @@ Blockly.Blocks.component_method = {
   },
 
   typeblock : function(){
-    var componentDb = this.workspace.getComponentDatabase();
+    var componentDb = this.getTopWorkspace().getComponentDatabase();
     var tb = [];
     var typeName;
     var typeNameDict = {};
@@ -569,7 +565,7 @@ Blockly.Blocks.component_method = {
 
     var validate = function() {
       // check component type
-      var componentDb = this.workspace.getComponentDatabase();
+      var componentDb = this.getTopWorkspace().getComponentDatabase();
       var componentType = componentDb.getType(this.typeName);
       if (!componentType) {
         return false; // component does NOT exist! should not happen!

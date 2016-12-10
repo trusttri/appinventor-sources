@@ -34,10 +34,15 @@ Blockly.WarningHandler.WarningState = {
 Blockly.WarningHandler.prototype.updateWarningErrorCount = function() {
   //update the error and warning count in the UI
   this.workspace.getWarningIndicator().updateWarningAndErrorCount();
-}
+};
 
-//Call to toggle the visibility of the warnings on the blocks
-Blockly.WarningHandler.prototype.warningToggle = function() {
+//noinspection JSUnusedGlobalSymbols
+/**
+ * Call to toggle the visibility of the warnings on the blocks.
+ * Called from BlocklyPanel.java
+ * @public
+ */
+Blockly.WarningHandler.prototype.toggleWarning = function() {
   if(this.showWarningsToggle) {
     this.showWarningsToggle = false;
     this.hideWarnings();
@@ -46,7 +51,7 @@ Blockly.WarningHandler.prototype.warningToggle = function() {
     this.checkAllBlocksForWarningsAndErrors(); // [lyn, 12/31/2013] Removed unnecessary false arg
   }
   this.workspace.getWarningIndicator().updateWarningToggleText();
-}
+};
 
 //Hide warnings on the blocks
 Blockly.WarningHandler.prototype.hideWarnings = function() {
@@ -56,7 +61,7 @@ Blockly.WarningHandler.prototype.hideWarnings = function() {
       blockArray[i].setWarningText(null);
     }
   }
-}
+};
 
 Blockly.WarningHandler.prototype.checkAllBlocksForWarningsAndErrors = function() {
   // Do not attempt to update blocks before they are rendered.
@@ -92,7 +97,7 @@ Blockly.WarningHandler.prototype.checkAllBlocksForWarningsAndErrors = function()
     Blockly.Instrument.stats.checkAllBlocksForWarningsAndErrorsCalls++;
     Blockly.Instrument.stats.checkAllBlocksForWarningsAndErrorsTime += timeDiff;
   }
-}
+};
 
 //Takes a block as the context (this), puts
 //the appropriate error or warning on the block,
@@ -229,11 +234,11 @@ Blockly.WarningHandler.prototype['checkIfUndefinedBlock'] = function(block) {
   } else {
     return false;
   }
-}
+};
 
 
 //Check if the block has an invalid drop down value, if so, create an error
-Blockly.WarningHandler.prototype['checkDropDownContainsValidValue'] = function(params){
+Blockly.WarningHandler.prototype['checkDropDownContainsValidValue'] = function(block, params){
   for(var i=0;i<params.dropDowns.length;i++){
     var dropDown = block.getField(params.dropDowns[i]);
     var dropDownList = dropDown.menuGenerator_();
@@ -252,7 +257,7 @@ Blockly.WarningHandler.prototype['checkDropDownContainsValidValue'] = function(p
     }
   }
   return false;
-}
+};
 
 // check if the component of the pasted block from the Backpack does not exist
 // - originally written by @evanrthomas
@@ -269,7 +274,7 @@ Blockly.WarningHandler.prototype['checkComponentNotExistsError'] = function(bloc
     return true;
   }
   return false;
-}
+};
 
 // [lyn, 12/31/2013] Function that determines which component event handlers
 // in the main workspace are duplicates. Sets the IAmADuplicate property of each
@@ -322,7 +327,7 @@ Blockly.WarningHandler.prototype['determineDuplicateComponentEventHandlers'] = f
       }
     }
   }
-}
+};
 
 // [lyn, 12/31/2013] Function called by each component event handler to check
 // if it's a duplicate, using the IAmADuplicate flag preiously set
@@ -334,7 +339,7 @@ Blockly.WarningHandler.prototype['checkIfIAmADuplicateEventHandler'] = function(
   } else {
     return false;
   }
-}
+};
 
 /* [lyn, 12/23/2013] Putting a change handler that determines duplicates
    on each AI2 event handler block leads to
@@ -431,7 +436,7 @@ Blockly.WarningHandler.prototype.setBlockError = function(block, message){
     this.updateWarningErrorCount();
   }
   block.setErrorIconText(message);
-}
+};
 
 // Check a disposed block for any errors or warnings and update state accordingly.
 Blockly.WarningHandler.prototype.checkDisposedBlock = function(block){
@@ -451,7 +456,7 @@ Blockly.WarningHandler.prototype.checkDisposedBlock = function(block){
     this.errorCount--;
     this.updateWarningErrorCount();
   }
-}
+};
 
 //Warnings
 
@@ -478,7 +483,7 @@ Blockly.WarningHandler.prototype['checkEmptySockets'] = function(block){
   } else {
     return false;
   }
-}
+};
 
 //Check if the block is a root block that isn't a procedure definition, variable declaration, or event
 Blockly.WarningHandler.prototype['checkBlockAtRoot'] = function(block){
@@ -493,7 +498,7 @@ Blockly.WarningHandler.prototype['checkBlockAtRoot'] = function(block){
   } else {
     return false;
   }
-}
+};
 
 //Check to see if the repl (Companion App) reported any errors.
 Blockly.WarningHandler.prototype['checkReplErrors'] = function(block) {
@@ -502,4 +507,4 @@ Blockly.WarningHandler.prototype['checkReplErrors'] = function(block) {
     return true;
   }
   return false;
-}
+};
