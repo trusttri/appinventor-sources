@@ -342,7 +342,8 @@ Blockly.WorkspaceSvg.prototype.renameComponent = function(oldName, newName, uid)
  * component information.
  */
 Blockly.WorkspaceSvg.prototype.populateComponentTypes = function(strComponentInfos, translations) {
-  this.componentDb_.populateTypes(JSON.parse(strComponentInfos), translations);
+  this.componentDb_.populateTypes(JSON.parse(strComponentInfos));
+  this.componentDb_.populateTranslations(translations);
 };
 
 //noinspection JSUnusedGlobalSymbols Called from BlocklyPanel.java.

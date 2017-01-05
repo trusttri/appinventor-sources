@@ -45,28 +45,11 @@ ComponentInfo;
  */
 ParameterDescriptor;
 
-/*
- * @typedef EventDescriptor
- * @type {object}
- * @property {!string} name
- * @property {!string} description
- * @property {?boolean} deprecated
- * @property {!ParameterDescriptor[]} parameters
- */
 /**
  * @typedef {{name: !string, description: !string, deprecated: ?boolean, parameters: !ParameterDescriptor[]}}
  */
 EventDescriptor;
 
-/*
- * @typedef MethodDescriptor
- * @type {object}
- * @property {!string} name
- * @property {!string} description
- * @property {?boolean} deprecated
- * @property {!ParameterDescriptor[]} parameters
- * @property {?string} returnType
- */
 /**
  * @typedef {{name: !string, description: !string, deprecated: ?boolean, parameters: !ParameterDescriptor[], returnType: ?string}}
  */
@@ -220,9 +203,8 @@ Blockly.ComponentDatabase.prototype.getComponentUidNameMapByType = function(comp
  * Populate the types database.
  *
  * @param {ComponentInfo[]} componentInfos
- * @param {Object.<string, string>} translations
  */
-Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos, translations) {
+Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
   for (var i = 0, componentInfo; componentInfo = componentInfos[i]; ++i) {
     var info = this.types_[componentInfo.name] = {
       type: componentInfo.type,
@@ -271,6 +253,29 @@ Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos, tra
       } else if (property['rw'] == 'write-only') {
         property.mutability = Blockly.PROPERTY_WRITEABLE;
         info.setPropertyList.push(property.name);
+      }
+    }
+  }
+};
+
+/**
+ * Populate the tranlsations for components.
+ * @param translations
+ */
+Blockly.ComponentDatabase.prototype.populateTranslations = function(translations) {
+  for (var key in translations) {
+    if (translations.hasOwnProperty(key)) {
+      var parts = key.split('-', 2);
+      if (parts[0] == 'COMPONENT') {
+        this.i18nComponentTypes_[parts[1]] = translations[key];
+      } else if (parts[0] == 'PROPERTY') {
+        this.i18nPropertyNames_[parts[1]] = translations[key];
+      } else if (parts[0] == 'EVENT') {
+        this.i18nEventNames_[parts[1]] = translations[key];
+      } else if (parts[0] == 'METHOD') {
+        this.i18nMethodNames_[parts[1]] = translations[key];
+      } else if (parts[0] == 'PARAM') {
+        this.i18nParamNames_[parts[1]] = translations[key];
       }
     }
   }
@@ -359,17 +364,17 @@ Blockly.ComponentDatabase.prototype.getInternationalizedComponentType = function
 };
 
 Blockly.ComponentDatabase.prototype.getInternationalizedEventName = function(name) {
-  return this.i18nEventNames_['EVENT-' + name] || name;
+  return this.i18nEventNames_[name] || name;
 };
 
 Blockly.ComponentDatabase.prototype.getInternationalizedMethodName = function(name) {
-  return this.i18nMethodNames_['METHOD-' + name] || name;
+  return this.i18nMethodNames_[name] || name;
 };
 
 Blockly.ComponentDatabase.prototype.getInternationalizedParameterName = function(name) {
-  return this.i18nParamNames_['PARAM-' + name] || name;
+  return this.i18nParamNames_[name] || name;
 };
 
 Blockly.ComponentDatabase.prototype.getInternationalizedPropertyName = function(name) {
-  return this.i18nPropertyNames_['PROPERTY-' + name] || name;
+  return this.i18nPropertyNames_[name] || name;
 };
