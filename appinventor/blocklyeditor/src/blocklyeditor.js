@@ -188,7 +188,7 @@ Blockly.unprefixName = function (name) {
   }
 };
 
-Blockly.BlocklyEditor.create = function(container, readOnly, rtl) {
+Blockly.BlocklyEditor['create'] = function(container, readOnly, rtl) {
   var workspace = new Blockly.WorkspaceSvg(new Blockly.Options({
     readOnly: readOnly,
     rtl: rtl,
@@ -340,4 +340,6 @@ Blockly.ai_inject = function(container, workspace) {
   return workspace;
 };
 
-/******************************************************************************/
+// Preserve Blockly during GWT optimizations
+window['Blockly'] = Blockly;
+top['Blockly'] = Blockly;
