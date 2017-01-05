@@ -15,6 +15,8 @@ import com.google.appinventor.client.boxes.PaletteBox;
 import com.google.appinventor.client.boxes.PropertiesBox;
 import com.google.appinventor.client.boxes.SourceStructureBox;
 import com.google.appinventor.client.editor.ProjectEditor;
+import com.google.appinventor.client.editor.adapters.IComponent;
+import com.google.appinventor.client.editor.adapters.IDesigner;
 import com.google.appinventor.client.editor.simple.SimpleComponentDatabase;
 import com.google.appinventor.client.editor.simple.SimpleEditor;
 import com.google.appinventor.client.editor.simple.SimpleNonVisibleComponentsPanel;
@@ -53,6 +55,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.DockPanel;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +68,7 @@ import java.util.Map;
  * @author markf@google.com (Mark Friedman)
  * @author lizlooney@google.com (Liz Looney)
  */
-public final class YaFormEditor extends SimpleEditor implements FormChangeListener, ComponentDatabaseChangeListener {
+public final class YaFormEditor extends SimpleEditor implements FormChangeListener, ComponentDatabaseChangeListener, IDesigner {
 
   private static class FileContentHolder {
     private String content;
@@ -82,6 +85,9 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
       return content;
     }
   }
+
+  private static final String ERROR_EXISTING_UUID = "Component with UUID \"%1$s\" already exists.";
+  private static final String ERROR_NONEXISTENT_UUID = "No component exists with UUID \"%1$s\".";
 
   // JSON parser
   private static final JSONParser JSON_PARSER = new ClientJsonParser();
@@ -118,6 +124,11 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
 
   private final List<ComponentDatabaseChangeListener> componentDatabaseChangeListeners = new ArrayList<ComponentDatabaseChangeListener>();
   private JSONArray authURL;    // List of App Inventor versions we have been edited on.
+
+  /**
+   * A mapping of component UUIDs to mock components in the designer view.
+   */
+  private final Map<String, MockComponent> componentsDb = new HashMap<String, MockComponent>();
 
   private static final int OLD_PROJECT_YAV = 150; // Projects older then this have no authURL
 
@@ -795,5 +806,48 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     for (ComponentDatabaseChangeListener cdbChangeListener : componentDatabaseChangeListeners) {
       cdbChangeListener.onResetDatabase();
     }
+  }
+
+  public void addComponent(String uuid, String type) {
+    if (componentsDb.containsKey(uuid)) {
+      throw new IllegalStateException(/*String.format(ERROR_EXISTING_UUID, uuid)*/);
+    }
+    MockComponent component = SimpleComponentDescriptor.createMockComponent(type, this);
+    component.changeProperty(MockComponent.PROPERTY_NAME_UUID, uuid);
+    componentsDb.put(uuid, component);
+  }
+
+  @Override
+  public void removeComponent(String uuid) {
+    if (!componentsDb.containsKey(uuid)) {
+      throw new IllegalStateException("No component exists with UUID \"" + uuid + "\".");
+    }
+    MockComponent component = componentsDb.remove(uuid);
+    component.removeFromParent();
+  }
+
+  @Override
+  public void renameComponent(String uuid, String name) {
+    MockComponent component = componentsDb.get(uuid);
+    if (component == null) {
+      throw new IllegalStateException("No component exists with UUID \"" + uuid + "\"");
+    } else {
+      component.changeProperty(MockComponent.PROPERTY_NAME_NAME, name);
+    }
+  }
+
+  @Override
+  public IComponent getComponentByUuid(String uuid) {
+    MockComponent component = componentsDb.get(uuid);
+    if (component == null) {
+      throw new IllegalStateException("No component exists with UUID \"" + uuid + "\"");
+    }
+    // TODO(ewpatton): Implementation
+    return null;
+  }
+
+  @Override
+  public void setProperty(String uuid, String property, String value) {
+    // TODO(ewpatton): Implementation
   }
 }

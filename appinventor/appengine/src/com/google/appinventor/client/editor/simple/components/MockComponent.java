@@ -82,9 +82,8 @@ import java.util.Map;
 public abstract class MockComponent extends Composite implements PropertyChangeListener,
     SourcesMouseEvents, DragSource {
   // Common property names (not all components support all properties).
-  protected static final String PROPERTY_NAME_NAME = "Name";
-  protected static final String PROPERTY_NAME_UUID = "Uuid";
-  protected static final String PROPERTY_NAME_SOURCE = "Source";
+  public static final String PROPERTY_NAME_NAME = "Name";
+  public static final String PROPERTY_NAME_UUID = "Uuid";
   protected static final List<String> YAIL_NAMES = Arrays.asList("CsvUtil", "Double", "Float",
     "Integer", "JavaCollection", "JavaIterator", "KawaEnvironment", "Long", "Short",
     "SimpleForm", "String", "Pattern", "YailList", "YailNumberToString", "YailRuntimeError");
