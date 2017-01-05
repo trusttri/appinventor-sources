@@ -26,7 +26,7 @@ goog.require('goog.crypt.base64');
 
 // App Inventor extensions to Blockly
 goog.require('AI.Blockly.Util');
-goog.require('AI.Blockly.Events');
+goog.require('AI.Events');
 
 if (Blockly.ReplMgr === undefined) Blockly.ReplMgr = {}
 Blockly.ReplMgr.yail = null;
