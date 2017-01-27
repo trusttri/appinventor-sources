@@ -315,11 +315,31 @@ Blockly.ai_inject = function(container, workspace) {
   // Render blocks created prior to the workspace being rendered.
   workspace.rendered = true;
   var blocks = workspace.getAllBlocks();
+
+  /**
+   * Creates a new helper function to render a comment set to visible but deferred during workspace
+   * generation.
+   * @param {!Blockly.Comment} comment The Blockly Comment object to be made visible.
+   * @returns {Function}
+   */
+  function commentRenderer(comment) {
+    return function() {
+      comment.setVisible(comment.visible);
+    }
+  }
+
   for (var i = blocks.length - 1; i >= 0; i--) {
     var block = blocks[i];
-    blocks[i].initSvg();
+    block.rendered = true;
+    block.initSvg();
+    if (block.disabled && block.updateDisabled) {
+      block.updateDisabled();
+    }
     if (!isNaN(block.x) && !isNaN(block.y)) {
       block.moveBy(workspace.RTL ? width - block.x : block.x, block.y);
+    }
+    if (block.comment && block.comment.visible && block.comment.setVisible) {
+      setTimeout(commentRenderer(block.comment), 1);
     }
   }
   workspace.render();
