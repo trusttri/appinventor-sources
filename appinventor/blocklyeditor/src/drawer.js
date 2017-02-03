@@ -38,7 +38,7 @@ Blockly.Drawer = function(parentWorkspace, opt_options) {
   this.options.languageTree = Blockly.Drawer.buildTree_();
   this.workspace_ = parentWorkspace;
   this.flyout_ = new Blockly.Flyout(this.options);
-  var flyoutGroup = this.flyout_.createDom(),
+  var flyoutGroup = this.flyout_.createDom('g'),
       svg = this.workspace_.getParentSvg();
   if (this.workspace_.svgGroup_.nextSibling == null) {
     svg.appendChild(flyoutGroup);

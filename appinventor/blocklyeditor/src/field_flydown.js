@@ -91,12 +91,12 @@ Blockly.FieldFlydown.prototype.init = function(block) {
   Blockly.FieldFlydown.superClass_.init.call(this, block);
 
   // Remove inherited field css classes ...
-  Blockly.removeClass_(/** @type {!Element} */ (this.fieldGroup_),
+  Blockly.utils.removeClass(/** @type {!Element} */ (this.fieldGroup_),
       'blocklyEditableText');
-  Blockly.removeClass_(/** @type {!Element} */ (this.fieldGroup_),
+  Blockly.utils.removeClass(/** @type {!Element} */ (this.fieldGroup_),
       'blocklyNoNEditableText');
   // ... and add new one, so that look and feel of flyout fields can be customized
-  Blockly.addClass_(/** @type {!Element} */ (this.fieldGroup_),
+  Blockly.utils.addClass(/** @type {!Element} */ (this.fieldGroup_),
       this.fieldCSSClassName);
 
   this.mouseOverWrapper_ =
@@ -155,12 +155,12 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
   // adjust scale for current zoom level
   flydown.workspace_.setScale(flydown.targetWorkspace_.scale);
   flydown.setCSSClass(this.flyoutCSSClassName); // This could have been changed by another field.
-  var blocksXMLText = this.flydownBlocksXML_()
+  var blocksXMLText = this.flydownBlocksXML_();
   var blocksDom = Blockly.Xml.textToDom(blocksXMLText);
   // [lyn, 11/10/13] Use goog.dom.getChildren rather than .children or .childNodes
   //   to make this code work across browsers.
   var blocksXMLList = goog.dom.getChildren(blocksDom); // List of blocks for flydown
-  var xy = Blockly.getSvgXY_(this.borderRect_, Blockly.getMainWorkspace());
+  var xy = Blockly.getMainWorkspace().getSvgXY(this.borderRect_);
   var borderBBox = this.borderRect_.getBBox();
   var x = xy.x;
   var y = xy.y;

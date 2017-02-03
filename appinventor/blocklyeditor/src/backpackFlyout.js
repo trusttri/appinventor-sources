@@ -98,8 +98,8 @@ Blockly.BackpackFlyout.prototype.createBlockFunc_ = function(originBlock) {
     if (!svgRoot) {
       throw 'originBlock is not rendered.';
     }
-    var xyOld = Blockly.getSvgXY_(svgRoot, flyout.targetWorkspace_);
-    var xyNew = Blockly.getSvgXY_(flyout.targetWorkspace_.getCanvas(), Blockly.getMainWorkspace());
+    var xyOld = flyout.targetWorkspace_.getSvgXY(svgRoot);
+    var xyNew = Blockly.getMainWorkspace().getSvgXY(flyout.targetWorkspace_.getCanvas());
     block.moveBy(xyOld.x - xyNew.x, xyOld.y - xyNew.y);
     block.render();
     if (flyout.autoClose) {

@@ -189,18 +189,32 @@ Blockly.unprefixName = function (name) {
 };
 
 Blockly.BlocklyEditor['create'] = function(container, readOnly, rtl) {
-  var workspace = new Blockly.WorkspaceSvg(new Blockly.Options({
-    readOnly: readOnly,
-    rtl: rtl,
-    collapse: true,
-    scrollbars: true,
-    trashcan: true,
-    comments: true,
-    disable: true,
-    media: './media/',
-    grid: {spacing: '20', length: '5', snap: true, colour: '#ccc'},
-    zoom: {controls: true, wheel: true, scaleSpeed: 1.1}
-  }));
+  var options = new Blockly.Options({
+    'readOnly': readOnly,
+    'rtl': rtl,
+    'collapse': true,
+    'scrollbars': true,
+    'trashcan': true,
+    'comments': true,
+    'disable': true,
+    'media': './media/',
+    'grid': {'spacing': '20', 'length': '5', 'snap': true, 'colour': '#ccc'},
+    'zoom': {'controls': true, 'wheel': true, 'scaleSpeed': 1.1, 'maxScale': 3, 'minScale': 0.1}
+  });
+
+  var subContainer = goog.dom.createDom('div', 'injectionDiv');
+  container.appendChild(subContainer);
+  var svg = Blockly.createDom_(subContainer, options);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+
+  // Create surfaces for dragging things. These are optimizations
+  // so that the broowser does not repaint during the drag.
+  var blockDragSurface = new Blockly.BlockDragSurfaceSvg(subContainer);
+  var workspaceDragSurface = new Blockly.workspaceDragSurfaceSvg(subContainer);
+
+  var workspace = new Blockly.WorkspaceSvg(options, blockDragSurface, workspaceDragSurface);
+  workspace.rendered = false;
   workspace.componentDb_ = new Blockly.ComponentDatabase();
   workspace.procedureDb_ = new Blockly.ProcedureDatabase();
   workspace.variableDb_ = new Blockly.VariableDatabase();
@@ -239,11 +253,7 @@ Blockly.ai_inject = function(container, workspace) {
   }
   Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
   var options = workspace.options;
-  var subContainer = goog.dom.createDom('div', 'injectionDiv');
-  container.appendChild(subContainer);
-  var svg = Blockly.createDom_(subContainer, options);
-  svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '100%');
+  var svg = container.querySelector('svg.blocklySvg');
   svg.cachedWidth_ = svg.clientWidth;
   svg.cachedHeight_ = svg.clientHeight;
   svg.appendChild(workspace.createDom('blocklyMainBackground'));
@@ -304,6 +314,7 @@ Blockly.ai_inject = function(container, workspace) {
   var flydown = new Blockly.Flydown(new Blockly.Options({scrollbars: false}));
   // ***** [lyn, 10/05/2013] NEED TO WORRY ABOUT MULTIPLE BLOCKLIES! *****
   workspace.flydown_ = flydown;
+  Blockly.utils.insertAfter_(flydown.createDom('g'), workspace.svgBubbleCanvas_);
   flydown.init(workspace);
   flydown.autoClose = true; // Flydown closes after selecting a block
   workspace.addWarningIndicator();
@@ -330,13 +341,16 @@ Blockly.ai_inject = function(container, workspace) {
 
   for (var i = blocks.length - 1; i >= 0; i--) {
     var block = blocks[i];
-    block.rendered = true;
     block.initSvg();
+    block.rendered = true;
     if (block.disabled && block.updateDisabled) {
       block.updateDisabled();
     }
     if (!isNaN(block.x) && !isNaN(block.y)) {
-      block.moveBy(workspace.RTL ? width - block.x : block.x, block.y);
+      var xy = block.getRelativeToSurfaceXY();
+      block.getSvgRoot().setAttribute('transform',
+        'translate(' + block.x + ',' + block.y + ')');
+      block.moveConnections_(block.x - xy.x, block.y - xy.y);
     }
     if (block.comment && block.comment.visible && block.comment.setVisible) {
       setTimeout(commentRenderer(block.comment), 1);
@@ -356,7 +370,7 @@ Blockly.ai_inject = function(container, workspace) {
   workspace.injecting = false;
   workspace.injected = true;
   // Add pending resize event to fix positioning issue in Firefox.
-  setTimeout(function() { Blockly.svgResize(workspace); });
+  setTimeout(function() { workspace.resizeContents(); Blockly.svgResize(workspace); });
   return workspace;
 };
 

@@ -177,7 +177,7 @@ Blockly.Backpack.prototype.createDom = function(opt_workspace) {
   // insert the flyout after the main workspace (except, there's no
   // svg.insertAfter method, so we need to insert before the thing following
   // the main workspace. Neil Fraser says: this is "less hacky than it looks".
-  var flyoutGroup = this.flyout_.createDom();
+  var flyoutGroup = this.flyout_.createDom('g');
   this.flyout_.svgBackground_.setAttribute('class', 'blocklybackpackFlyoutBackground');
   if (workspace.svgGroup_.nextSibling) {
     workspace.getParentSvg().insertBefore(flyoutGroup, workspace.svgGroup_.nextSibling);
@@ -185,8 +185,8 @@ Blockly.Backpack.prototype.createDom = function(opt_workspace) {
     workspace.getParentSvg().appendChild(flyoutGroup);
   }
 
-  this.svgGroup_ = Blockly.createSvgElement('g', {}, null);
-  this.svgBody_ = Blockly.createSvgElement('image',
+  this.svgGroup_ = Blockly.utils.createSvgElement('g', {}, null);
+  this.svgBody_ = Blockly.utils.createSvgElement('image',
       {'width': this.WIDTH_, 'height': this.BODY_HEIGHT_, 'id': 'backpackIcon'},
       this.svgGroup_);
   this.svgBody_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',

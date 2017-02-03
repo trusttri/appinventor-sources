@@ -705,13 +705,13 @@ Blockly.WorkspaceSvg.prototype.onMouseWheel_ = function(e) {
         return;
       }
       var delta = e.deltaY > 0 ? -1 : 1;
-      var position = Blockly.mouseToSvg(e, this.getParentSvg(),
+      var position = Blockly.utils.mouseToSvg(e, this.getParentSvg(),
         this.getInverseScreenCTM());
       this.zoom(position.x, position.y, delta);
     } else {
       // pan using mouse wheel
-      this.scrollX += e.deltaX;
-      this.scrollY += e.deltaY;
+      this.scrollX -= e.deltaX;
+      this.scrollY -= e.deltaY;
       this.updateGridPattern_();
       if (this.scrollbar) {
         // can only pan if scrollbars exist

@@ -788,9 +788,6 @@ Blockly.Blocks['procedures_callnoreturn'] = {
     // Switch off rendering while the block is rebuilt.
     var savedRendered = this.rendered;
     this.rendered = false;
-    if (!this.workspace.rendered) {
-      return;  // workspace hasn't been rendered yet, so other connections may not yet exist.
-    }
     // Update the quarkConnections_ with existing connections.
     for (x = 0;this.getInput('ARG' + x); x++) {
       input = this.getInput('ARG' + x);
@@ -830,6 +827,9 @@ Blockly.Blocks['procedures_callnoreturn'] = {
     }
     // Restore rendering and show the changes.
     this.rendered = savedRendered;
+    if (!this.workspace.rendered) {
+      return;  // workspace hasn't been rendered yet, so other connections may not yet exist.
+    }
     if (this.rendered) {
       this.render();
     }
