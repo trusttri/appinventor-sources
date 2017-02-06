@@ -99,6 +99,16 @@ public class BlocklyPanel extends HTMLPanel {
   // My workspace
   private JavaScriptObject workspace;
 
+  /**
+   * If true, the loading of the blocks editor has not completed.
+   */
+  private boolean loadComplete = false;
+
+  /**
+   * If true, the loading of the blocks editor resulted in an error.
+   */
+  private boolean loadError = false;
+
   public BlocklyPanel(YaBlocksEditor blocksEditor, String formName) {
     this(blocksEditor, formName, false);
   }
@@ -121,8 +131,17 @@ public class BlocklyPanel extends HTMLPanel {
   }
 
   private void workspaceChanged(BlocklyEvent event) {
-    for (BlocklyWorkspaceChangeListener listener : listeners) {
-      listener.onWorkspaceChange(this, event);
+    // ignore workspaceChanged events until after the load finishes
+    if (!loadComplete) {
+      return;
+    }
+    if (loadError) {
+      YaBlocksEditor.setBlocksDamaged(formName);
+      ErrorReporter.reportError(MESSAGES.blocksNotSaved(formName));
+    } else {
+      for (BlocklyWorkspaceChangeListener listener : listeners) {
+	listener.onWorkspaceChange(this, event);
+      }
     }
   }
 
@@ -167,10 +186,13 @@ public class BlocklyPanel extends HTMLPanel {
     try {
       doLoadBlocksContent(formJson, blocksContent);
     } catch (JavaScriptException e) {
+      loadError = true;
       ErrorReporter.reportError(MESSAGES.blocksLoadFailure(formName));
       OdeLog.elog("Error loading blocks for screen " + formName + ": "
           + e.getDescription());
       throw new LoadBlocksException(e, formName);
+    } finally {
+      loadComplete = true;
     }
   }
 
@@ -459,7 +481,7 @@ public class BlocklyPanel extends HTMLPanel {
     var el = this.@com.google.gwt.user.client.ui.UIObject::getElement()();
     var workspace = Blockly.BlocklyEditor.create(el, readOnly, rtl);
     var BlocklyPanel$this = this;
-    workspace.addChangeListener(function(e) {
+    workspace.addChangeListener($entry(function(e) {
       var block = this.getBlockById(e.blockId);
       if ( block && e.name == Blockly.ComponentBlock.COMPONENT_SELECTOR ) {
         block.rename(e.oldValue, e.newValue);
@@ -468,7 +490,7 @@ public class BlocklyPanel extends HTMLPanel {
       // [lyn 12/31/2013] Check for duplicate component event handlers before
       // running any error handlers to avoid quadratic time behavior.
       this.getWarningHandler().determineDuplicateComponentEventHandlers();
-    }.bind(workspace));
+    }.bind(workspace)));
     this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace = workspace;
   }-*/;
 
