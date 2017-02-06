@@ -248,15 +248,19 @@ Blockly.BlocklyEditor['create'] = function(container, readOnly, rtl) {
  * @param {!Blockly.WorkspaceSvg} workspace
  */
 Blockly.ai_inject = function(container, workspace) {
+  Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
+  var gridEnabled = top.BlocklyPanel_getGridEnabled && top.BlocklyPanel_getGridEnabled();
+  var gridSnap = top.BlocklyPanel_getSnapEnabled && top.BlocklyPanel_getSnapEnabled();
   if (workspace.injected) {
+    workspace.setGridSettings(gridEnabled, gridSnap);
     return;
   }
-  Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
   var options = workspace.options;
   var svg = container.querySelector('svg.blocklySvg');
   svg.cachedWidth_ = svg.clientWidth;
   svg.cachedHeight_ = svg.clientHeight;
   svg.appendChild(workspace.createDom('blocklyMainBackground'));
+  workspace.setGridSettings(gridEnabled, gridSnap);
   workspace.translate(0, 0);
   if (!options.readOnly && !options.hasScrollbars) {
     var workspaceChanged = function() {
@@ -265,10 +269,8 @@ Blockly.ai_inject = function(container, workspace) {
         var edgeLeft = metrics.viewLeft + metrics.absoluteLeft;
         var edgeTop = metrics.viewTop + metrics.absoluteTop;
         if (metrics.contentTop < edgeTop ||
-            metrics.contentTop + metrics.contentHeight >
-            metrics.viewHeight + edgeTop ||
-            metrics.contentLeft <
-                (options.RTL ? metrics.viewLeft : edgeLeft) ||
+            metrics.contentTop + metrics.contentHeight > metrics.viewHeight + edgeTop ||
+            metrics.contentLeft < (options.RTL ? metrics.viewLeft : edgeLeft) ||
             metrics.contentLeft + metrics.contentWidth > (options.RTL ?
                 metrics.viewWidth : metrics.viewWidth + edgeLeft)) {
           // One or more blocks may be out of bounds.  Bump them back in.

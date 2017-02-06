@@ -13,7 +13,12 @@ import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.TopToolbar;
 import com.google.appinventor.client.editor.youngandroid.events.BlocklyEvent;
 import com.google.appinventor.client.output.OdeLog;
+import com.google.appinventor.client.settings.user.BlocksSettings;
+import com.google.appinventor.client.settings.user.UserSettings;
+import com.google.appinventor.client.widgets.properties.EditableProperty;
+import com.google.appinventor.client.widgets.properties.TextPropertyEditor;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.shared.settings.SettingsConstants;
 import com.google.common.collect.Sets;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
@@ -374,6 +379,32 @@ public class BlocklyPanel extends HTMLPanel {
     }
   }
 
+  private static void setGridEnabled(boolean enable) {
+    BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
+    settings.changePropertyValue(SettingsConstants.GRID_ENABLED, Boolean.toString(enable));
+  }
+
+  private static void setSnapEnabled(boolean enable) {
+    BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
+    settings.changePropertyValue(SettingsConstants.SNAP_ENABLED, Boolean.toString(enable));
+  }
+
+  private static boolean getGridEnabled() {
+    BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
+    String snap = settings.getPropertyValue(SettingsConstants.GRID_ENABLED);
+    return Boolean.parseBoolean(snap);
+  }
+
+  private static boolean getSnapEnabled() {
+    BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
+    String snap = settings.getPropertyValue(SettingsConstants.SNAP_ENABLED);
+    return Boolean.parseBoolean(snap);
+  }
+
+  private static void saveUserSettings() {
+    Ode.getUserSettings().saveSettings(null);
+  }
+
   // ------------ Native methods ------------
 
   /**
@@ -412,6 +443,16 @@ public class BlocklyPanel extends HTMLPanel {
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString(Ljava/lang/String;));
     $wnd.BlocklyPanel_getOdeMessage =
       $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getOdeMessage(Ljava/lang/String;));
+    $wnd.BlocklyPanel_setGridEnabled =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::setGridEnabled(Z));
+    $wnd.BlocklyPanel_setSnapEnabled =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::setSnapEnabled(Z));
+    $wnd.BlocklyPanel_getGridEnabled =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getGridEnabled());
+    $wnd.BlocklyPanel_getSnapEnabled =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getSnapEnabled());
+    $wnd.BlocklyPanel_saveUserSettings =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::saveUserSettings());
   }-*/;
 
   private native void initWorkspace(boolean readOnly, boolean rtl)/*-{

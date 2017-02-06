@@ -129,12 +129,7 @@ Blockly.TypeBlock.prototype.handleKey = function(e){
       // if id is empty, it is deleting inside a block title
       if (e.target.id === '') return;
       // only when selected and deletable, actually delete the block
-      if (Blockly.selected && Blockly.selected.deletable) {
-        Blockly.hideChaff();
-        Blockly.selected.dispose(true, true);
-      }
-      // Stop the browser from going back to the previous page.
-      e.preventDefault();
+      Blockly.onKeyDown_(e);
       return;
     }
     if (e.keyCode === 27){ //Dismiss the panel with esc

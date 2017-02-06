@@ -83,6 +83,10 @@ Blockly.Msg.en.switch_language_to_english = {
    " the Backpack will be re-initialized -- i.e., emptied." +
    "</p><p>For further documentation and a 'how to' video, see:" +
    '</p><p><a href="http://ai2.appinventor.mit.edu/reference/other/backpack.html" target="_blank">http://ai2.appinventor.mit.edu/reference/other/backpack.html</a>';
+    Blockly.Msg.ENABLE_GRID = 'Enable Workspace Grid';
+    Blockly.Msg.DISABLE_GRID = 'Disable Workspace Grid';
+    Blockly.Msg.ENABLE_SNAPPING = 'Enable Snap to Grid';
+    Blockly.Msg.DISABLE_SNAPPING = 'Disable Snap to Grid';
 
 // Variable renaming.
     Blockly.MSG_CHANGE_VALUE_TITLE = 'Change value:';

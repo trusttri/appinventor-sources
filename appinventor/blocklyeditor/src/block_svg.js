@@ -397,10 +397,10 @@ Blockly.BlockSvg.prototype.dispose = (function(func) {
   if (func.isWrapped) {
     return func;
   } else {
-    var wrappedFunc = function() {
+    var wrappedFunc = function(healStack, animate) {
       var workspace = this.workspace;
       try {
-        func.call(this);
+        func.call(this, healStack, animate);
       } finally {
         // Remove any associated errors or warnings.
         if (workspace && workspace.getWarningHandler()) {  // Blocks in drawers do not have a workspace

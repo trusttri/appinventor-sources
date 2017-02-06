@@ -49,4 +49,11 @@ public class SettingsConstants {
   public static final String YOUNG_ANDROID_SETTINGS_USES_LOCATION = "UsesLocation";
   public static final String YOUNG_ANDROID_SETTINGS_SIZING = "Sizing";
   public static final String YOUNG_ANDROID_SETTINGS_APP_NAME = "AppName";
+
+  /**
+   * Settings for the Blocks editor.
+   */
+  public static final String BLOCKS_SETTINGS = "BlocksSettings";
+  public static final String GRID_ENABLED = "Grid";
+  public static final String SNAP_ENABLED = "Snap";
 }

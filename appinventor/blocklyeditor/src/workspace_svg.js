@@ -670,6 +670,39 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
   };
   menuOptions.push(backpackClear);
 
+  // Enable grid
+  var gridOption = {enabled: true};
+  gridOption.text = this.options.gridOptions['enabled'] ? Blockly.Msg.DISABLE_GRID :
+    Blockly.Msg.ENABLE_GRID;
+  gridOption.callback = function() {
+    self.options.gridOptions['enabled'] = !self.options.gridOptions['enabled'];
+    if (self.options.gridOptions['enabled']) {
+      // add grid
+      self.svgBackground_.setAttribute('style', 'fill: url(#' + self.options.gridPattern.id + ');');
+    } else {
+      // remove grid
+      self.svgBackground_.setAttribute('style', 'fill: white;');
+    }
+    if (top.BlocklyPanel_setGridEnabled) {
+      top.BlocklyPanel_setGridEnabled(self.options.gridOptions['enabled']);
+      top.BlocklyPanel_saveUserSettings();
+    }
+  };
+  menuOptions.push(gridOption);
+
+  // Enable Snapping
+  var snapOption = {enabled: this.options.gridOptions['enabled']};
+  snapOption.text = this.options.gridOptions['snap'] ? Blockly.Msg.DISABLE_SNAPPING :
+    Blockly.Msg.ENABLE_SNAPPING;
+  snapOption.callback = function() {
+    self.options.gridOptions['snap'] = !self.options.gridOptions['snap'];
+    if (top.BlocklyPanel_setSnapEnabled) {
+      top.BlocklyPanel_setSnapEnabled(self.options.gridOptions['enabled']);
+      top.BlocklyPanel_saveUserSettings();
+    }
+  };
+  menuOptions.push(snapOption);
+
   // Option to get help.
   var helpOption = {enabled: false};
   helpOption.text = Blockly.Msg.HELP;
@@ -721,5 +754,19 @@ Blockly.WorkspaceSvg.prototype.onMouseWheel_ = function(e) {
       }
     }
     e.preventDefault();
+  }
+};
+
+Blockly.WorkspaceSvg.prototype.setGridSettings = function(enabled, snap) {
+  this.options.gridOptions['enabled'] = enabled;
+  this.options.gridOptions['snap'] = snap;
+  if (this.svgBackground_) {
+    if (this.options.gridOptions['enabled']) {
+      // add grid
+      this.svgBackground_.setAttribute('style', 'fill: url(#' + this.options.gridPattern.id + ');');
+    } else {
+      // remove grid
+      this.svgBackground_.setAttribute('style', 'fill: white;');
+    }
   }
 };
