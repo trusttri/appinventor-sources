@@ -44,8 +44,8 @@ goog.inherits(Blockly.BackpackFlyout, Blockly.Flyout);
  * Creates the flyout's DOM.  Only needs to be called once.
  * @return {!Element} The flyout's SVG group.
  */
-Blockly.BackpackFlyout.prototype.createDom = function() {
-  Blockly.Flyout.prototype.createDom.call(this);
+Blockly.BackpackFlyout.prototype.createDom = function(tagName) {
+  Blockly.Flyout.prototype.createDom.call(this, tagName);
   this.svgBackground_.setAttribute('class', 'blocklybackpackFlyoutBackground');
   return this.svgGroup_;
 };

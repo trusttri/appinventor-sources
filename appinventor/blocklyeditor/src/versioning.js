@@ -251,6 +251,14 @@ Blockly.Versioning.ensureWorkspace = function (blocksRep, opt_workspace) {
     Blockly.Versioning.log("Blockly.Versioning.ensureWorkspace: converting dom to Blockly.mainWorkspace");
     workspace.clear(); // Remove any existing blocks before we add new ones.
     Blockly.Xml.domToWorkspaceHeadless(blocksRep, workspace);
+    // update top block positions in event of save before rendering.
+    var blocks = workspace.getTopBlocks();
+    for (var i = 0; i < blocks.length; i++) {
+      var block = blocks[i];
+      var xy = block.getRelativeToSurfaceXY();
+      xy.x = block.x;
+      xy.y = block.y;
+    }
     return workspace;
   } else {
     throw "Blockly.Versioning.ensureWorkspace: blocksRep is neither workspace nor dom -- " + blocksRep;

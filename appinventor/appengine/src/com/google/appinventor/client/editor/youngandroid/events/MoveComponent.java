@@ -46,4 +46,10 @@ public class MoveComponent extends JavaScriptObject implements DesignerEvent {
     return 0;
   }
 
+  @Override
+  public boolean isTransient() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
 }

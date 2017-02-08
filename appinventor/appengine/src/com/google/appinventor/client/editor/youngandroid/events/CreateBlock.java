@@ -66,9 +66,13 @@ public class CreateBlock extends JavaScriptObject implements BlocklyEvent {
   }-*/;
 
   @Override
-  public long getUserId() {
-    // TODO Auto-generated method stub
-    return 0;
-  }
+  public native long getUserId()/*-{
+    return this.userId;
+  }-*/;
+
+  @Override
+  public native boolean isTransient()/*-{
+    return !this.persist;
+  }-*/;
 
 }

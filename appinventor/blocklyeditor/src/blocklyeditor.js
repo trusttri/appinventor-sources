@@ -249,6 +249,8 @@ Blockly.BlocklyEditor['create'] = function(container, readOnly, rtl) {
  */
 Blockly.ai_inject = function(container, workspace) {
   Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
+  console.log('Made ' + workspace.id + ' the active workspace.');
+  workspace.fireChangeListener(new AI.Events.ScreenSwitch(workspace.projectId, workspace.formName));
   var gridEnabled = top.BlocklyPanel_getGridEnabled && top.BlocklyPanel_getGridEnabled();
   var gridSnap = top.BlocklyPanel_getSnapEnabled && top.BlocklyPanel_getSnapEnabled();
   if (workspace.injected) {

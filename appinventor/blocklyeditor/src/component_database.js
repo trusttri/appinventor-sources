@@ -349,6 +349,12 @@ Blockly.ComponentDatabase.prototype.forMethodInType = function(typeName, callbac
  *
  */
 Blockly.ComponentDatabase.prototype.getPropertyForType = function(typeName, propertyName) {
+  if (this.types_[typeName]) {
+    if (this.types_[typeName].properties[propertyName]) {
+      return this.types_[typeName].properties[propertyName];
+    }
+  }
+  return null;
 };
 
 Blockly.ComponentDatabase.prototype.getSetterNamesForType = function(typeName) {

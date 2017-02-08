@@ -2,27 +2,23 @@ package com.google.appinventor.client.editor.youngandroid.events;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public class CreateComponent extends JavaScriptObject implements DesignerEvent {
+public class CompanionConnected extends JavaScriptObject implements CompanionEvent {
   public static final String TYPE;
-  
+
   static {
-    TYPE = init(CreateComponent.class);
+    TYPE = init(CompanionConnected.class);
   }
 
-  protected CreateComponent() {}
+  protected CompanionConnected() {}
 
-  private static native String init(Class<CreateComponent> clazz)/*-{
-    clazz.jsType = AppInventor.Events.CreateComponent;
+  private static native String init(Class<CompanionConnected> clazz)/*-{
+    clazz.jsType = AI.Events.CompanionConnected;
     return clazz.jsType.prototype.type;
-  }-*/;
-
-  static native CreateComponent create(long projectId, String uuid, String componentType)/*-{
-    return new AI.Events.CreateComponent();
   }-*/;
 
   @Override
   public native boolean recordUndo()/*-{
-    return this.recordUndo;
+    return false;
   }-*/;
 
   @Override
@@ -42,6 +38,11 @@ public class CreateComponent extends JavaScriptObject implements DesignerEvent {
   }-*/;
 
   @Override
+  public native long getUserId()/*-{
+    return this.userId;
+  }-*/;
+
+  @Override
   public native boolean isRealtime()/*-{
     return this.realtime;
   }-*/;
@@ -52,14 +53,7 @@ public class CreateComponent extends JavaScriptObject implements DesignerEvent {
   }-*/;
 
   @Override
-  public native long getUserId()/*-{
-    // TODO Auto-generated method stub
-    return 0;
-  }-*/;
-
-  @Override
   public native boolean isTransient()/*-{
     return !this.persist;
   }-*/;
-
 }

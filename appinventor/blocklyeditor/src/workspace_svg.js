@@ -676,6 +676,7 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
     Blockly.Msg.ENABLE_GRID;
   gridOption.callback = function() {
     self.options.gridOptions['enabled'] = !self.options.gridOptions['enabled'];
+    self.options.gridOptions['snap'] = self.options.gridOptions['enabled'] && top.BlocklyPanel_getSnapEnabled();
     if (self.options.gridOptions['enabled']) {
       // add grid
       self.svgBackground_.setAttribute('style', 'fill: url(#' + self.options.gridPattern.id + ');');
@@ -690,18 +691,20 @@ Blockly.WorkspaceSvg.prototype.customContextMenu = function(menuOptions) {
   };
   menuOptions.push(gridOption);
 
-  // Enable Snapping
-  var snapOption = {enabled: this.options.gridOptions['enabled']};
-  snapOption.text = this.options.gridOptions['snap'] ? Blockly.Msg.DISABLE_SNAPPING :
-    Blockly.Msg.ENABLE_SNAPPING;
-  snapOption.callback = function() {
-    self.options.gridOptions['snap'] = !self.options.gridOptions['snap'];
-    if (top.BlocklyPanel_setSnapEnabled) {
-      top.BlocklyPanel_setSnapEnabled(self.options.gridOptions['enabled']);
-      top.BlocklyPanel_saveUserSettings();
-    }
-  };
-  menuOptions.push(snapOption);
+  if (this.options.gridOptions['enabled']) {
+    // Enable Snapping
+    var snapOption = {enabled: this.options.gridOptions['enabled']};
+    snapOption.text = this.options.gridOptions['snap'] ? Blockly.Msg.DISABLE_SNAPPING :
+      Blockly.Msg.ENABLE_SNAPPING;
+    snapOption.callback = function() {
+      self.options.gridOptions['snap'] = !self.options.gridOptions['snap'];
+      if (top.BlocklyPanel_setSnapEnabled) {
+        top.BlocklyPanel_setSnapEnabled(self.options.gridOptions['enabled']);
+        top.BlocklyPanel_saveUserSettings();
+      }
+    };
+    menuOptions.push(snapOption);
+  }
 
   // Option to get help.
   var helpOption = {enabled: false};
@@ -759,7 +762,7 @@ Blockly.WorkspaceSvg.prototype.onMouseWheel_ = function(e) {
 
 Blockly.WorkspaceSvg.prototype.setGridSettings = function(enabled, snap) {
   this.options.gridOptions['enabled'] = enabled;
-  this.options.gridOptions['snap'] = snap;
+  this.options.gridOptions['snap'] = enabled && snap;
   if (this.svgBackground_) {
     if (this.options.gridOptions['enabled']) {
       // add grid
@@ -769,4 +772,55 @@ Blockly.WorkspaceSvg.prototype.setGridSettings = function(enabled, snap) {
       this.svgBackground_.setAttribute('style', 'fill: white;');
     }
   }
+};
+
+/**
+ * Builds a map of component name -> top level blocks for that component.
+ * A special entry for "globals" maps to top-level global definitions.
+ *
+ * @param warnings a Map that will be filled with warnings for troublesome blocks
+ * @param errors a list that will be filled with error messages
+ * @param forRepl whether this is executed for REPL
+ * @param compileUnattachedBlocks whether to compile unattached blocks
+ * @returns object mapping component names to the top-level blocks for that component in the
+ *            workspace. For each component C the object contains a field "component.C" whose
+ *            value is an array of blocks. In addition, the object contains a field named "globals"
+ *            whose value is an array of all valid top-level blocks not associated with a
+ *            component (procedure and variable definitions)
+ */
+Blockly.WorkspaceSvg.prototype.buildComponentMap = function(warnings, errors, forRepl, compileUnattachedBlocks) {
+  var map = {};
+  map.components = {};
+  map.globals = [];
+
+  // TODO: populate warnings, errors as we traverse the top-level blocks
+
+  var blocks = this.getTopBlocks(true);
+  for (var x = 0, block; block = blocks[x]; x++) {
+
+    // TODO: deal with unattached blocks that are not valid top-level definitions. Valid blocks
+    // are events, variable definitions, or procedure definitions.
+
+    if (!block.category) {
+      continue;
+    }
+    if (block.type == 'procedures_defnoreturn' || block.type == 'procedures_defreturn' || block.type == 'global_declaration') {
+      map.globals.push(block);
+      // TODO: eventually deal with variable declarations, once we have them
+    } else if (block.category == 'Component') {
+      var instanceName = block.instanceName;
+      if(block.blockType != "event") {
+        continue;
+      }
+      if (!map.components[instanceName]) {
+        map.components[instanceName] = [];  // first block we've found for this component
+      }
+
+      // TODO: check for duplicate top-level blocks (e.g., two event handlers with same name) -
+      // or better yet, prevent these from happening!
+
+      map.components[instanceName].push(block);
+    }
+  }
+  return map;
 };

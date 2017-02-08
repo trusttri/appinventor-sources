@@ -71,4 +71,10 @@ public class DeleteBlock extends JavaScriptObject implements BlocklyEvent {
     return 0;
   }
 
+  @Override
+  public boolean isTransient() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
 }

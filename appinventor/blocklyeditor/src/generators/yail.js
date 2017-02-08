@@ -142,7 +142,7 @@ Blockly.Yail.getFormYail = function(formJson, packageName, forRepl, workspace) {
     var sourceType = jsonObject.Source;
     if (sourceType == "Form") {
       code = code.concat(Blockly.Yail.getComponentLines(formName, formProperties, null /*parent*/, 
-          componentMap, false /*forRepl*/, propertyNameConverter));
+          componentMap, false /*forRepl*/, propertyNameConverter, workspace.getComponentDatabase()));
     } else {
       throw "Source type " + sourceType + " is invalid.";
     }
@@ -268,10 +268,10 @@ Blockly.Yail.getComponentInitializationString = function(formName, componentName
  */
 Blockly.Yail.getComponentLines = function(formName, componentJson, parentName, componentMap, 
   forRepl, nameConverter, componentDb) {
-  var code = [], i;
+  var code = [], i, block, child;
   var componentName = componentJson.$Name;
   if (componentJson.$Type == 'Form') {
-    code = Blockly.Yail.getFormPropertiesLines(formName, componentJson, !forRepl);
+    code = Blockly.Yail.getFormPropertiesLines(formName, componentJson, !forRepl, componentDb);
   } else {
     code = Blockly.Yail.getComponentPropertiesLines(formName, componentJson, parentName, !forRepl,
       nameConverter, componentDb);
@@ -281,7 +281,7 @@ Blockly.Yail.getComponentLines = function(formName, componentJson, parentName, c
     // Generate code for all top-level blocks related to this component
     if (componentMap.components && componentMap.components[componentName]) {
       var componentBlocks = componentMap.components[componentName];
-      for (i = 0, block; block = componentBlocks[i]; i++) {
+      for (i = 0; block = componentBlocks[i]; i++) {
         code.push(Blockly.Yail.blockToCode(block));
       }
     }
@@ -290,9 +290,9 @@ Blockly.Yail.getComponentLines = function(formName, componentJson, parentName, c
   // Generate code for child components of this component
   if (componentJson.$Components) {
     var children = componentJson.$Components;
-    for (i = 0, child; child = children[i]; i++) {
+    for (i = 0; child = children[i]; i++) {
       code = code.concat(Blockly.Yail.getComponentLines(formName, child, componentName,
-          componentMap, forRepl, nameConverter));
+          componentMap, forRepl, nameConverter, componentDb));
     }
   }
   return code;  
@@ -330,7 +330,7 @@ Blockly.Yail.getComponentPropertiesLines = function(formName, componentJson, par
   code.push(Blockly.Yail.YAIL_ADD_COMPONENT + parentName + Blockly.Yail.YAIL_SPACER +
     nameConverter(componentDb.getType(componentType).type) +
     Blockly.Yail.YAIL_SPACER + componentName + Blockly.Yail.YAIL_SPACER);
-  code = code.concat(Blockly.Yail.getPropertySettersLines(componentJson, componentName));
+  code = code.concat(Blockly.Yail.getPropertySettersLines(componentJson, componentName, componentDb));
   code.push(Blockly.Yail.YAIL_CLOSE_BLOCK);
   return code;
 };
@@ -344,12 +344,12 @@ Blockly.Yail.getComponentPropertiesLines = function(formName, componentJson, par
  * @returns {Array} code strings
  * @private
  */
-Blockly.Yail.getFormPropertiesLines = function(formName, componentJson, includeComments) {
+Blockly.Yail.getFormPropertiesLines = function(formName, componentJson, includeComments, componentDb) {
   var code = [];
   if (includeComments) {
     code.push(Blockly.Yail.YAIL_COMMENT_MAJOR + formName + Blockly.Yail.YAIL_LINE_FEED);
   }
-  var yailForComponentProperties = Blockly.Yail.getPropertySettersLines(componentJson, formName);
+  var yailForComponentProperties = Blockly.Yail.getPropertySettersLines(componentJson, formName, componentDb);
   if (yailForComponentProperties.length > 0) {
     // getPropertySettersLine returns an array of lines.  So we need to 
     // concatenate them (using join) before pushing them onto the Yail expression.
@@ -368,15 +368,16 @@ Blockly.Yail.getFormPropertiesLines = function(formName, componentJson, includeC
  * @param {Object} componentJson JSON String describing the component
  * @param {String} componentName the name of the component (also present in the $Name field in
  *    componentJson)
+ * @param {Blockly.ComponentDatabase} componentDb The workspace's database of components and types.
  * @returns {Array} code strings
  * @private
  */
-Blockly.Yail.getPropertySettersLines = function(componentJson, componentName) {
+Blockly.Yail.getPropertySettersLines = function(componentJson, componentName, componentDb) {
   var code = [];
   for (var prop in componentJson) {
     if (prop.charAt(0) != "$" && prop != "Uuid") {
       code.push(Blockly.Yail.getPropertySetterString(componentName, componentJson.$Type, prop, 
-        componentJson[prop]));
+        componentJson[prop], componentDb));
     }
   }
   return code;
@@ -399,7 +400,7 @@ Blockly.Yail.getPropertySetterString = function(componentName, componentType, pr
     componentName + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + propertyName + 
     Blockly.Yail.YAIL_SPACER;
   var propType = Blockly.Yail.YAIL_QUOTE +
-    componentDb.getPropertyForType(typeName, propertyName).type;
+    componentDb.getPropertyForType(componentType, propertyName).type;
   var value = Blockly.Yail.getPropertyValueString(propertyValue, propType);
   code = code.concat(value + Blockly.Yail.YAIL_SPACER + propType + Blockly.Yail.YAIL_CLOSE_BLOCK);
   return code;

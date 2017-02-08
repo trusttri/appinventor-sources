@@ -8,4 +8,5 @@ public interface AppInventorEvent {
   public long getUserId();
   public boolean isRealtime();
   public void setRealtime(boolean realtime);
+  public boolean isTransient();
 }

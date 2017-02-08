@@ -2,27 +2,23 @@ package com.google.appinventor.client.editor.youngandroid.events;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public class CreateComponent extends JavaScriptObject implements DesignerEvent {
+public final class ScreenSwitch extends JavaScriptObject implements ScreenEvent {
   public static final String TYPE;
-  
+
   static {
-    TYPE = init(CreateComponent.class);
+    TYPE = init(ScreenSwitch.class);
   }
 
-  protected CreateComponent() {}
+  protected ScreenSwitch() {}
 
-  private static native String init(Class<CreateComponent> clazz)/*-{
-    clazz.jsType = AppInventor.Events.CreateComponent;
+  private static native String init(Class<ScreenSwitch> clazz)/*-{
+    clazz.jsType = AI.Events.ScreenSwitch;
     return clazz.jsType.prototype.type;
-  }-*/;
-
-  static native CreateComponent create(long projectId, String uuid, String componentType)/*-{
-    return new AI.Events.CreateComponent();
   }-*/;
 
   @Override
   public native boolean recordUndo()/*-{
-    return this.recordUndo;
+    return false;
   }-*/;
 
   @Override
@@ -42,6 +38,11 @@ public class CreateComponent extends JavaScriptObject implements DesignerEvent {
   }-*/;
 
   @Override
+  public native long getUserId()/*-{
+    return this.userId;
+  }-*/;
+
+  @Override
   public native boolean isRealtime()/*-{
     return this.realtime;
   }-*/;
@@ -49,12 +50,6 @@ public class CreateComponent extends JavaScriptObject implements DesignerEvent {
   @Override
   public native void setRealtime(boolean realtime)/*-{
     this.realtime = realtime;
-  }-*/;
-
-  @Override
-  public native long getUserId()/*-{
-    // TODO Auto-generated method stub
-    return 0;
   }-*/;
 
   @Override

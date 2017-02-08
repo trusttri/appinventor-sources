@@ -18,7 +18,9 @@ import com.google.appinventor.client.editor.simple.components.MockComponent;
 import com.google.appinventor.client.editor.simple.components.MockForm;
 import com.google.appinventor.client.editor.simple.palette.DropTargetProvider;
 import com.google.appinventor.client.editor.youngandroid.BlocklyPanel.BlocklyWorkspaceChangeListener;
+import com.google.appinventor.client.editor.youngandroid.events.AppInventorEvent;
 import com.google.appinventor.client.editor.youngandroid.events.BlocklyEvent;
+import com.google.appinventor.client.editor.youngandroid.events.NativeEventHelper;
 import com.google.appinventor.client.editor.youngandroid.palette.YoungAndroidPalettePanel;
 import com.google.appinventor.client.explorer.SourceStructureExplorer;
 import com.google.appinventor.client.explorer.SourceStructureExplorerItem;
@@ -290,9 +292,11 @@ public final class YaBlocksEditor extends FileEditor
   }
 
   @Override
-  public void onWorkspaceChange(BlocklyPanel panel, BlocklyEvent event) {
+  public void onWorkspaceChange(BlocklyPanel panel, AppInventorEvent event) {
     OdeLog.log("Got blocks area changed for " + fullFormName);
-    Ode.getInstance().getEditorManager().scheduleAutoSave(this);
+    if (!NativeEventHelper.isTransient(event)) {
+      Ode.getInstance().getEditorManager().scheduleAutoSave(this);
+    }
     sendComponentData();
   }
 

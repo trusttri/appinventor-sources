@@ -65,7 +65,7 @@ Blockly.SaveFile.load = function(preUpgradeFormJson, blocksContent) {
 */
 Blockly.SaveFile.get = function(opt_workspace) {
   var workspace = opt_workspace || Blockly.mainWorkspace;
-  var xml = Blockly.Xml.workspaceToDom(workspace);
+  var xml = Blockly.Xml.workspaceToDom(workspace, false);
   var element = goog.dom.createElement('yacodeblocks');
   element.setAttribute('ya-version',top.YA_VERSION);
   element.setAttribute('language-version',top.BLOCKS_VERSION);

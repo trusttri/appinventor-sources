@@ -82,6 +82,14 @@ AI.Events.Abstract.prototype.realtime = false;
 // Blockly Events are real-time.
 Blockly.Events.Abstract.prototype.realtime = true;
 
+Blockly.Events.Ui.prototype.isTransient = true;
+
+/**
+ * If true, the event is transient and should not trigger a save action (e.g., companion connected)
+ * @type {boolean}
+ */
+AI.Events.Abstract.prototype.isTransient = false;
+
 /**
  * The project id that the event is associated.
  *
@@ -105,6 +113,8 @@ AI.Events.CompanionEvent = function() {
   AI.Events.CompanionEvent.superClass_.constructor.call(this);
 };
 goog.inherits(AI.Events.CompanionEvent, AI.Events.Abstract);
+
+AI.Events.CompanionEvent.prototype.isTransient = true;
 
 /**
  * Event raised when a connection has been established between the Companion and the ReplMgr.
@@ -143,6 +153,9 @@ AI.Events.ScreenEvent = function(projectId, screenName) {
   this.screenName = screenName;
 };
 goog.inherits(AI.Events.ScreenEvent, AI.Events.Abstract);
+
+// Changing screens is transient behavior.
+AI.Events.ScreenEvent.prototype.isTransient = true;
 
 /**
  * Event raised when a screen switch occurs in a project editor.

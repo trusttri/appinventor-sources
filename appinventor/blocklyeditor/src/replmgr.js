@@ -117,7 +117,7 @@ Blockly.ReplMgr.buildYail = function(workspace) {
         formProperties = jsonObject.Properties;
         formName = formProperties.$Name;
     }
-    var componentMap = Blockly.Component.buildComponentMap([], [], false, false);
+    var componentMap = Blockly.mainWorkspace.buildComponentMap([], [], false, false);
     var componentNames = [];
     for (var comp in componentMap.components)
         componentNames.push(comp);
@@ -711,7 +711,8 @@ Blockly.ReplMgr.processRetvals = function(responses) {
             runtimeerr(escapeHTML(r.value) + Blockly.Msg.REPL_NO_ERROR_FIVE_SECONDS);
         }
     }
-    Blockly.getMainWorkspace().getWarningHandler().checkAllBlocksForWarningsAndErrors();
+    var handler = Blockly.getMainWorkspace().getWarningHandler();
+    handler && handler.checkAllBlocksForWarningsAndErrors();
 };
 
 Blockly.ReplMgr.setDoitResult = function(block, value) {
@@ -927,9 +928,9 @@ Blockly.ReplMgr.startAdbDevice = function(rs, usb) {
             progdialog.hide();
             rs.state = context.rsState.ASSET; // Indicate that we are connected, start loading assets
             clearInterval(interval);
-            RefreshAssets(context.formName, function() {
+            RefreshAssets(function() {
                 rs.state = context.rsState.CONNECTED;
-                top.BlocklyPanel_blocklyWorkspaceChanged(context.formName);
+                Blockly.mainWorkspace.fireChangeListener(new AI.Events.CompanionConnect());
             });
         }
     };
