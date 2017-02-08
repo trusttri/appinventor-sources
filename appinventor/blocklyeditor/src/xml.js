@@ -78,7 +78,7 @@ Blockly.Xml.domToWorkspace = (function(func) {
     return func;
   } else {
     var f = function() {
-      arguments[1].rendered = false;
+      var savedRendered = arguments[1].rendered;
       var args = Array.prototype.slice.call(arguments);
       Blockly.Instrument.timer (
         function() {
@@ -88,6 +88,7 @@ Blockly.Xml.domToWorkspace = (function(func) {
           Blockly.Instrument.stats.domToWorkspaceCalls++;
           Blockly.Instrument.stats.domToWorkspaceTime = timeDiff;
         });
+      arguments[1].rendered = savedRendered;
     };
     f.isInstrumented = true;
     return f;
