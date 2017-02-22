@@ -483,9 +483,10 @@ public class BlocklyPanel extends HTMLPanel {
 
   private native void initWorkspace(String projectId, boolean readOnly, boolean rtl)/*-{
     var el = this.@com.google.gwt.user.client.ui.UIObject::getElement()();
-    var workspace = Blockly.BlocklyEditor.create(el, readOnly, rtl);
+    var workspace = Blockly.BlocklyEditor.create(el,
+      this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::formName,
+      readOnly, rtl);
     workspace.projectId = projectId;
-    workspace.formName = this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::formName;
     var cb = $entry(this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspaceChanged(Lcom/google/gwt/core/client/JavaScriptObject;));
     cb = cb.bind(this);
     workspace.addChangeListener(function(e) {

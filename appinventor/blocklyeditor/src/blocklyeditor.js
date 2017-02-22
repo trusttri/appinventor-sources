@@ -24,6 +24,8 @@ if (Blockly.BlocklyEditor === undefined) {
   Blockly.BlocklyEditor = {};
 }
 
+Blockly.allWorkspaces = {};
+
 Blockly.configForTypeBlock = {
   frame: 'ai_frame',
   typeBlockDiv: 'ai_type_block',
@@ -188,7 +190,7 @@ Blockly.unprefixName = function (name) {
   }
 };
 
-Blockly.BlocklyEditor['create'] = function(container, readOnly, rtl) {
+Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
   var options = new Blockly.Options({
     'readOnly': readOnly,
     'rtl': rtl,
@@ -214,6 +216,8 @@ Blockly.BlocklyEditor['create'] = function(container, readOnly, rtl) {
   var workspaceDragSurface = new Blockly.workspaceDragSurfaceSvg(subContainer);
 
   var workspace = new Blockly.WorkspaceSvg(options, blockDragSurface, workspaceDragSurface);
+  Blockly.allWorkspaces[formName] = workspace;
+  workspace.formName = formName;
   workspace.rendered = false;
   workspace.componentDb_ = new Blockly.ComponentDatabase();
   workspace.procedureDb_ = new Blockly.ProcedureDatabase();
