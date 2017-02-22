@@ -35,7 +35,7 @@ Blockly.PROPERTY_READWRITEABLE = 3;
  * @property {Object.<string, Object<string, string>>} blockProperties
  * @property {Object.<string, Object<string, string>>} methods
  */
-ComponentInfo;
+ComponentInfo = function() {};
 
 /**
  * @typedef ParameterDescriptor
@@ -43,17 +43,17 @@ ComponentInfo;
  * @property {!string} name
  * @property {!type} type
  */
-ParameterDescriptor;
+ParameterDescriptor = function() {};
 
 /**
  * @typedef {{name: !string, description: !string, deprecated: ?boolean, parameters: !ParameterDescriptor[]}}
  */
-EventDescriptor;
+EventDescriptor = function() {};
 
 /**
  * @typedef {{name: !string, description: !string, deprecated: ?boolean, parameters: !ParameterDescriptor[], returnType: ?string}}
  */
-MethodDescriptor;
+MethodDescriptor = function() {};
 
 /**
  * @typedef PropertyDescriptor
@@ -64,7 +64,7 @@ MethodDescriptor;
  * @property {!string} rw
  * @property {?boolean} deprecated
  */
-PropertyDescriptor;
+PropertyDescriptor = function() {};
 
 /**
  * @typedef ComponentTypeDescriptor
@@ -78,7 +78,7 @@ PropertyDescriptor;
  * @property {!string[]} setPropertyList
  * @property {!string[]} getPropertyList
  */
-ComponentTypeDescriptor;
+ComponentTypeDescriptor = function() {};
 
 /**
  * @typedef ComponentInstanceDescriptor
@@ -86,7 +86,7 @@ ComponentTypeDescriptor;
  * @property {!string} name
  * @property {!string} typeName
  */
-ComponentInstanceDescriptor;
+ComponentInstanceDescriptor = function() {};
 
 /**
  * Database for component type information and instances.

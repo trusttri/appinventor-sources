@@ -129,7 +129,7 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent, 
 
   var preUpgradeLanguageVersion;
   if (versionTags.length===0) {
-    Blockly.Versioning.v17_blocksOverhaul(dom);
+    Blockly.Versioning.v17_blocksOverhaul(dom, opt_workspace);
     preUpgradeLanguageVersion = 17;  // default for oldest ai2
   }
   else {
@@ -473,7 +473,7 @@ Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile, workspace) {
             var componentDb = workspace.getComponentDatabase();
             if (componentDb.hasType(splitComponent[0]) &&
                 (splitComponent[1] == 'setproperty' || splitComponent[1] == 'getproperty'))
-              Blockly.Versioning.v17_translateComponentSetGetProperty(blockElem);
+              Blockly.Versioning.v17_translateComponentSetGetProperty(blockElem, workspace);
             else {
               var instance = splitComponent[0];
               var componentType = componentDb.instanceNameToTypeName(instance);
@@ -489,16 +489,16 @@ Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile, workspace) {
               //    are answered affirmatively, but this should be checked here as well
               var rightside = splitComponent[1];
               if (rightside == 'setproperty' || rightside == 'getproperty')
-                Blockly.Versioning.v17_translateSetGetProperty(blockElem);
+                Blockly.Versioning.v17_translateSetGetProperty(blockElem, workspace);
               else
               if (rightside == 'component')
-                Blockly.Versioning.v17_translateComponentGet(blockElem);
+                Blockly.Versioning.v17_translateComponentGet(blockElem, workspace);
               else
               if (componentDb.getEventForType(componentType, rightside))
-                Blockly.Versioning.v17_translateEvent(blockElem);
+                Blockly.Versioning.v17_translateEvent(blockElem, workspace);
               else
               if (componentDb.getMethodForType(componentType, rightside))
-                Blockly.Versioning.v17_translateMethod(blockElem);
+                Blockly.Versioning.v17_translateMethod(blockElem, workspace);
             }
           }
         }
@@ -512,7 +512,7 @@ Blockly.Versioning.v17_blocksOverhaul = function(xmlFromFile, workspace) {
  * v17_translateEvent is called when we know we have an Event element that
  * needs to be translated.
  */
-Blockly.Versioning.v17_translateEvent = function(blockElem) {
+Blockly.Versioning.v17_translateEvent = function(blockElem, workspace) {
   //get the event type and instance name,
   // the type attribute is "component_event"
   // event block types look like: <block type="Button1_Click" x="132" y="72">
@@ -524,7 +524,7 @@ Blockly.Versioning.v17_translateEvent = function(blockElem) {
   var instance = splitComponent[0];
   var event=splitComponent[1];
   // Paul has a function to convert instance to type
-  var componentType = Blockly.Component.instanceNameToTypeName(instance);
+  var componentType = workspace.getComponentDatabase().instanceNameToTypeName(instance);
   // ok, we have all the info, now we can override the old event attribute with 'event'
   blockElem.setAttribute('type','component_event');
   // <mutation component_type=​"Canvas" instance_name=​"Canvas1" event_name=​"Dragged">​</mutation>
@@ -541,7 +541,7 @@ Blockly.Versioning.v17_translateEvent = function(blockElem) {
  * v17_translateMethod is called when we know we have a component method element that
  * needs to be translated.
  */
-Blockly.Versioning.v17_translateMethod = function(blockElem) {
+Blockly.Versioning.v17_translateMethod = function(blockElem, workspace) {
   // the type attribute is "instance_method"
   var blockType = blockElem.getAttribute('type');
   // method block types look like: <block type="TinyDB_StoreValue" ...>
@@ -553,7 +553,7 @@ Blockly.Versioning.v17_translateMethod = function(blockElem) {
   var instance = splitComponent[0];
   var method = splitComponent[1];
   // Paul has a function to convert instance to type
-  var componentType = Blockly.Component.instanceNameToTypeName(instance);
+  var componentType = workspace.getComponentDatabase().instanceNameToTypeName(instance);
   // ok, we have all the info, now we can override the old event attribute with 'event'
   blockElem.setAttribute('type','component_method');
   // <mutation component_type=​"Canvas" instance_name=​"Canvas1" event_name=​"Dragged">​</mutation>
@@ -598,7 +598,7 @@ Blockly.Versioning.v17_translateAnyMethod = function(blockElem) {
  * v17_translateComponentGet is called when we know we have a component get, e.g.
  * TinyDB_component as the block
  */
-Blockly.Versioning.v17_translateComponentGet = function(blockElem) {
+Blockly.Versioning.v17_translateComponentGet = function(blockElem, workspace) {
   // the type attribute is "instance_method"
   var blockType = blockElem.getAttribute('type');
   // block type looks like: <block type="TinyDB1_component" ..> note an instance
@@ -611,7 +611,7 @@ Blockly.Versioning.v17_translateComponentGet = function(blockElem) {
   var instance = splitComponent[0];
   // if we got here splitComponent[1] must be "component"
   // Paul has a function to convert instance to type
-  var componentType = Blockly.Component.instanceNameToTypeName(instance);
+  var componentType = workspace.getComponentDatabase().instanceNameToTypeName(instance);
   // ok, we have all the info, now we can override the old event attribute with 'event'
   blockElem.setAttribute('type','component_component_block');
   // <mutation component_type=​"Canvas" instance_name=​"Canvas1" event_name=​"Dragged">​</mutation>
@@ -627,7 +627,7 @@ Blockly.Versioning.v17_translateComponentGet = function(blockElem) {
 /**
  * v17_translateSetGetProperty is called when we know we have a get or set on an instance
  */
-Blockly.Versioning.v17_translateSetGetProperty = function(blockElem) {
+Blockly.Versioning.v17_translateSetGetProperty = function(blockElem, workspace) {
   // the type attribute is "instance_setproperty" or "component_getproperty"
   var blockType = blockElem.getAttribute('type');
   // set block look like: <block type="Button1_setproperty" x="132" y="72">
@@ -639,7 +639,7 @@ Blockly.Versioning.v17_translateSetGetProperty = function(blockElem) {
   var instance = splitComponent[0];
   var type=splitComponent[1]; //setproperty or getproperty
   // Paul has a function to convert instance to type
-  var componentType = Blockly.Component.instanceNameToTypeName(instance);
+  var componentType = workspace.getComponentDatabase().instanceNameToTypeName(instance);
   // grab titles to find the particular property. There is a title elem with
   //   a "PROP" attribute right under and within the block element itself
   //   There might be many titles, but we grab the first.

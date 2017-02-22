@@ -120,6 +120,15 @@ Blockly.WorkspaceSvg.prototype.dispose = (function(func) {
 })(Blockly.WorkspaceSvg.prototype.dispose);
 
 /**
+ * Add the warning handler.
+ */
+Blockly.WorkspaceSvg.prototype.addWarningHandler = function() {
+  if (this.warningHandler_ == null) {
+    this.warningHandler_ = new Blockly.WarningHandler(this);
+  }
+};
+
+/**
  * Adds the warning indicator.
  */
 Blockly.WorkspaceSvg.prototype.addWarningIndicator = function() {

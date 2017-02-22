@@ -75,15 +75,6 @@ Blockly.FieldLexicalVariable = function(varname) {
 goog.inherits(Blockly.FieldLexicalVariable, Blockly.FieldDropdown);
 
 /**
- * Get the variable's name (use a variableDB to convert into a real name).
- * Unline a regular dropdown, variables are literal and have no neutral value.
- * @return {string} Current text.
- */
-Blockly.FieldLexicalVariable.prototype.getValue = function() {
-  return this.getText();
-};
-
-/**
  * Set the variable name.
  * @param {string} text New text.
  */

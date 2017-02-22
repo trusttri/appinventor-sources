@@ -222,6 +222,7 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
   workspace.componentDb_ = new Blockly.ComponentDatabase();
   workspace.procedureDb_ = new Blockly.ProcedureDatabase();
   workspace.variableDb_ = new Blockly.VariableDatabase();
+  workspace.addWarningHandler();
   if (!readOnly) {
     var ai_type_block = goog.dom.createElement('div'),
       p = goog.dom.createElement('p'),
@@ -253,7 +254,6 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
  */
 Blockly.ai_inject = function(container, workspace) {
   Blockly.mainWorkspace = workspace;  // make workspace the 'active' workspace
-  console.log('Made ' + workspace.id + ' the active workspace.');
   workspace.fireChangeListener(new AI.Events.ScreenSwitch(workspace.projectId, workspace.formName));
   var gridEnabled = top.BlocklyPanel_getGridEnabled && top.BlocklyPanel_getGridEnabled();
   var gridSnap = top.BlocklyPanel_getSnapEnabled && top.BlocklyPanel_getSnapEnabled();
