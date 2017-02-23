@@ -670,7 +670,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    *
    * @return  owning component container for this component
    */
-  protected final MockContainer getContainer() {
+  public final MockContainer getContainer() {
     return container;
   }
 

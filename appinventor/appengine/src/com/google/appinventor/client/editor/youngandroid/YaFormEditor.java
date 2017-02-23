@@ -15,6 +15,7 @@ import com.google.appinventor.client.boxes.PaletteBox;
 import com.google.appinventor.client.boxes.PropertiesBox;
 import com.google.appinventor.client.boxes.SourceStructureBox;
 import com.google.appinventor.client.editor.ProjectEditor;
+import com.google.appinventor.client.editor.adapters.ComponentAdapter;
 import com.google.appinventor.client.editor.adapters.IComponent;
 import com.google.appinventor.client.editor.adapters.IDesigner;
 import com.google.appinventor.client.editor.simple.SimpleComponentDatabase;
@@ -808,22 +809,29 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     }
   }
 
+  @Override
   public void addComponent(String uuid, String type) {
     if (componentsDb.containsKey(uuid)) {
-      throw new IllegalStateException(/*String.format(ERROR_EXISTING_UUID, uuid)*/);
+      throw new IllegalStateException("Component with UUID \"" + uuid + "\" already exists.");
     }
     MockComponent component = SimpleComponentDescriptor.createMockComponent(type, this);
     component.changeProperty(MockComponent.PROPERTY_NAME_UUID, uuid);
     componentsDb.put(uuid, component);
+    YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
+    YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
+    blockEditor.addComponent(component.getType(), component.getName(), component.getUuid());
   }
 
   @Override
   public void removeComponent(String uuid) {
     if (!componentsDb.containsKey(uuid)) {
-      throw new IllegalStateException("No component exists with UUID \"" + uuid + "\".");
+      return;
     }
-    MockComponent component = componentsDb.remove(uuid);
-    component.removeFromParent();
+    MockComponent component = componentsDb.get(uuid);
+    componentsDb.remove(uuid);
+    YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
+    YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
+    blockEditor.removeComponent(component.getType(), component.getName(), uuid);
   }
 
   @Override
@@ -832,7 +840,11 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     if (component == null) {
       throw new IllegalStateException("No component exists with UUID \"" + uuid + "\"");
     } else {
+      String oldName = component.getPropertyValue(MockComponent.PROPERTY_NAME_NAME);
       component.changeProperty(MockComponent.PROPERTY_NAME_NAME, name);
+      YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
+      YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
+      blockEditor.renameComponent(oldName, name, uuid);
     }
   }
 
@@ -842,17 +854,34 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     if (component == null) {
       throw new IllegalStateException("No component exists with UUID \"" + uuid + "\"");
     }
-    // TODO(ewpatton): Implementation
-    return null;
+    return ComponentAdapter.create(componentsDb.get(uuid));
   }
 
   @Override
   public void setProperty(String uuid, String property, String value) {
-    // TODO(ewpatton): Implementation
+    if (!componentsDb.containsKey(uuid)) {
+      throw new IllegalStateException("Component with UUID \"" + uuid + "\" does not exist.");
+    }
+    MockComponent component = componentsDb.get(uuid);
+    component.changeProperty(property, value);
   }
 
   @Override
   public void moveComponent(String uuid, String parentUuid, int index) {
-    // TODO(ewpatton): Implementation
+    if (!componentsDb.containsKey(uuid)) {
+      throw new IllegalStateException("Component with UUID \"" + uuid + "\" does not exist.");
+    }
+    if (!componentsDb.containsKey(parentUuid)) {
+      throw new IllegalStateException("Component with UUID \"" + parentUuid + "\" does not exist.");
+    }
+    MockComponent component = componentsDb.get(uuid);
+    MockContainer parent = (MockContainer)componentsDb.get(parentUuid);
+    MockContainer oldParent = component.getContainer();
+    if (oldParent != null) {
+      oldParent.removeComponent(component, false);
+    }
+    parent.addVisibleComponent(component, index);
   }
+
+
 }
