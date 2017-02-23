@@ -14,11 +14,16 @@ goog.provide('AI.Adapter');
 
 /**
  * A JavaScript Adapter for the AI Designer interface.
- * @param editor
+ * @param {string} formName The name of the form, e.g. 1234_Screen1
+ * @param {com.google.appinventor.client.editor.youngandroid.YaFormEditor} editor The YaFormEditor
+ * that implements the IDesigner interface.
  * @constructor
  */
-AI.Adapter.Designer = function(editor) {
+AI.Adapter.Designer = function(formName, editor) {
   this.editor = editor;
+  var parts = formName.split(/ /);
+  this.projectId = parts[0];
+  this.formName = formName;
 };
 
 /**
@@ -80,5 +85,6 @@ AI.Adapter.Designer.prototype.setProperty = null;
  * @constructor
  */
 AI.Adapter.Component = function(editor, component) {
-
+  this.editor = editor;
+  this.component = component;
 };

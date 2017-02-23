@@ -14,8 +14,11 @@ import com.google.appinventor.client.boxes.AssetListBox;
 import com.google.appinventor.client.boxes.PaletteBox;
 import com.google.appinventor.client.boxes.PropertiesBox;
 import com.google.appinventor.client.boxes.SourceStructureBox;
+import com.google.appinventor.client.editor.EditorManager;
+import com.google.appinventor.client.editor.FileEditor;
 import com.google.appinventor.client.editor.ProjectEditor;
 import com.google.appinventor.client.editor.adapters.ComponentAdapter;
+import com.google.appinventor.client.editor.adapters.DesignerAdapter;
 import com.google.appinventor.client.editor.adapters.IComponent;
 import com.google.appinventor.client.editor.adapters.IDesigner;
 import com.google.appinventor.client.editor.simple.SimpleComponentDatabase;
@@ -132,6 +135,10 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
   private final Map<String, MockComponent> componentsDb = new HashMap<String, MockComponent>();
 
   private static final int OLD_PROJECT_YAV = 150; // Projects older then this have no authURL
+
+  static {
+    exportJavascript();
+  }
 
   /**
    * Creates a new YaFormEditor.
@@ -496,6 +503,7 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     JSONObject propertiesObject = YoungAndroidSourceAnalyzer.parseSourceFile(
         content, JSON_PARSER);
     form = createMockForm(propertiesObject.getProperties().get("Properties").asObject());
+    componentsDb.put("0", form);
 
     // Initialize the nonVisibleComponentsPanel and visibleComponentsPanel.
     nonVisibleComponentsPanel.setForm(form);
@@ -829,6 +837,7 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     }
     MockComponent component = componentsDb.get(uuid);
     componentsDb.remove(uuid);
+    component.getContainer().removeComponent(component, true);
     YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
     YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
     blockEditor.removeComponent(component.getType(), component.getName(), uuid);
@@ -845,6 +854,8 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
       YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
       YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
       blockEditor.renameComponent(oldName, name, uuid);
+      onFormStructureChange();
+      updatePropertiesPanel(component);
     }
   }
 
@@ -854,7 +865,8 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     if (component == null) {
       throw new IllegalStateException("No component exists with UUID \"" + uuid + "\"");
     }
-    return ComponentAdapter.create(componentsDb.get(uuid));
+    String formName = this.getProjectId() + "_" + this.form.getName();
+    return ComponentAdapter.create(DesignerAdapter.make(formName, this), component);
   }
 
   @Override
@@ -883,5 +895,31 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     parent.addVisibleComponent(component, index);
   }
 
+  /**
+   * 
+   * @param formName The form name as a projectId '_' screenName, e.g. '1234_Screen1'
+   * @return 
+   */
+  public static IDesigner getDesignerForForm(String formName) {
+    YaFormEditor editor = null;
+    String[] parts = formName.split("_");
+    long projectId = Long.parseLong(parts[0]);
+    ProjectEditor projectEditor = Ode.getInstance().getEditorManager().getOpenProjectEditor(projectId);
+    for (FileEditor e : projectEditor.getOpenFileEditors()) {
+      if (e instanceof YaFormEditor) {
+        editor = (YaFormEditor) e;
+      }
+    }
+    if (editor != null) {
+      return DesignerAdapter.make(formName, editor);
+    } else {
+      return null;
+    }
+  }
+
+  private static native void exportJavascript()/*-{
+    top.getDesignerForForm =
+      $entry(@com.google.appinventor.client.editor.youngandroid.YaFormEditor::getDesignerForForm(Ljava/lang/String;));
+  }-*/;
 
 }

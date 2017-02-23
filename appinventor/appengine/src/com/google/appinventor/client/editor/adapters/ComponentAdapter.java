@@ -8,7 +8,7 @@ public class ComponentAdapter extends JavaScriptObject implements IComponent {
   protected ComponentAdapter() {
   }
 
-  public static native IComponent create(MockComponent component)/*-{
-    return new AI.Adapter.Component(component);
+  public static native IComponent create(DesignerAdapter editor, MockComponent component)/*-{
+    return new AI.Adapter.Component(editor, component);
   }-*/;
 }
