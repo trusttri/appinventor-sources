@@ -97,12 +97,13 @@ Blockly.Blocks['text_join_item'] = {
   }
 };
 
+/*
 Blockly.Blocks['text_length'] = {
   // String length.
   category: 'Text',
   helpUrl: Blockly.Msg.LANG_TEXT_LENGTH_HELPURL,
   init: function () {
-    this.setColour(Blockly.TEXT_CATEGORY_HUE);
+    this.setColour(Blockly.TEXT_CATEGORY_HUE); //delete
     this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.OUTPUT));
     this.appendValueInput('VALUE')
         .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text", Blockly.Blocks.Utilities.INPUT))
@@ -110,6 +111,45 @@ Blockly.Blocks['text_length'] = {
     this.setTooltip(Blockly.Msg.LANG_TEXT_LENGTH_TOOLTIP);
   },
   typeblock: [{translatedName: Blockly.Msg.LANG_TEXT_LENGTH_INPUT_LENGTH}]
+};
+*/
+
+///////////////////////////////////////////////////////////////////////
+/*
+ "<block xmlns="http://www.w3.org/1999/xhtml" type="text_length" id="uwup!Q#aMXmaatbXM?rC"><value name="VALUE"><block type="text" id="m0m!MsZ!-N=kN-qnuQ/Z"><field name="TEXT">gh</field></block></value></block>"
+ */
+
+
+Blockly.Blocks['text_length'] = {
+    category: 'Text',
+    jsonObject:{
+        "type": "text_length",
+        "message0": "length"+"%1",
+        "args0": [
+            {
+            "type": "input_value",
+            "name": "VALUE",
+            "check": "String"
+          }
+        ],
+        "output": "Number",
+        "category": "Text",
+        "colour": Blockly.TEXT_CATEGORY_HUE,
+        "tooltip": Blockly.Msg.LANG_TEXT_LENGTH_TOOLTIP,
+        "helpUrl": Blockly.Msg.LANG_TEXT_TEXT_HELPURL
+    },
+    init: function () {
+        this.jsonInit(this.jsonObject);
+        this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.OUTPUT)); //check this
+    },
+    jsBlockInfo:{
+      scope: "GLOBAL",
+        methodName: "text_length",
+        textParameters: ["VALUE"],
+        blockToText: function(block){
+          return "\""+block.getFieldValue('VALUE').length+"\""; //check this
+        }
+    },
 };
 
 Blockly.Blocks['text_isEmpty'] = {
@@ -126,6 +166,8 @@ Blockly.Blocks['text_isEmpty'] = {
   },
   typeblock: [{translatedName: Blockly.Msg.LANG_TEXT_ISEMPTY_INPUT_ISEMPTY}]
 };
+
+
 
 Blockly.Blocks['text_compare'] = {
   // Compare two texts
