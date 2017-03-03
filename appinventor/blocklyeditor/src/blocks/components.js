@@ -255,7 +255,7 @@ Blockly.Blocks.component_event = {
   },
 
   typeblock : function(){
-    var componentDb = this.getTopWorkspace().getComponentDatabase();
+    var componentDb = Blockly.mainWorkspace.getComponentDatabase();
     var tb = [];
 
     componentDb.forEachInstance(function(instance) {
@@ -524,7 +524,7 @@ Blockly.Blocks.component_method = {
   },
 
   typeblock : function(){
-    var componentDb = this.getTopWorkspace().getComponentDatabase();
+    var componentDb = Blockly.mainWorkspace.getComponentDatabase();
     var tb = [];
     var typeName;
     var typeNameDict = {};
@@ -838,7 +838,7 @@ Blockly.Blocks.component_set_get = {
     }
   },
   typeblock : function(){
-    var componentDb = this.getTopWorkspace().getComponentDatabase();
+    var componentDb = Blockly.mainWorkspace.getComponentDatabase();
     var tb = [];
 
     function pushBlock(prefix, mode, property, typeName, instanceName) {
@@ -979,7 +979,7 @@ Blockly.Blocks.component_component_block = {
   },
 
   typeblock : function(){
-    var componentDb = this.getTopWorkspace().getComponentDatabase();
+    var componentDb = Blockly.mainWorkspace.getComponentDatabase();
     var tb = [];
 
     componentDb.forEachInstance(function(instance) {
@@ -1025,7 +1025,7 @@ Blockly.ComponentBlock.isClockMethodName =  function  (name) {
 
 Blockly.ComponentBlock.createComponentDropDown = function(block){
   var componentDropDown = new Blockly.FieldDropdown([["",""]]);
-  componentDropDown.menuGenerator_ = function(){ return block.getTopWorkspace().getComponentDatabase().getComponentUidNameMapByType(block.typeName); };
+  componentDropDown.menuGenerator_ = function(){ return block.getTopWorkspace().getComponentDatabase().getComponentNamesByType(block.typeName); };
   return componentDropDown;
 };
 

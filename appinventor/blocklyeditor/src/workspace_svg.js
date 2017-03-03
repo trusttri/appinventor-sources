@@ -59,7 +59,11 @@ Blockly.WorkspaceSvg.prototype.onMouseDown_ = (function(func) {
   } else {
     var f = function(e) {
       try {
-        this.latestClick = { x: e.clientX, y: e.clientY };
+        var metrics = Blockly.mainWorkspace.getMetrics();
+        var point = Blockly.utils.mouseToSvg(e, this.getParentSvg(), this.getInverseScreenCTM());
+        point.x = (point.x + metrics.viewLeft) / this.scale;
+        point.y = (point.y + metrics.viewTop) / this.scale;
+        this.latestClick = point;
         return func.call(this, e);
       } finally {
         //if drawer exists and supposed to close
@@ -123,7 +127,7 @@ Blockly.WorkspaceSvg.prototype.dispose = (function(func) {
  * Add the warning handler.
  */
 Blockly.WorkspaceSvg.prototype.addWarningHandler = function() {
-  if (this.warningHandler_ == null) {
+  if (!this.warningHandler_) {
     this.warningHandler_ = new Blockly.WarningHandler(this);
   }
 };
@@ -133,7 +137,9 @@ Blockly.WorkspaceSvg.prototype.addWarningHandler = function() {
  */
 Blockly.WorkspaceSvg.prototype.addWarningIndicator = function() {
   if (!this.options.readOnly && this.warningIndicator_ == null) {
-    this.warningHandler_ = new Blockly.WarningHandler(this);
+    if (!this.warningHandler_) {
+      this.warningHandler_ = new Blockly.WarningHandler(this);
+    }
     this.warningIndicator_ = new Blockly.WarningIndicator(this);
     var svgWarningIndicator = this.warningIndicator_.createDom();
     this.svgGroup_.appendChild(svgWarningIndicator);
@@ -146,7 +152,7 @@ Blockly.WorkspaceSvg.prototype.addWarningIndicator = function() {
  */
 Blockly.WorkspaceSvg.prototype.addBackpack = function() {
   if (Blockly.Backpack && !this.options.readOnly) {
-    this.backpack_ = new Blockly.Backpack(this, {scrollbars: true, media: './media/'});
+    this.backpack_ = new Blockly.Backpack(this, {scrollbars: true, media: './assets/'});
     var svgBackpack = this.backpack_.createDom(this);
     this.svgGroup_.appendChild(svgBackpack);
     this.backpack_.init();

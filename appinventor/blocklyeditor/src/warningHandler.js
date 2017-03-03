@@ -33,7 +33,11 @@ Blockly.WarningHandler.WarningState = {
 
 Blockly.WarningHandler.prototype.updateWarningErrorCount = function() {
   //update the error and warning count in the UI
-  this.workspace.getWarningIndicator().updateWarningAndErrorCount();
+  var indicator = this.workspace.getWarningIndicator();
+  if (indicator) {
+    // indicator is only available after the workspace has been drawn.
+    indicator.updateWarningAndErrorCount();
+  }
 };
 
 //noinspection JSUnusedGlobalSymbols
@@ -50,7 +54,11 @@ Blockly.WarningHandler.prototype.toggleWarning = function() {
     this.showWarningsToggle = true;
     this.checkAllBlocksForWarningsAndErrors(); // [lyn, 12/31/2013] Removed unnecessary false arg
   }
-  this.workspace.getWarningIndicator().updateWarningToggleText();
+  var indicator = this.workspace.getWarningIndicator();
+  if (indicator) {
+    // indicator is only available after the workspace has been drawn.
+    indicator.updateWarningToggleText();
+  }
 };
 
 //Hide warnings on the blocks
@@ -228,7 +236,7 @@ Blockly.WarningHandler.prototype['checkIfUndefinedBlock'] = function(block) {
     if (block.type == "component_event") {
       healStack = false; // unplug all blocks inside
     }
-    block.isolate(healStack, true);
+    block.isolate(healStack);
     block.setErrorIconText(errorMessage);
     return true;
   } else {

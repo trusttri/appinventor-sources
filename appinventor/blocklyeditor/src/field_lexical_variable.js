@@ -65,9 +65,9 @@ Blockly.FieldLexicalVariable = function(varname) {
   Blockly.FieldDropdown.call(this, Blockly.FieldLexicalVariable.dropdownCreate,
                                    Blockly.FieldLexicalVariable.dropdownChange);
   if (varname) {
-    this.setText(varname);
+    this.setValue(varname);
   } else {
-    this.setText(Blockly.Variables.generateUniqueName());
+    this.setValue(Blockly.Variables.generateUniqueName());
   }
 };
 

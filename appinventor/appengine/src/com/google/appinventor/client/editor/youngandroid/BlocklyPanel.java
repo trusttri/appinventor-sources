@@ -11,9 +11,8 @@ import com.google.appinventor.client.DesignToolbar;
 import com.google.appinventor.client.ErrorReporter;
 import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.TopToolbar;
-import com.google.appinventor.client.editor.youngandroid.events.AppInventorEvent;
-import com.google.appinventor.client.editor.youngandroid.events.NativeEventHelper;
 import com.google.appinventor.client.output.OdeLog;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.appinventor.client.settings.user.BlocksSettings;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.shared.settings.SettingsConstants;
@@ -59,7 +58,7 @@ public class BlocklyPanel extends HTMLPanel {
 		   "for(var ns in window.goog.implicitNamespaces_) {\n" +
 		   "  if(ns.indexOf('.') !== false) ns = ns.split('.')[0];\n" +
 		   "  top[ns] = window.goog.global[ns];\n" +
-		   "}\nwindow['Blockly'] = top['Blockly'];")
+		   "}\nwindow['Blockly'] = top['Blockly'];\nwindow['AI'] = top['AI'];")
     public void initBlockly();
   }
 
@@ -79,8 +78,23 @@ public class BlocklyPanel extends HTMLPanel {
     SIMPLE_COMPONENT_TRANSLATIONS = NativeTranslationMap.transform(ComponentsTranslation.myMap);
   }
 
+  /**
+   * BlocklyWorkspaceChangeListener allows other parts of the App Inventor system to subscribe to
+   * events in the Blockly panel.
+   *
+   * @see com.google.appinventor.client.editor.youngandroid.events.EventHelper
+   *
+   * @author ewpatton
+   *
+   */
   public interface BlocklyWorkspaceChangeListener {
-    public void onWorkspaceChange(BlocklyPanel panel, AppInventorEvent event);
+    /**
+     * Event callback when a workspace change occurs.
+     *
+     * @param panel Source BlocklyPanel where the event occurred.
+     * @param event Native object representing the event.
+     */
+    public void onWorkspaceChange(BlocklyPanel panel, JavaScriptObject event);
   }
 
   // The currently displayed form (project/screen)
@@ -121,18 +135,44 @@ public class BlocklyPanel extends HTMLPanel {
     getElement().addClassName("svg");
     getElement().setId(formName);
     this.formName = formName;
+    /* Blockly initialization now occurs in three stages. This is due to the fact that certain
+     * Blockly objects rely on SVG methods such as getScreenCTM(), which are not properly
+     * initialized and/or null prior to the svg element being attached to the DOM. The first
+     * stage of initialization happens here.
+     *
+     * Stages 2 and 3 can occur in different orders depending on network latency. On a fast
+     * connection, the second stage will be loading of the .bky content into the workspace.
+     * The third stage will then be rendering of the workspace when the user switches to the
+     * Blocks editor. On slow connections, the workspace may render blank until the blocks file
+     * has been downloaded from the server.
+     */
     initWorkspace(Long.toString(blocksEditor.getProjectId()), readOnly, LocaleInfo.getCurrentLocale().isRTL());
     OdeLog.log("Created BlocklyPanel for " + formName);
   }
 
+  /**
+   * Register an object to listen for changes in the Blockly workspace.
+   *
+   * @param listener
+   */
   public void addChangeListener(BlocklyWorkspaceChangeListener listener) {
     listeners.add(listener);
   }
 
+  /**
+   * Unregister an object from listening to changes in the Blockly workspace.
+   *
+   * @param listener
+   */
   public void removeChangeListener(BlocklyWorkspaceChangeListener listener) {
     listeners.remove(listener);
   }
 
+  /**
+   * Notify listeners that an event has occurred in the Blockly workspace.
+   *
+   * @param event Native JavaScript event object with additional details.
+   */
   private void workspaceChanged(JavaScriptObject event) {
     // ignore workspaceChanged events until after the load finishes
     if (!loadComplete) {
@@ -143,7 +183,7 @@ public class BlocklyPanel extends HTMLPanel {
       ErrorReporter.reportError(MESSAGES.blocksNotSaved(formName));
     } else {
       for (BlocklyWorkspaceChangeListener listener : listeners) {
-        listener.onWorkspaceChange(this, NativeEventHelper.asEvent(event));
+        listener.onWorkspaceChange(this, event);
       }
     }
   }
@@ -166,12 +206,12 @@ public class BlocklyPanel extends HTMLPanel {
    * our parent object and then our blocks editor gets loaded
    * again later). Also, remember the current state of the blocks
    * area in case we get reloaded.
+   *
+   * This method originally stashed a bunch of iframe related state
+   * that is no longer necessary due to the removal of blocklyframe.html.
+   * To maintain the correct logic with the ReplMgr, it remains for now.
    */
   public void saveComponentsAndBlocks() {
-    // Actually, we already have the components saved, but take this as an
-    // indication that we are going to reinit the blocks editor the next
-    // time it is shown.
-    OdeLog.log("BlocklyEditor: prepared for reinit for form " + formName);
     // Call doResetYail which will stop the timer that is polling the phone. It is important
     // that it be stopped to avoid a race condition where the last timer on this form fires
     // while the new form is loading.
@@ -183,6 +223,7 @@ public class BlocklyPanel extends HTMLPanel {
    *
    * @param formJson JSON description of Form's structure for upgrading
    * @param blocksContent XML description of a blocks workspace in format expected by Blockly
+   * @throws LoadBlocksException if Blockly throws an uncaught exception
    */
   // [lyn, 2014/10/27] added formJson for upgrading
   public void loadBlocksContent(String formJson, String blocksContent) throws LoadBlocksException {
@@ -393,6 +434,12 @@ public class BlocklyPanel extends HTMLPanel {
     doUpdateCompanion(formName);
   }
 
+  /**
+   * Access UI translations for generating a deletion warning dialog.
+   * @param message Identifier of message
+   * @return Translated message
+   * @throws IllegalArgumentException if the identifier is not understood
+   */
   public static String getOdeMessage(String message) {
     // TODO(ewpatton): Investigate using a generator to work around
     // lack of reflection
@@ -405,28 +452,53 @@ public class BlocklyPanel extends HTMLPanel {
     }
   }
 
+  /**
+   * Update the user's grid setting.
+   * This method is called via JSNI.
+   * @param enable true if the grid should be enabled, otherwise false.
+   */
   private static void setGridEnabled(boolean enable) {
     BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
     settings.changePropertyValue(SettingsConstants.GRID_ENABLED, Boolean.toString(enable));
   }
 
+  /**
+   * Update the user's snap-to-grid setting.
+   * This method is called via JSNI.
+   * @param enable true if snapping should be enabled, otherwise false.
+   */
   private static void setSnapEnabled(boolean enable) {
     BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
     settings.changePropertyValue(SettingsConstants.SNAP_ENABLED, Boolean.toString(enable));
   }
 
+  /**
+   * Get the current state of the user's grid setting.
+   * This method is called via JSNI.
+   * @return true if the setting is present and set to true, otherwise false.
+   */
   private static boolean getGridEnabled() {
     BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
     String snap = settings.getPropertyValue(SettingsConstants.GRID_ENABLED);
     return Boolean.parseBoolean(snap);
   }
 
+  /**
+   * Get the current state of the user's snap setting.
+   * This method is called via JSNI.
+   * @return true if the setting is present and set to true, otherwise false.
+   */
   private static boolean getSnapEnabled() {
     BlocksSettings settings = (BlocksSettings) Ode.getUserSettings().getSettings(SettingsConstants.BLOCKS_SETTINGS);
     String snap = settings.getPropertyValue(SettingsConstants.SNAP_ENABLED);
     return Boolean.parseBoolean(snap);
   }
 
+  /**
+   * Trigger a save of the user's settings. This is used to prevent two updates being sent to the
+   * server in the event a Blockly operation sets both grid and snap back-to-back.
+   * This method is called via JSNI.
+   */
   private static void saveUserSettings() {
     Ode.getUserSettings().saveSettings(null);
   }
@@ -467,6 +539,8 @@ public class BlocklyPanel extends HTMLPanel {
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentInfo(Ljava/lang/String;));
     $wnd.BlocklyPanel_getComponentsJSONString =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getComponentsJSONString(Ljava/lang/String;));
+    $wnd.BlocklyPanel_storeBackpack =
+      $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::storeBackpack(Ljava/lang/String;));
     $wnd.BlocklyPanel_getOdeMessage =
       $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getOdeMessage(Ljava/lang/String;));
     $wnd.BlocklyPanel_setGridEnabled =
@@ -518,18 +592,24 @@ public class BlocklyPanel extends HTMLPanel {
    */
   native void makeActive()/*-{
     Blockly.mainWorkspace = this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace;
+    // Trigger a screen switch to send new YAIL.
+    var parts = Blockly.mainWorkspace.formName.split(/_/);
+    Blockly.mainWorkspace.fireChangeListener(new AI.Events.ScreenSwitch(parts[0], parts[1]));
   }-*/;
 
   // [lyn, 2014/10/27] added formJson for upgrading
   public native void doLoadBlocksContent(String formJson, String blocksContent) /*-{
     var workspace = this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace;
+    var previousMainWorkspace = Blockly.mainWorkspace;
     try {
+      Blockly.mainWorkspace = workspace;
       workspace.loadBlocksFile(formJson, blocksContent).verifyAllBlocks();
     } catch(e) {
       workspace.loadError = true;
       throw e;
     } finally {
       workspace.loadComplete = true;
+      Blockly.mainWorkspace = previousMainWorkspace;
     }
   }-*/;
 
@@ -741,17 +821,73 @@ public class BlocklyPanel extends HTMLPanel {
       .exportBlocksImageToUri(callb);
   }-*/;
 
+  /**
+   * Set the initial backpack contents from the server.
+   *
+   * This is an optimization that reduces the number of serializations to and from JSON. The
+   * backpack in earlier versions needed to be marshalled between iframes, but now lives in
+   * the same environment so can remain as JavaScript content.
+   *
+   * @param backpack JSON-serialized backpack contents.
+   */
+  public static native void setInitialBackpack(String backpack)/*-{
+    Blockly.Backpack.shared_contents = JSON.parse(backpack);
+  }-*/;
+
+  /**
+   * Store the backpack's contents to the App Inventor service.
+   *
+   * @param backpack JSON-serialized backpack contents.
+   */
+  private static void storeBackpack(String backpack) {
+    Ode.getInstance().getUserInfoService().storeUserBackpack(backpack,
+      new AsyncCallback<Void>() {
+        @Override
+        public void onSuccess(Void nothing) {
+          // Nothing to do...
+        }
+        @Override
+        public void onFailure(Throwable caught) {
+          OdeLog.elog("Failed setting the backpack");
+        }
+      });
+  }
+
+  /**
+   * NativeTranslationMap is a plain JavaScriptObject that provides key-value mappings for
+   * user interface translations in Blockly. This reduces the overhead of crossing GWT's
+   * JSNI barrier by replacing a more expensive function call with a dictionary lookup.
+   *
+   * @author ewpatton
+   *
+   */
   private static class NativeTranslationMap extends JavaScriptObject {
+    // GWT requires JSO constructors to be non-visible.
     protected NativeTranslationMap() {}
 
+    /**
+     * Instantiate a new NativeTranslationMap.
+     * @return An empty NativeTranslationMap
+     */
     private static native NativeTranslationMap make()/*-{
       return {};
     }-*/;
 
+    /**
+     * Add a key-value pair to the translation map.
+     * @param key Untranslated term
+     * @param value Translated term for the user's current locale
+     */
     private native void put(String key, String value)/*-{
       this[key] = value;
     }-*/;
 
+    /**
+     * Transforms a Java Collections Map into a NativeTranslationMap.
+     * @param map The source mapping of key-value pairs
+     * @return A new NativeTranslationMap with the same contents as <i>map</i> but as a
+     * JavaScript Object usable in native code.
+     */
     public static NativeTranslationMap transform(Map<String, String> map) {
       NativeTranslationMap result = make();
       for(Entry<String, String> entry : map.entrySet()) {

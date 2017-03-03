@@ -14,13 +14,7 @@ import com.google.appinventor.client.boxes.AssetListBox;
 import com.google.appinventor.client.boxes.PaletteBox;
 import com.google.appinventor.client.boxes.PropertiesBox;
 import com.google.appinventor.client.boxes.SourceStructureBox;
-import com.google.appinventor.client.editor.EditorManager;
-import com.google.appinventor.client.editor.FileEditor;
 import com.google.appinventor.client.editor.ProjectEditor;
-import com.google.appinventor.client.editor.adapters.ComponentAdapter;
-import com.google.appinventor.client.editor.adapters.DesignerAdapter;
-import com.google.appinventor.client.editor.adapters.IComponent;
-import com.google.appinventor.client.editor.adapters.IDesigner;
 import com.google.appinventor.client.editor.simple.SimpleComponentDatabase;
 import com.google.appinventor.client.editor.simple.SimpleEditor;
 import com.google.appinventor.client.editor.simple.SimpleNonVisibleComponentsPanel;
@@ -72,7 +66,7 @@ import java.util.Map;
  * @author markf@google.com (Mark Friedman)
  * @author lizlooney@google.com (Liz Looney)
  */
-public final class YaFormEditor extends SimpleEditor implements FormChangeListener, ComponentDatabaseChangeListener, IDesigner {
+public final class YaFormEditor extends SimpleEditor implements FormChangeListener, ComponentDatabaseChangeListener {
 
   private static class FileContentHolder {
     private String content;
@@ -135,10 +129,6 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
   private final Map<String, MockComponent> componentsDb = new HashMap<String, MockComponent>();
 
   private static final int OLD_PROJECT_YAV = 150; // Projects older then this have no authURL
-
-  static {
-    exportJavascript();
-  }
 
   /**
    * Creates a new YaFormEditor.
@@ -503,7 +493,6 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
     JSONObject propertiesObject = YoungAndroidSourceAnalyzer.parseSourceFile(
         content, JSON_PARSER);
     form = createMockForm(propertiesObject.getProperties().get("Properties").asObject());
-    componentsDb.put("0", form);
 
     // Initialize the nonVisibleComponentsPanel and visibleComponentsPanel.
     nonVisibleComponentsPanel.setForm(form);
@@ -816,110 +805,4 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
       cdbChangeListener.onResetDatabase();
     }
   }
-
-  @Override
-  public void addComponent(String uuid, String type) {
-    if (componentsDb.containsKey(uuid)) {
-      throw new IllegalStateException("Component with UUID \"" + uuid + "\" already exists.");
-    }
-    MockComponent component = SimpleComponentDescriptor.createMockComponent(type, this);
-    component.changeProperty(MockComponent.PROPERTY_NAME_UUID, uuid);
-    componentsDb.put(uuid, component);
-    YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
-    YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
-    blockEditor.addComponent(component.getType(), component.getName(), component.getUuid());
-  }
-
-  @Override
-  public void removeComponent(String uuid) {
-    if (!componentsDb.containsKey(uuid)) {
-      return;
-    }
-    MockComponent component = componentsDb.get(uuid);
-    componentsDb.remove(uuid);
-    component.getContainer().removeComponent(component, true);
-    YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
-    YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
-    blockEditor.removeComponent(component.getType(), component.getName(), uuid);
-  }
-
-  @Override
-  public void renameComponent(String uuid, String name) {
-    MockComponent component = componentsDb.get(uuid);
-    if (component == null) {
-      throw new IllegalStateException("No component exists with UUID \"" + uuid + "\"");
-    } else {
-      String oldName = component.getPropertyValue(MockComponent.PROPERTY_NAME_NAME);
-      component.changeProperty(MockComponent.PROPERTY_NAME_NAME, name);
-      YaProjectEditor yaProjectEditor = (YaProjectEditor) projectEditor;
-      YaBlocksEditor blockEditor = yaProjectEditor.getBlocksFileEditor(formNode.getFormName());
-      blockEditor.renameComponent(oldName, name, uuid);
-      onFormStructureChange();
-      updatePropertiesPanel(component);
-    }
-  }
-
-  @Override
-  public IComponent getComponentByUuid(String uuid) {
-    MockComponent component = componentsDb.get(uuid);
-    if (component == null) {
-      throw new IllegalStateException("No component exists with UUID \"" + uuid + "\"");
-    }
-    String formName = this.getProjectId() + "_" + this.form.getName();
-    return ComponentAdapter.create(DesignerAdapter.make(formName, this), component);
-  }
-
-  @Override
-  public void setProperty(String uuid, String property, String value) {
-    if (!componentsDb.containsKey(uuid)) {
-      throw new IllegalStateException("Component with UUID \"" + uuid + "\" does not exist.");
-    }
-    MockComponent component = componentsDb.get(uuid);
-    component.changeProperty(property, value);
-  }
-
-  @Override
-  public void moveComponent(String uuid, String parentUuid, int index) {
-    if (!componentsDb.containsKey(uuid)) {
-      throw new IllegalStateException("Component with UUID \"" + uuid + "\" does not exist.");
-    }
-    if (!componentsDb.containsKey(parentUuid)) {
-      throw new IllegalStateException("Component with UUID \"" + parentUuid + "\" does not exist.");
-    }
-    MockComponent component = componentsDb.get(uuid);
-    MockContainer parent = (MockContainer)componentsDb.get(parentUuid);
-    MockContainer oldParent = component.getContainer();
-    if (oldParent != null) {
-      oldParent.removeComponent(component, false);
-    }
-    parent.addVisibleComponent(component, index);
-  }
-
-  /**
-   * 
-   * @param formName The form name as a projectId '_' screenName, e.g. '1234_Screen1'
-   * @return 
-   */
-  public static IDesigner getDesignerForForm(String formName) {
-    YaFormEditor editor = null;
-    String[] parts = formName.split("_");
-    long projectId = Long.parseLong(parts[0]);
-    ProjectEditor projectEditor = Ode.getInstance().getEditorManager().getOpenProjectEditor(projectId);
-    for (FileEditor e : projectEditor.getOpenFileEditors()) {
-      if (e instanceof YaFormEditor) {
-        editor = (YaFormEditor) e;
-      }
-    }
-    if (editor != null) {
-      return DesignerAdapter.make(formName, editor);
-    } else {
-      return null;
-    }
-  }
-
-  private static native void exportJavascript()/*-{
-    top.getDesignerForForm =
-      $entry(@com.google.appinventor.client.editor.youngandroid.YaFormEditor::getDesignerForForm(Ljava/lang/String;));
-  }-*/;
-
 }

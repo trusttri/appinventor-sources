@@ -90,8 +90,13 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent, 
         preUpgradeVersion + ","  + systemVersion + "," + rep + ")");
     if (preUpgradeVersion > systemVersion) {
       // What to do in this case? Currently, throw an exception, but might want to do something else:
-      throw "Unexpected situation in Blockly.Versioning.upgrade: preUpgradeVersion of " + componentType +
-          " = " + preUpgradeVersion + " > systemVersion = " + systemVersion;
+      // JIS: We simply ignore this situation. It happens when someone imports a project that was
+      // touched by a newer version of App Inventor. By the time we are run here the user has already
+      // been shown a warning that the project may not work as expected. However if we throw the
+      // exception below we *guarantee* that the project will fail to load. Let's give them a
+      // chance instead (so the lines below are commented out).
+      // throw "Unexpected situation in Blockly.Versioning.upgrade: preUpgradeVersion of " + componentType +
+      //     " = " + preUpgradeVersion + " > systemVersion = " + systemVersion;
     } else if (preUpgradeVersion < systemVersion) {
       // Need to upgrade this component
       Blockly.Versioning.log("upgrading component type " + componentType + " from version " +
@@ -110,7 +115,7 @@ Blockly.Versioning.upgrade = function (preUpgradeFormJsonString, blocksContent, 
         Blockly.Versioning.log("applying upgrader for upgrading component type " + componentType +
             " from version " + (version-1) + " to version " + version);
         // Apply upgrader, possibly mutating rep and changing its dynamic type.
-        rep = Blockly.Versioning.applyUpgrader(versionUpgrader, rep);
+        rep = Blockly.Versioning.applyUpgrader(versionUpgrader, rep, opt_workspace);
       }
     } // otherwise, preUpgradeVersion and systemVersion are equal and no updgrade is necessary
     return rep; // Return final blocks representation, for dynamic typing purposes
@@ -209,7 +214,8 @@ Blockly.Versioning.isDom = function (blocksRep) {
   try {
     return (blocksRep instanceof Element
             || blocksRep instanceof HTMLElement
-            || blocksRep instanceof HTMLUnknownElement);
+            || blocksRep instanceof HTMLUnknownElement
+            || blocksRep.tagName == 'XML');
   } catch (anyErr) {
     // In phantomJS testing context, HTMLUnknownElement is undefined and causes an error,
     // so handle it this way.
@@ -270,18 +276,21 @@ Blockly.Versioning.ensureWorkspace = function (blocksRep, opt_workspace) {
  * (2) changing its representation (dom or workspace). Returns the final representation.
  * @param upgrader
  * @param blocksRep: an instance of an XML dom tree or a Blockly.Workspace
+ * @param opt_workspace: Optional workspace to be upgraded
  */
-Blockly.Versioning.applyUpgrader = function (upgrader, blocksRep) {
+Blockly.Versioning.applyUpgrader = function (upgrader, blocksRep, opt_workspace) {
+  opt_workspace = opt_workspace || Blockly.mainWorkspace;
+  opt_workspace.getProcedureDatabase().clear();  // clear the proc database in case of multiple upgrades
   Blockly.Versioning.checkUpgrader(upgrader); // ensure it has the correct form.
   // Perform upgrade
   if (upgrader == "ai1CantDoUpgrade") {
     throw "Blockly.Versioning.applyUpgrader: cannot perform an AI Classic upgrade on " + blocksRep;
   } else if (typeof(upgrader) == "function") {
-    return upgrader(blocksRep); // Apply upgrader, possibly mutating rep and changing its dynamic type.
+    return upgrader(blocksRep, opt_workspace); // Apply upgrader, possibly mutating rep and changing its dynamic type.
   } else if (Array.isArray (upgrader)) {
     // Treat array as sequential composition of upgraders
     Blockly.Versioning.log("Blockly.Versioning.applyUpgrader: treating list as sequential composition of upgraders");
-    return (Blockly.Versioning.composeUpgraders(upgrader))(blocksRep);
+    return (Blockly.Versioning.composeUpgraders(upgrader))(blocksRep, opt_workspace);
   } else { // otherwise, versionUpgrader is "noUpgrade", and nothing is done, so acts like identity
     return blocksRep;
   }
@@ -291,10 +300,11 @@ Blockly.Versioning.applyUpgrader = function (upgrader, blocksRep) {
  * Return a single upgrader that sequentially composes the upgraders in upgraderList
  * @param upgraderList
  */
-Blockly.Versioning.composeUpgraders = function (upgraderList) {
+Blockly.Versioning.composeUpgraders = function (upgraderList, opt_workspace) {
+  opt_workspace = opt_workspace || Blockly.mainWorkspace;
   return function (blocksRep) {
     for (var i = 0, upgrader; upgrader = upgraderList[i]; i++) {
-      blocksRep = Blockly.Versioning.applyUpgrader(upgrader, blocksRep); // Applying upgrader may convert blocks rep from dom to workspace or vice versa.
+      blocksRep = Blockly.Versioning.applyUpgrader(upgrader, blocksRep, opt_workspace); // Applying upgrader may convert blocks rep from dom to workspace or vice versa.
     }
     return blocksRep; // Return the final blocks rep
   }
@@ -2062,13 +2072,19 @@ Blockly.Versioning.AllUpgradeMaps =
     // - Screen.CompatibilityMode property was added no block needs to be changed.
     17: "noUpgrade",
 
+    // FOR FORM_COMPONENT_VERSION 18:
     // Screen.CompatibililtyMode replaced with Screen.Sizing no blocks need to be
     // changed.
     18: "noUpgrade",
 
     // For FORM_COMPONENT_VERSION 19:
     // - The Screen1.HideKeyboard method was added and no block needs to be changed.
-    19: "noUpgrade"
+    19: "noUpgrade",
+
+    // For FORM_COMPONENT_VERSION 20:
+    // - The Screen1.ShowListsAsJson property was added and no block needs to be changed.
+    20: "noUpgrade"
+
 
   }, // End Screen
 

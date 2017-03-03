@@ -59,8 +59,6 @@
     '../lib/blockly/core/names.js',
     '../lib/blockly/core/options.js',
     '../lib/blockly/core/procedures.js',
-    //'../lib/blockly/src/core/realtime.js',  // removed from blockly
-    //'../lib/blockly/src/core/realtime-client-utils.js',  // removed from blockly
     '../lib/blockly/core/rendered_connection.js',
     '../lib/blockly/core/scrollbar.js',
     '../lib/blockly/core/toolbox.js',
@@ -78,7 +76,6 @@
     '../lib/blockly/core/zoom_controls.js',
 
     //finally, include any of our own .js file in any order
-    "./src/adapters.js",
     "./src/events.js",
     "./src/blocklyeditor.js",
     './src/typeblock.js',
@@ -114,7 +111,7 @@
     "./src/field_flydown.js",
     "./src/field_parameter_flydown.js",
     "./src/field_global_flydown.js",
-    "./src/field_procedure_flydown.js",
+    "./src/field_procedurename.js",
     "./src/nameSet.js",
     "./src/substitution.js",
     "./src/language_switch.js",

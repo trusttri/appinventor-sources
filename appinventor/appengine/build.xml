@@ -66,23 +66,11 @@
   <property name="build.war.dir" location="${local.build.dir}/war" />
 
   <!-- =====================================================================
-       Generate a Unique ID for this build. This is used to name blockly-all.js
-       in a unique way (blockly-${guid1}.js) so blockly is cacheable but
-       different builds get their own copy instead of a potentially out of date
-       version. This is particularly important when we do releases.
-       ===================================================================== -->
-  <target name="GenerateGuid1"
-          description="Generate a Unique ID for this build">
-    <generateguid property="guid1" />
-    <echo message="${guid1}" />
-  </target>
-
-  <!-- =====================================================================
        Copy static files to <build>/war, from war and elsewhere
        ===================================================================== -->
   <target name="CopyToBuildWar"
           description="Create and populate build/war directory structure"
-          depends="init,GenerateGuid1,blocklyeditor_BlocklyCompile">
+          depends="init,blocklyeditor_BlocklyCompile">
     <mkdir dir="${build.war.dir}" />
     <copy todir="${build.war.dir}/">
       <fileset dir="war">
@@ -93,6 +81,9 @@
         <include name="images/canvas.png" />
       </fileset>
       <fileset dir="${docs.dir}"/>
+    </copy>
+    <mkdir dir="${build.war.dir}/assets/" />
+    <copy todir="${build.war.dir}/assets/" flatten="true">
       <fileset dir="${lib.dir}/blockly">
         <include name="media/*"/>
         <include name="**/*.css"/>
@@ -423,7 +414,7 @@
         <pathelement location="${lib.dir}/guava/guava-18.0.jar" />
         <pathelement location="${lib.dir}/gwt_dragdrop/gwt-dnd-3.2.3.jar" />
         <pathelement location="${lib.dir}/gwt_incubator/gwt-incubator-20101117-r1766.jar" />
-	<pathelement location="${lib.dir}/gwt_query/gwtquery-1.5-beta1.jar" />
+        <pathelement location="${lib.dir}/gwt_query/gwtquery-1.5-beta1.jar" />
         <!-- gwt libs -->
         <pathelement location="${gwt.sdk}/gwt-user.jar"/>
       </classpath>
@@ -456,7 +447,7 @@
 
   <target name="YaClientApp"
           description="GWT compile to JavaScript"
-          depends="common_BlocksEditorHttpConstants,common_CommonUtils,common_CommonVersion,components_CommonConstants,AiClientLib,AiRebindLib,CheckYaClientApp,CopyToBuildWar"
+          depends="common_BlocksEditorHttpConstants,common_CommonUtils,common_CommonVersion,components_CommonConstants,AiClientLib,AiRebindLib,CheckYaClientApp"
           unless="YaClientApp.uptodate">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
@@ -474,7 +465,7 @@
         <pathelement location="${lib.dir}/guava/guava-gwt-18.0.jar" />
         <pathelement location="${lib.dir}/gwt_dragdrop/gwt-dnd-3.2.3.jar" />
         <pathelement location="${lib.dir}/gwt_incubator/gwt-incubator-20101117-r1766.jar" />
-	<pathelement location="${lib.dir}/gwt_query/gwtquery-1.5-beta1.jar" />
+        <pathelement location="${lib.dir}/gwt_query/gwtquery-1.5-beta1.jar" />
         <!-- gwt libs -->
         <pathelement location="${gwt.sdk}/gwt-dev.jar"/>
         <pathelement location="${gwt.sdk}/gwt-user.jar"/>
@@ -486,7 +477,7 @@
       <jvmarg line="${XstartOnFirstThread}"/>
       <arg line="-war"/>
       <arg value="${build.war.dir}"/>
-      <arg line="-logLevel INFO -style pretty -localWorkers 4"/>
+      <arg line="-logLevel INFO -style pretty"/>
       <arg value="com.google.appinventor.YaClient"/>
     </java>
   </target>

@@ -109,7 +109,7 @@ Blockly.BlockSvg.prototype.onMouseUp_ = (function(func) {
         if (Blockly.getMainWorkspace().hasBackpack() &&
             Blockly.getMainWorkspace().getBackpack().isOpen) {
           var backpack = Blockly.getMainWorkspace().getBackpack();
-          backpack.addToBackpack(Blockly.selected);
+          backpack.addToBackpack(Blockly.selected, true);
           backpack.onMouseUp(e, Blockly.selected.dragStartXY_);
         }
         return result;
@@ -505,6 +505,9 @@ Blockly.BlockSvg.prototype.getTopWorkspace = function() {
   return workspace;
 };
 
+/**
+ * Add the selection highlight to the block.
+ */
 Blockly.BlockSvg.prototype.addSelect = function() {
   Blockly.utils.addClass(this.svgGroup_, 'blocklySelected');
   var block_0 = this;

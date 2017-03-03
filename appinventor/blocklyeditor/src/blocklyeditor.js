@@ -190,6 +190,14 @@ Blockly.unprefixName = function (name) {
   }
 };
 
+/**
+ * Create a new Blockly workspace but without initializing its DOM.
+ * @param container The container that will host the Blockly workspace
+ * @param formName The projectId_formName identifier used to name the workspace
+ * @param readOnly True if the workspace should be created read-only
+ * @param rtl True if the workspace is using a right-to-left language
+ * @returns {Blockly.WorkspaceSvg} A newly created workspace
+ */
 Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
   var options = new Blockly.Options({
     'readOnly': readOnly,
@@ -199,7 +207,7 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
     'trashcan': true,
     'comments': true,
     'disable': true,
-    'media': './media/',
+    'media': './assets/',
     'grid': {'spacing': '20', 'length': '5', 'snap': true, 'colour': '#ccc'},
     'zoom': {'controls': true, 'wheel': true, 'scaleSpeed': 1.1, 'maxScale': 3, 'minScale': 0.1}
   });
@@ -220,7 +228,7 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
   workspace.formName = formName;
   workspace.rendered = false;
   workspace.componentDb_ = new Blockly.ComponentDatabase();
-  workspace.procedureDb_ = new Blockly.ProcedureDatabase();
+  workspace.procedureDb_ = new Blockly.ProcedureDatabase(workspace);
   workspace.variableDb_ = new Blockly.VariableDatabase();
   workspace.addWarningHandler();
   if (!readOnly) {
@@ -235,7 +243,7 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
     // build dom for typeblock (adapted from blocklyframe.html)
     goog.style.setElementShown(ai_type_block, false);
     goog.dom.classlist.add(ai_type_block, "ai_type_block");
-    goog.dom.appendChild(container, ai_type_block);
+    goog.dom.insertChildAt(container, ai_type_block, 0);
     goog.dom.appendChild(ai_type_block, p);
     goog.dom.appendChild(p, ac_input_text);
     workspace.typeBlock_ = new Blockly.TypeBlock(typeblockOpts, workspace);
@@ -382,6 +390,8 @@ Blockly.ai_inject = function(container, workspace) {
   return workspace;
 };
 
-// Preserve Blockly during GWT optimizations
+// Preserve Blockly during Closure and GWT optimizations
 window['Blockly'] = Blockly;
 top['Blockly'] = Blockly;
+window['AI'] = AI;
+top['AI'] = AI;

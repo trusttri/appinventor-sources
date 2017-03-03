@@ -31,6 +31,7 @@ goog.require('goog.ui.ac.Renderer');
        typeBlockDiv: 'ai_type_block',
        inputText: 'ac_input_text'
      }
+ * @param {Blockly.WorkspaceSvg} workspace The workspace targeted by the TypeBlock
  * stating the ids of the attributes to be used in the html enclosing page
  * create a new block
  */
@@ -40,7 +41,7 @@ Blockly.TypeBlock = function( htmlConfig, workspace ){
   this.typeBlockDiv_ = htmlConfig['typeBlockDiv'];
   this.inputText_ = htmlConfig['inputText'];
 
-  this.docKh_ = new goog.events.KeyHandler(goog.dom.getElement(frame));
+  this.docKh_ = new goog.events.KeyHandler(goog.dom.getElement(top.document.body));
   this.inputKh_ = new goog.events.KeyHandler(goog.dom.getElement(this.inputText_));
   this.handleKeyWrapper_ = this.handleKey.bind(this);
   goog.events.listen(this.docKh_, 'key', this.handleKeyWrapper_);
@@ -120,7 +121,11 @@ Blockly.TypeBlock.prototype.ac_ = null;
 Blockly.TypeBlock.prototype.currentListener_ = null;
 
 Blockly.TypeBlock.prototype.handleKey = function(e){
-    if (e.altKey || e.ctrlKey || e.metaKey || e.keycode === 9) return; // 9 is tab
+    if (Blockly.mainWorkspace !== this.workspace_) return;  // not targeting this workspace
+    // test blocks editor displayed/visible to user
+    if (!this.workspace_.getParentSvg() ||
+        this.workspace_.getParentSvg().parentElement.offsetParent == null) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.keyCode === 9) return; // 9 is tab
     //We need to duplicate delete handling here from blockly.js
     if (e.keyCode === 8 || e.keyCode === 46) {
       // Delete or backspace.
@@ -136,8 +141,6 @@ Blockly.TypeBlock.prototype.handleKey = function(e){
       this.hide();
       return;
     }
-    // A way to know if the user is editing a block or trying to type a new one
-    if (e.target.tagName != 'svg' && e.target.id === '') return;
     if (goog.style.isElementShown(goog.dom.getElement(this.typeBlockDiv_))) {
       // Enter in the panel makes it select an option
       if (e.keyCode === 13) Blockly.TypeBlock.hide();
@@ -297,16 +300,17 @@ Blockly.TypeBlock.prototype.loadProcedures_ = function(){
   this.TBOptions_ = goog.object.filter(this.TBOptions_,
       function(opti){ return !opti.isProcedure;});
 
-  var procsNoReturn = createTypeBlockForProcedures_(false);
+  var procsNoReturn = createTypeBlockForProcedures_.call(this, false);
+  var self = this;
   goog.array.forEach(procsNoReturn, function(pro){
-    this.TBOptions_[pro.translatedName] = {
+    self.TBOptions_[pro.translatedName] = {
       canonicName: 'procedures_callnoreturn',
       dropDown: pro.dropDown,
       isProcedure: true // this attribute is used to clean up before reloading
     };
   });
 
-  var procsReturn = createTypeBlockForProcedures_(true);
+  var procsReturn = createTypeBlockForProcedures_.call(this, true);
   goog.array.forEach(procsReturn, function(pro){
     Blockly.TypeBlock.TBOptions_[pro.translatedName] = {
       canonicName: 'procedures_callreturn',
@@ -324,14 +328,17 @@ Blockly.TypeBlock.prototype.loadProcedures_ = function(){
    */
   function createTypeBlockForProcedures_(withReturn) {
     var options = [];
-    var procNames = this.workspace_.getProcedureNames(withReturn);
+    var procNames = this.workspace_.getProcedureDatabase().getMenuItems(withReturn);
+    if (procNames.length == 1 && procNames[0][0] == '') {
+      procNames = [];
+    }
     goog.array.forEach(procNames, function(proc){
       options.push(
           {
-            translatedName: Blockly.LANG_PROCEDURES_CALLNORETURN_CALL + ' ' + proc[0],
+            translatedName: Blockly.Msg.LANG_PROCEDURES_CALLNORETURN_CALL + proc[0],
             dropDown: {
               titleName: 'PROCNAME',
-              value: proc[0]
+              value: proc[1]
             }
           }
       );
@@ -350,14 +357,15 @@ Blockly.TypeBlock.prototype.loadGlobalVariables_ = function () {
   this.TBOptions_ = goog.object.filter(this.TBOptions_,
       function(opti){ return !opti.isGlobalvar;});
 
-  var globalVarNames = createTypeBlockForVariables_();
+  var globalVarNames = createTypeBlockForVariables_.call(this);
+  var self = this;
   goog.array.forEach(globalVarNames, function(varName){
     var canonicalN;
     if (varName.translatedName.substring(0,3) === 'get')
       canonicalN = 'lexical_variable_get';
     else
       canonicalN = 'lexical_variable_set';
-    this.TBOptions_[varName.translatedName] = {
+    self.TBOptions_[varName.translatedName] = {
       canonicName: canonicalN,
       dropDown: varName.dropDown,
       isGlobalvar: true
@@ -370,7 +378,7 @@ Blockly.TypeBlock.prototype.loadGlobalVariables_ = function () {
    */
   function createTypeBlockForVariables_() {
     var options = [];
-    var varNames = this.workspace_.getGlobalNames();
+    var varNames = Blockly.FieldLexicalVariable.getGlobalNames();
     // Make a setter and a getter for each of the names
     goog.array.forEach(varNames, function(varName){
       options.push(
@@ -417,11 +425,12 @@ Blockly.TypeBlock.prototype.createAutoComplete_ = function(inputText){
   inputHandler.attachAutoComplete(this.ac_);
   inputHandler.attachInputs(goog.dom.getElement(inputText));
 
+  var self = this;
   this.currentListener_ = goog.events.listen(this.ac_,
       goog.ui.ac.AutoComplete.EventType.UPDATE,
     function() {
       var blockName = goog.dom.getElement(inputText).value;
-      var blockToCreate = goog.object.get(this.TBOptions_, blockName);
+      var blockToCreate = goog.object.get(self.TBOptions_, blockName);
       if (!blockToCreate) {
         //If the input passed is not a block, check if it is a number or a pre-populated text block
         var numberReg = new RegExp('^-?[0-9]\\d*(\.\\d+)?$', 'g');
@@ -466,9 +475,9 @@ Blockly.TypeBlock.prototype.createAutoComplete_ = function(inputText){
           xmlString += '>';
           xmlString += '</mutation></block></xml>';
           var xml = Blockly.Xml.textToDom(xmlString);
-          block = Blockly.Xml.domToBlock(this.workspace_, xml.firstChild);
+          block = Blockly.Xml.domToBlock(xml.firstChild, self.workspace_);
         } else {
-          block = new Blockly.Block.obtain(this.workspace_, blockToCreateName);
+          block = self.workspace_.newBlock(blockToCreateName);
           block.initSvg(); //Need to init the block before doing anything else
           if (block.type && (block.type == "procedures_callnoreturn" || block.type == "procedures_callreturn")) {
             //Need to make sure Procedure Block inputs are updated
@@ -477,7 +486,7 @@ Blockly.TypeBlock.prototype.createAutoComplete_ = function(inputText){
         }
 
         if (blockToCreate.dropDown.titleName && blockToCreate.dropDown.value){
-          block.setTitleValue(blockToCreate.dropDown.value, blockToCreate.dropDown.titleName);
+          block.setFieldValue(blockToCreate.dropDown.value, blockToCreate.dropDown.titleName);
           // change type checking for split blocks
           if(blockToCreate.dropDown.value == 'SPLITATFIRST' || blockToCreate.dropDown.value == 'SPLIT') {
             block.getInput("AT").setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("text",Blockly.Blocks.Utilities.INPUT));
@@ -488,7 +497,7 @@ Blockly.TypeBlock.prototype.createAutoComplete_ = function(inputText){
       } else {
         throw new Error('Type Block not correctly set up for: ' + blockToCreateName);
       }
-      this.workspace_.getWarningHandler().checkAllBlocksForWarningsAndErrors();
+      self.workspace_.getWarningHandler().checkAllBlocksForWarningsAndErrors();
       block.render();
       var blockSelected = Blockly.selected;
       var selectedX, selectedY, selectedXY;
@@ -496,7 +505,7 @@ Blockly.TypeBlock.prototype.createAutoComplete_ = function(inputText){
         selectedXY = blockSelected.getRelativeToSurfaceXY();
         selectedX = selectedXY.x;
         selectedY = selectedXY.y;
-        this.connectIfPossible(blockSelected, block);
+        self.connectIfPossible(blockSelected, block);
         if(!block.parentBlock_){
           //Place it close but a bit out of the way from the one we created.
           block.moveBy(Blockly.selected.getRelativeToSurfaceXY().x + 110,
@@ -506,12 +515,12 @@ Blockly.TypeBlock.prototype.createAutoComplete_ = function(inputText){
       }
       else {
         //calculate positions relative to the view and the latest click
-        var left = this.workspace_.getMetrics().viewLeft + this.workspace_.latestClick.x;
-        var top = this.workspace_.getMetrics().viewTop + this.workspace_.latestClick.y;
+        var left = self.workspace_.latestClick.x;
+        var top = self.workspace_.latestClick.y;
         block.moveBy(left, top);
         block.select();
       }
-      this.hide();
+      self.hide();
     }
   );
 };
@@ -535,7 +544,8 @@ Blockly.TypeBlock.prototype.connectIfPossible = function(blockSelected, createdB
     try {
       if (createdBlock.outputConnection != null){
         //Check for type validity (connect does not do it)
-        if ( inputList[i].connection.checkType_(createdBlock.outputConnection) ){
+        if ( inputList[i].connection &&
+             inputList[i].connection.checkType_(createdBlock.outputConnection) ){
             if (!inputList[i].connection.targetConnection){ // is connection empty?
               createdBlock.outputConnection.connect(inputList[i].connection);
               break;
@@ -637,4 +647,9 @@ Blockly.TypeBlock.ac.AIArrayMatcher.prototype.requestMatchingRows = function(tok
   }
 
   matchHandler(token, matches);
+};
+
+Blockly.TypeBlock.hide = function() {
+  if (Blockly.mainWorkspace && Blockly.mainWorkspace.typeBlock_)
+    Blockly.mainWorkspace.typeBlock_.hide();
 };

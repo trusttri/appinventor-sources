@@ -30,10 +30,10 @@ Blockly.PROPERTY_READWRITEABLE = 3;
  * @property {string} showOnPalette
  * @property {string} nonVisible
  * @property {string} iconName
- * @property {Object.<string, Object<string, string>>} events
- * @property {Object.<string, Object<string, string>>} properties
+ * @property {Object.<string, EventDescriptor>} events
+ * @property {Object.<string, PropertyDescriptor>} properties
  * @property {Object.<string, Object<string, string>>} blockProperties
- * @property {Object.<string, Object<string, string>>} methods
+ * @property {Object.<string, MethodDescriptor>} methods
  */
 ComponentInfo = function() {};
 
@@ -109,6 +109,14 @@ Blockly.ComponentDatabase = function() {
   this.i18nPropertyNames_ = {};
 };
 
+/**
+ * Add a new instance to the ComponentDatabase.
+ * @param {!string} uid UUID of the component instance
+ * @param {!string} name Name of the component instance
+ * @param {!string} typeName Type of the component instance
+ * @returns {boolean} true if the component was added, false if a component exists with the given
+ * UUID.
+ */
 Blockly.ComponentDatabase.prototype.addInstance = function(uid, name, typeName) {
   if (this.hasInstance(uid)) {
     return false;
@@ -118,14 +126,33 @@ Blockly.ComponentDatabase.prototype.addInstance = function(uid, name, typeName) 
   return true;
 };
 
+/**
+ * Check whether an instance exists with the given UUID.
+ * @param {!string} uid UUID to look up in the database
+ * @returns {boolean} true if a component exists with the UUID, otherwise false.
+ */
 Blockly.ComponentDatabase.prototype.hasInstance = function(uid) {
   return uid in this.instances_;
 };
 
+/**
+ * Get a component instance for the given UUID or Name.
+ * @param {!string} uidOrName UUID for the component. This method also takes a Name for backwards
+ * compatibility with methods that do not yet refer to a component by UUID.
+ * @returns {{typeName: !string, name: !string}|ComponentInstanceDescriptor} An internal descriptor
+ * of a component, otherwise undefined.
+ */
 Blockly.ComponentDatabase.prototype.getInstance = function(uidOrName) {
   return this.instances_[uidOrName] || this.instances_[this.instanceNameUid_[uidOrName]];
 };
 
+/**
+ * Rename a component instance in the ComponentDatabase.
+ * @param {!string} uid UUID of the component to be renamed
+ * @param {!string} oldName Old name of the component
+ * @param {!string} newName New name for the component
+ * @returns {boolean} true if the component was successfully renamed, otherwise false.
+ */
 Blockly.ComponentDatabase.prototype.renameInstance = function(uid, oldName, newName) {
   if (!this.hasInstance(uid)) {
     return false;
@@ -136,6 +163,11 @@ Blockly.ComponentDatabase.prototype.renameInstance = function(uid, oldName, newN
   return true;
 };
 
+/**
+ * Remove a component instance in the ComponentDatabase.
+ * @param {!string} uid UUID of the component to be removed
+ * @returns {boolean} true if the component was removed, otherwise false.
+ */
 Blockly.ComponentDatabase.prototype.removeInstance = function(uid) {
   if (!this.hasInstance(uid)) {
     return false;
@@ -154,14 +186,30 @@ Blockly.ComponentDatabase.prototype.forEachInstance = function(callback) {
   goog.object.forEach(this.instances_, callback);
 };
 
+/**
+ * Check whether the ComponentDatabase has a type identified by typeName.
+ *
+ * @param {!string} typeName String identifying a component type
+ * @returns {boolean} true if the type is known to the ComponentDatabase, otherwise false.
+ */
 Blockly.ComponentDatabase.prototype.hasType = function(typeName) {
   return typeName in this.types_;
 };
 
+/**
+ * Get the ComponentTypeDescriptor associated with the given typeName.
+ * @param {!string} typeName String identifying a component type.
+ * @returns {ComponentTypeDescriptor} The ComponentTypeDescriptor for the type, or undefined if no
+ * type is registered with the supplied typeName.
+ */
 Blockly.ComponentDatabase.prototype.getType = function(typeName) {
   return this.types_[typeName];
 };
 
+/**
+ * Get the names of the component instances in the database.
+ * @returns {Array.<string>} An array of user-provided names for components.
+ */
 Blockly.ComponentDatabase.prototype.getInstanceNames = function() {
   var instanceNames = [];
   for (var uid in this.instances_) {
@@ -172,6 +220,11 @@ Blockly.ComponentDatabase.prototype.getInstanceNames = function() {
   return instanceNames;
 };
 
+/**
+ * Get the name of the type for the given component instance name.
+ * @param {!string} instanceName The name of a component instance (e.g., Button1)
+ * @returns {string|boolean} The name of the component's type if it exists, otherwise false.
+ */
 Blockly.ComponentDatabase.prototype.instanceNameToTypeName = function(instanceName) {
   if (instanceName in this.instanceNameUid_) {
     return this.instances_[this.instanceNameUid_[instanceName]].typeName;
@@ -200,11 +253,35 @@ Blockly.ComponentDatabase.prototype.getComponentUidNameMapByType = function(comp
 };
 
 /**
+ * Obtain names of known components for presentation in dropdown fields.
+ *
+ * @param {!string} componentType The untranslated component type (e.g., button)
+ * @returns {Array.<Array.<string>>} An array of 2-tuples containing the name of each component
+ *   of the given componentType. If no components are declared, a single element list is returned
+ *   with the pair (' ', 'none').
+ */
+Blockly.ComponentDatabase.prototype.getComponentNamesByType = function(componentType) {
+  var componentNameArray = [];
+  for (var uid in this.instances_) {
+    if (this.instances_.hasOwnProperty(uid) && this.instances_[uid].typeName == componentType) {
+      var name = this.instances_[uid].name;
+      componentNameArray.push([name, name]);
+    }
+  }
+  if (componentNameArray.length == 0) {
+    return [[' ', 'none']]
+  } else {
+    return componentNameArray;
+  }
+}
+
+/**
  * Populate the types database.
  *
  * @param {ComponentInfo[]} componentInfos
  */
 Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
+  var j, event, method, property;
   for (var i = 0, componentInfo; componentInfo = componentInfos[i]; ++i) {
     var info = this.types_[componentInfo.name] = {
       type: componentInfo.type,
@@ -217,7 +294,7 @@ Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
       getPropertyList: []
     };
     // parse type description and fill in all of the fields
-    for (var j = 0, /** @type {EventDescriptor} */ event; event = componentInfo.events[j]; ++j) {
+    for (j = 0; event = componentInfo.events[j]; ++j) {
       if (typeof event['deprecated'] === 'string') {
         event['deprecated'] = JSON.parse(event['deprecated']);
       }
@@ -227,7 +304,7 @@ Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
       }
       info.eventDictionary[event.name] = event;
     }
-    for (var j = 0, /** @type {MethodDescriptor} */ method; method = componentInfo.methods[j]; ++j) {
+    for (j = 0; method = componentInfo.methods[j]; ++j) {
       if (typeof method['deprecated'] === 'string') {
         method['deprecated'] = JSON.parse(method['deprecated']);
       }
@@ -237,7 +314,7 @@ Blockly.ComponentDatabase.prototype.populateTypes = function(componentInfos) {
       }
       info.methodDictionary[method.name] = method;
     }
-    for (var j = 0, property; property = componentInfo.blockProperties[j]; ++j) {
+    for (j = 0; property = componentInfo.blockProperties[j]; ++j) {
       info.properties[property.name] = property;
       if (typeof property['deprecated'] === 'string') {
         property['deprecated'] = JSON.parse(property['deprecated']);
@@ -346,7 +423,11 @@ Blockly.ComponentDatabase.prototype.forMethodInType = function(typeName, callbac
 };
 
 /**
- *
+ * Get the property descriptor for a given typeName named by propertyName.
+ * @param {!string} typeName String naming a component type
+ * @param {!string} propertyName String naming a property defined on typeName
+ * @returns {?PropertyDescriptor} The PropertyDescriptor for the property, or null if no such
+ * property or type is defined.
  */
 Blockly.ComponentDatabase.prototype.getPropertyForType = function(typeName, propertyName) {
   if (this.types_[typeName]) {
@@ -357,30 +438,73 @@ Blockly.ComponentDatabase.prototype.getPropertyForType = function(typeName, prop
   return null;
 };
 
+/**
+ * Get a list of setter property names for a type.
+ * @param {!string} typeName String naming a component type
+ * @returns {?string[]} An array of property names that are writable, otherwise null if the type
+ * does not exist.
+ */
 Blockly.ComponentDatabase.prototype.getSetterNamesForType = function(typeName) {
-  return this.types_[typeName].setPropertyList;
+  if (typeName in this.types_) {
+    return this.types_[typeName].setPropertyList;
+  }
+  return null;
 };
 
+/**
+ * Get a list of the getter property names for a type.
+ * @param {!string} typeName String naming a component type
+ * @returns {?string[]} An array of property names that are readable, otherwise null if the type
+ * does not exist.
+ */
 Blockly.ComponentDatabase.prototype.getGetterNamesForType = function(typeName) {
-  return this.types_[typeName].getPropertyList;
+  if (typeName in this.types_) {
+    return this.types_[typeName].getPropertyList;
+  }
+  return null;
 };
 
+/**
+ * Get the internationalized string for the given component type.
+ * @param {!string} name String naming a component type
+ * @returns {string} The localized string if available, otherwise the unlocalized name.
+ */
 Blockly.ComponentDatabase.prototype.getInternationalizedComponentType = function(name) {
   return this.i18nComponentTypes_[name] || name;
 };
 
+/**
+ * Get the internationalized string for the given event name.
+ * @param {!string} name String naming a component event
+ * @returns {string} The localized string if available, otherwise the unlocalized name.
+ */
 Blockly.ComponentDatabase.prototype.getInternationalizedEventName = function(name) {
   return this.i18nEventNames_[name] || name;
 };
 
+/**
+ * Get the internationalized string for the given method name.
+ * @param {!string} name String naming a component method
+ * @returns {string} The localized string if available, otherwise the unlocalized name.
+ */
 Blockly.ComponentDatabase.prototype.getInternationalizedMethodName = function(name) {
   return this.i18nMethodNames_[name] || name;
 };
 
+/**
+ * Get the internationalized string for the given parameter name.
+ * @param {!string} name String naming a component event or method parameter
+ * @returns {string} The localized string if available, otherwise the unlocalized name.
+ */
 Blockly.ComponentDatabase.prototype.getInternationalizedParameterName = function(name) {
   return this.i18nParamNames_[name] || name;
 };
 
+/**
+ * Get the internationalized string for the given property name.
+ * @param {!string} name String naming a component property
+ * @returns {string} The localized string if available, otherwise the unlocalized name.
+ */
 Blockly.ComponentDatabase.prototype.getInternationalizedPropertyName = function(name) {
   return this.i18nPropertyNames_[name] || name;
 };

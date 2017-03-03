@@ -670,7 +670,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    *
    * @return  owning component container for this component
    */
-  public final MockContainer getContainer() {
+  protected final MockContainer getContainer() {
     return container;
   }
 
@@ -924,12 +924,27 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * Refreshes the form.
    *
    * <p>This method should be called whenever a property that affects the size
-   * of the component is changed.
+   * of the component is changed. It calls refreshForm(false) which permits
+   * throttling.
    */
   final void refreshForm() {
+    refreshForm(false);
+  }
+
+  /*
+   * Refresh the current form. If force is true, we bypass the
+   * throttling code. This is needed by MockImageBase because it
+   * *must* refresh the form before resizing loaded images.
+   *
+   */
+  final void refreshForm(boolean force) {
     if (isAttached()) {
       if (getContainer() != null || isForm()) {
-        getForm().refresh();
+        if (force) {
+          getForm().doRefresh();
+        } else {
+          getForm().refresh();
+        }
       }
     }
   }

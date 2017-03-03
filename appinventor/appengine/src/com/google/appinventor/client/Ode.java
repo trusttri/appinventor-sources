@@ -28,6 +28,7 @@ import com.google.appinventor.client.boxes.SourceStructureBox;
 import com.google.appinventor.client.boxes.ViewerBox;
 import com.google.appinventor.client.editor.EditorManager;
 import com.google.appinventor.client.editor.FileEditor;
+import com.google.appinventor.client.editor.youngandroid.BlocklyPanel;
 import com.google.appinventor.client.explorer.commands.ChainableCommand;
 import com.google.appinventor.client.explorer.commands.CommandRegistry;
 import com.google.appinventor.client.explorer.commands.SaveAllEditorsCommand;
@@ -472,7 +473,7 @@ public class Ode implements EntryPoint {
     getTopToolbar().updateFileMenuButtons(currentView);
     if (currentFileEditor != null) {
       deckPanel.showWidget(designTabIndex);
-    } else {
+    } else if (!editorManager.hasOpenEditor()) {  // is there a project editor pending visibility?
       OdeLog.wlog("No current file editor to show in designer");
       ErrorReporter.reportInfo(MESSAGES.chooseProject());
     }
@@ -579,6 +580,13 @@ public class Ode implements EntryPoint {
               projectManager.removeProjectManagerEventListener(this);
               openYoungAndroidProjectInDesigner(project);
             }
+          }
+          @Override
+          public void onProjectsLoaded() {
+            // we only get here iff onProjectAdded is never called with the target project id
+            projectManager.removeProjectManagerEventListener(this);
+            switchToProjectsView();  // the user will need to select a project...
+            ErrorReporter.reportInfo(MESSAGES.chooseProject());
           }
         });
       }
@@ -831,6 +839,20 @@ public class Ode implements EntryPoint {
     // Newer sessions invalidate older sessions.
 
     userInfoService.getSystemConfig(sessionId, callback);
+
+    // We fetch the user's backpack here. This runs asynchronously with the rest
+    // of the system initialization.
+
+    userInfoService.getUserBackpack(new AsyncCallback<String>() {
+        @Override
+        public void onSuccess(String backpack) {
+          BlocklyPanel.setInitialBackpack(backpack);
+        }
+        @Override
+        public void onFailure(Throwable caught) {
+          OdeLog.log("Fetching backpack failed");
+        }
+      });
 
     History.addValueChangeHandler(new ValueChangeHandler<String>() {
       @Override
@@ -1483,7 +1505,7 @@ public class Ode implements EntryPoint {
    */
   private void createWelcomeDialog(boolean force) {
     if (!shouldShowWelcomeDialog() && !force) {
-      openProjectsTab();
+      maybeShowNoProjectsDialog();
       return;
     }
     // Create the UI elements of the DialogBox
@@ -1510,7 +1532,7 @@ public class Ode implements EntryPoint {
                 "" + splashConfig.version);
             userSettings.saveSettings(null);
           }
-          openProjectsTab();
+          maybeShowNoProjectsDialog();
         }
       });
     holder.add(ok);
@@ -1522,22 +1544,19 @@ public class Ode implements EntryPoint {
   }
 
   /**
-   * Load and open the projects tab.
+   * Check the number of projects for the user and show the "no projects" dialog if no projects
+   * are present.
    */
-  private void openProjectsTab() {
-    getProjectService().getProjects(new AsyncCallback<long[]>() {
-        @Override
-          public void onSuccess(long [] projectIds) {
-          if (projectIds.length == 0 && !templateLoadingFlag) {
-            createNoProjectsDialog(true);
-          }
+  private void maybeShowNoProjectsDialog() {
+    projectManager.addProjectManagerEventListener(new ProjectManagerEventAdapter() {
+      @Override
+      public void onProjectsLoaded() {
+        if (projectManager.projectCount() == 0 && !templateLoadingFlag) {
+          ErrorReporter.hide();  // hide the "Please choose a project" message
+          createNoProjectsDialog(true);
         }
-
-        @Override
-          public void onFailure(Throwable projectIds) {
-          OdeLog.elog("Could not get project list");
-        }
-      });
+      }
+    });
   }
 
   /*
@@ -1637,7 +1656,7 @@ public class Ode implements EntryPoint {
     if (AppInventorFeatures.showSplashScreen() && !isReadOnly) {
       createWelcomeDialog(false);
     } else {
-      openProjectsTab();
+      maybeShowNoProjectsDialog();
     }
   }
 
@@ -1995,46 +2014,6 @@ public class Ode implements EntryPoint {
   }
 
   /**
-   * Display a generic warning dialog box.
-   * This method is public because it is intended to be used from other
-   * parts of the client GWT side system.
-   *
-   * Note: We expect our caller to internationalize the messages to be
-   * displayed.
-   *
-   * @param title The title for the dialog box
-   * @param message The message to display
-   * @param buttonString the name of the button, i.e., "OK"
-   */
-
-  public void warningDialog(String title, String messageString, String buttonString) {
-    // Create the UI elements of the DialogBox
-    final DialogBox dialogBox = new DialogBox(false, true); // DialogBox(autohide, modal)
-    dialogBox.setStylePrimaryName("ode-DialogBox");
-    dialogBox.setText(title);
-    dialogBox.setHeight("100px");
-    dialogBox.setWidth("400px");
-    dialogBox.setGlassEnabled(true);
-    dialogBox.setAnimationEnabled(true);
-    dialogBox.center();
-    VerticalPanel DialogBoxContents = new VerticalPanel();
-    HTML message = new HTML("<p>" + messageString + "</p>");
-    message.setStyleName("DialogBox-message");
-    FlowPanel holder = new FlowPanel();
-    Button okButton = new Button(buttonString);
-    okButton.addClickListener(new ClickListener() {
-        public void onClick(Widget sender) {
-          dialogBox.hide();
-        }
-      });
-    holder.add(okButton);
-    DialogBoxContents.add(message);
-    DialogBoxContents.add(holder);
-    dialogBox.setWidget(DialogBoxContents);
-    dialogBox.show();
-  }
-
-  /**
    * Is it OK to connect a device/emulator. Returns true if so false
    * otherwise.
    *
@@ -2313,6 +2292,26 @@ public class Ode implements EntryPoint {
     } else {
       top.location.reload();
     }
+  }-*/;
+
+  private static native boolean finish(String userId) /*-{
+    var delete_cookie = function(name) {
+       document.cookie = name + '=;Path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    };
+    var retval = {
+       "type": "closeApp",
+       "uuid" : userId }
+    if (top.opener) {
+      delete_cookie("AppInventor"); // This ends our authentication
+      top.opener.postMessage(retval, "*");
+      return true;
+    } else {
+      return false;
+    }
+  }-*/;
+
+  public static native void CLog(String message) /*-{
+    console.log(message);
   }-*/;
 
 }

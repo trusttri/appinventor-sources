@@ -93,10 +93,10 @@ Blockly.Drawer.prototype.showBuiltin = function(drawerName) {
     var newBlockSet = [];
     for(var i=0;i<blockSet.length;i++) {
       if(!(blockSet[i] == "procedures_callnoreturn" // Include callnoreturn only if at least one defnoreturn declaration
-           && this.workspace_.getProcedureDatabase().voidProcedures > 0)
+           && this.workspace_.getProcedureDatabase().voidProcedures == 0)
          &&
          !(blockSet[i] == "procedures_callreturn" // Include callreturn only if at least one defreturn declaration
-           && this.workspace_.getProcedureDatabase().returnProcedures > 0)){
+           && this.workspace_.getProcedureDatabase().returnProcedures == 0)){
         newBlockSet.push(blockSet[i]);
       }
     }

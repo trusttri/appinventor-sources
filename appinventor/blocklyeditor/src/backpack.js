@@ -63,7 +63,7 @@ Blockly.Backpack = function(targetWorkspace, opt_options) {
  * @type {string}
  * @private
  */
-Blockly.Backpack.prototype.BPACK_CLOSED_ = 'media/backpack-closed.png';
+Blockly.Backpack.prototype.BPACK_CLOSED_ = 'assets/backpack-closed.png';
 
 /**
  * URL of the small backpack image.
@@ -71,14 +71,14 @@ Blockly.Backpack.prototype.BPACK_CLOSED_ = 'media/backpack-closed.png';
  * @private
  */
 //Blockly.Backpack.prototype.BPACK_EMPTY_ = 'media/backpack-small-highlighted.png';
-Blockly.Backpack.prototype.BPACK_EMPTY_ = 'media/backpack-empty.png';
+Blockly.Backpack.prototype.BPACK_EMPTY_ = 'assets/backpack-empty.png';
 
 /**
  * URL of the full backpack image
  * @type {string}
  * @private
  */
-Blockly.Backpack.prototype.BPACK_FULL_ = 'media/backpack-full.png';
+Blockly.Backpack.prototype.BPACK_FULL_ = 'assets/backpack-full.png';
 
 /**
  * Width of the image.
@@ -206,7 +206,7 @@ Blockly.Backpack.prototype.init = function() {
   this.flyout_.init(this.workspace_);
 
   // load files for sound effect
-  Blockly.getMainWorkspace().loadAudio_(['media/backpack.mp3', 'media/backpack.ogg', 'media/backpack.wav'], 'backpack');
+  Blockly.getMainWorkspace().loadAudio_(['assets/backpack.mp3', 'assets/backpack.ogg', 'assets/backpack.wav'], 'backpack');
 
   var bp_contents = this.getContents();
   if (!bp_contents)
@@ -284,17 +284,20 @@ Blockly.Backpack.prototype.addAllToBackpack = function() {
   var allBlocks = Blockly.mainWorkspace.getAllBlocks();
   var topBlocks = Blockly.mainWorkspace.getTopBlocks(false);
   for (var x = 0; x < topBlocks.length; x++) {
-    this.addToBackpack(allBlocks[x]);
+    this.addToBackpack(topBlocks[x], false);
   }
+  // We have to read back the backpack (getContents) and store it again
+  // this time stating that it should be pushed up to the server
+  this.setContents(this.getContents(), true); // A little klunky but gets the job done
 };
 
 /**
  *  The backpack is an array containing 0 or more
  *   blocks
  */
-Blockly.Backpack.prototype.addToBackpack = function(block) {
-  if (this.getContents() == undefined) {  // this should never happen
-    this.setContents([]);
+Blockly.Backpack.prototype.addToBackpack = function(block, store) {
+  if (this.getContents() == undefined) {
+    this.setContents([], false);
   }
 
   // Copy is made of the expanded block.
@@ -314,7 +317,7 @@ Blockly.Backpack.prototype.addToBackpack = function(block) {
   // We technically do not need to set the contents here since the contents are manipulated by
   // reference, but separating the setting from modifying allows us to use different, non-in-memory
   // storage in the future.
-  this.setContents(bp_contents);
+  this.setContents(bp_contents, store);
   this.grow();
   Blockly.getMainWorkspace().playAudio('backpack');
 
@@ -512,7 +515,7 @@ Blockly.Backpack.prototype.shrink = function() {
  */
 Blockly.Backpack.prototype.clear = function() {
   if (this.confirmClear()) {
-    this.setContents([]);
+    this.setContents([], true);
     this.shrink();
   }
 };
@@ -540,8 +543,10 @@ Blockly.Backpack.prototype.getContents = function() {
 /**
  * Set the contents of the shared Backpack.
  * @param {string[]} backpack Array of XML strings to set as the new Backpack contents.
+ * @param {boolean=false} store If true, store the backpack as a user file.
  */
-Blockly.Backpack.prototype.setContents = function(backpack) {
+Blockly.Backpack.prototype.setContents = function(backpack, store) {
   Blockly.Backpack.shared_contents = backpack;
+  if (store) window.parent.BlocklyPanel_storeBackpack(JSON.stringify(backpack));
 };
 

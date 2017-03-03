@@ -32,7 +32,6 @@
   <inherits name="com.google.appinventor.common.CommonVersion" />
   <inherits name="com.google.common.annotations.Annotations" />
   <inherits name="com.allen_sauer.gwt.dnd.gwt-dnd" />
-  <inherits name="com.google.gwt.logging.Logging" />
   <inherits name="com.google.gwt.query.Query" />
 
   <!-- servlets -->
@@ -111,33 +110,25 @@
 
   <!-- English language, independent of country -->
   <extend-property name="locale" values="en"/>
-  <extend-property name="locale" values="es_ES"/>
-  <!--
-  < ! - - Simplified Chinese - - >
+  <!-- Simplified Chinese -->
   <extend-property name="locale" values="zh_CN"/>
-  < !- - Traditional Chinese - - >
+  <!-- Traditional Chinese -->
   <extend-property name="locale" values="zh_TW"/>
-  < !- - Spanish from Spain
+  <!-- Spanish from Spain -->
   <extend-property name="locale" values="es_ES"/>
-  < ! - - French
+  <!-- French -->
   <extend-property name="locale" values="fr_FR"/>
-  < !- - Italian
+  <!-- Italian -->
   <extend-property name="locale" values="it_IT"/>
-  <! - - Russian
+  <!-- Russian -->
   <extend-property name="locale" values="ru"/>
-  <! - - Korean
+  <!-- Korean -->
   <extend-property name="locale" values="ko_KR"/>
-  <! - - Swedish
+  <!-- Swedish -->
   <extend-property name="locale" values="sv"/>
-  <! - - Portuguese (Brazilian) - - >
+  <!-- Portuguese (Brazilian) -->
   <extend-property name="locale" values="pt_BR"/>
 
   <set-property-fallback name="locale" value="en"/>
-  -->
-
-  <add-linker name="std" />
-
-  <add-linker name="xsiframe" />
 
 </module>
-

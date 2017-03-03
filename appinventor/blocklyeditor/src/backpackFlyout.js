@@ -33,6 +33,12 @@ goog.require('Blockly.Comment');
 goog.require('Blockly.WorkspaceSvg');
 goog.require('goog.userAgent');
 
+/**
+ * BackpackFlyout provides a Blockly flyout that presents opposite of the drawer and contains
+ * the contents of the user's backpack.
+ * @param workspaceOptions Options to control the look-and-feel of the flyout
+ * @constructor
+ */
 Blockly.BackpackFlyout = function(workspaceOptions) {
   Blockly.BackpackFlyout.superClass_.constructor.call(this, workspaceOptions);
   // Backpack flyout is opposite the blocks flyout
@@ -70,49 +76,6 @@ Blockly.BackpackFlyout.prototype.dispose = function() {
   this.svgBackground_ = null;
   this.targetWorkspace_ = null;
 };
-
-/**
- * Create a copy of this block on the workspace.
- * @param {!Blockly.Flyout} flyout Instance of the flyout.
- * @param {!Blockly.Block} originBlock The flyout block to copy.
- * @return {!Function} Function to call when block is clicked.
- * @private
- */
-/*
-Blockly.BackpackFlyout.prototype.createBlockFunc_ = function(originBlock) {
-  var flyout = this;
-  return function(e) {
-    if (Blockly.isRightButton(e)) {
-      // Right-click.  Don't create a block, let the context menu show.
-      return;
-    }
-    if (originBlock.disabled) {
-      // Beyond capacity.
-      return;
-    }
-    // Create the new block by cloning the block in the flyout (via XML).
-    var xml = Blockly.Xml.blockToDom(originBlock);
-    var block = Blockly.Xml.domToBlock(xml, flyout.targetWorkspace_);
-    // Place it in the same spot as the flyout copy.
-    var svgRoot = originBlock.getSvgRoot();
-    if (!svgRoot) {
-      throw 'originBlock is not rendered.';
-    }
-    var xyOld = flyout.targetWorkspace_.getSvgXY(svgRoot);
-    var xyNew = Blockly.getMainWorkspace().getSvgXY(flyout.targetWorkspace_.getCanvas());
-    block.moveBy(xyOld.x - xyNew.x, xyOld.y - xyNew.y);
-    block.render();
-    if (flyout.autoClose) {
-      flyout.hide();
-    } else {
-      flyout.filterForCapacity_();
-    }
-
-    // Start a dragging operation on the new block.
-    block.onMouseDown_(e);
-  };
-};
-*/
 
 /**
  * Filter the blocks on the flyout to disable the ones that are above the

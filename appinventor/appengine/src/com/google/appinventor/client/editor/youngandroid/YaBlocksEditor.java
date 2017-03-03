@@ -18,9 +18,7 @@ import com.google.appinventor.client.editor.simple.components.MockComponent;
 import com.google.appinventor.client.editor.simple.components.MockForm;
 import com.google.appinventor.client.editor.simple.palette.DropTargetProvider;
 import com.google.appinventor.client.editor.youngandroid.BlocklyPanel.BlocklyWorkspaceChangeListener;
-import com.google.appinventor.client.editor.youngandroid.events.AppInventorEvent;
-import com.google.appinventor.client.editor.youngandroid.events.BlocklyEvent;
-import com.google.appinventor.client.editor.youngandroid.events.NativeEventHelper;
+import com.google.appinventor.client.editor.youngandroid.events.EventHelper;
 import com.google.appinventor.client.editor.youngandroid.palette.YoungAndroidPalettePanel;
 import com.google.appinventor.client.explorer.SourceStructureExplorer;
 import com.google.appinventor.client.explorer.SourceStructureExplorerItem;
@@ -34,6 +32,7 @@ import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidBlocks
 import com.google.appinventor.shared.youngandroid.YoungAndroidSourceAnalyzer;
 import com.google.common.collect.Maps;
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.user.client.Command;
@@ -292,9 +291,9 @@ public final class YaBlocksEditor extends FileEditor
   }
 
   @Override
-  public void onWorkspaceChange(BlocklyPanel panel, AppInventorEvent event) {
+  public void onWorkspaceChange(BlocklyPanel panel, JavaScriptObject event) {
     OdeLog.log("Got blocks area changed for " + fullFormName);
-    if (!NativeEventHelper.isTransient(event)) {
+    if (!EventHelper.isTransient(event)) {
       Ode.getInstance().getEditorManager().scheduleAutoSave(this);
     }
     sendComponentData();
@@ -622,4 +621,8 @@ public final class YaBlocksEditor extends FileEditor
     blocksArea.populateComponentTypes(COMPONENT_DATABASE.getComponentsJSONString());
   }
 
+  @Override
+  public void makeActiveWorkspace() {
+    blocksArea.makeActive();
+  }
 }

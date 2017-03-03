@@ -215,7 +215,7 @@ Blockly.ReplMgr.pollYail = function(workspace) {
         this.buildYail(workspace);
     }
     if (top.ReplState.state == this.rsState.CONNECTED) {
-        RefreshAssets(this.formName, function() {});
+        RefreshAssets(function() {});
     }
 };
 
@@ -324,7 +324,9 @@ Blockly.ReplMgr.putYail = (function() {
             conn = goog.net.XmlHttp();
             var blockid;
             if (work.block) {
-                blockid = work.block.id;
+                // Quote blockId as a string due to non-numeric identifiers generated from
+                // Blockly's soup {@see Blockly.utils.genUid.soup_}
+                blockid = '"' + work.block.id + '"';
             } else {
                 if (work.chunking) { // Used to indicate an error in when chunking
                     blockid = "-2";
@@ -674,7 +676,7 @@ Blockly.ReplMgr.processRetvals = function(responses) {
                 top.loadAllErrorCount = 20;
                 console.log("Error in chunking, disabling.");
                 this.resetYail(true);
-                this.pollYail(workspace);
+                this.pollYail(Blockly.mainWorkspace);
             } else if (r.blockid != "-1" && r.blockid != "-2") {
                 block = Blockly.mainWorkspace.getBlockById(r.blockid);
                 if (block === null) {
@@ -760,13 +762,7 @@ Blockly.ReplMgr.startAdbDevice = function(rs, usb) {
     } else {
         message = Blockly.Msg.REPL_STARTING_EMULATOR;
     }
-    progdialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_CONNECTING, message, Blockly.Msg.REPL_CANCEL, 'GO', 0, function(resp) {
-        if (resp == 'GO') {
-            if (pc == 1 || pc == 2) {
-                counter = 0;    // Force counter to finish
-            }
-            return;
-        }
+    progdialog = new Blockly.Util.Dialog(Blockly.Msg.REPL_CONNECTING, message, Blockly.Msg.REPL_CANCEL, null, 0, function() {
         progdialog.hide();
         clearInterval(interval);
         top.ReplState.state = Blockly.ReplMgr.rsState.IDLE;
@@ -1038,10 +1034,9 @@ Blockly.ReplMgr.getFromRendezvous = function() {
                 rs.baseurl = 'http://' + json.ipaddr + ':8001/';
                 rs.state = Blockly.ReplMgr.rsState.ASSET;
                 rs.dialog.hide();
-                RefreshAssets(context.formName,
-                              function() {
+                RefreshAssets(function() {
                                   rs.state = Blockly.ReplMgr.rsState.CONNECTED;
-                                  top.BlocklyPanel_blocklyWorkspaceChanged(context.formName);
+                                  Blockly.mainWorkspace.fireChangeListener(new AI.Events.CompanionConnect());
                               });
                 // Start the connection with the Repl itself
             } catch (err) {

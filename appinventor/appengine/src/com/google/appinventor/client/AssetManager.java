@@ -300,7 +300,7 @@ public final class AssetManager implements ProjectChangeListener {
   }-*/;
 
   private static native void doCallBack(JavaScriptObject callback) /*-{
-    callback.call(null);
+    if (typeof callback === 'function') callback.call(null);
   }-*/;
 
 }
