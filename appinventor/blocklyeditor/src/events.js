@@ -82,8 +82,6 @@ AI.Events.Abstract.prototype.realtime = false;
 // Blockly Events are real-time.
 Blockly.Events.Abstract.prototype.realtime = true;
 
-Blockly.Events.Ui.prototype.isTransient = true;
-
 /**
  * If true, the event is transient and should not trigger a save action (e.g., companion connected)
  * @type {boolean}
