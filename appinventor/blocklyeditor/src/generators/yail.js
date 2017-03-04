@@ -142,61 +142,62 @@ Blockly.Yail.getFormYail = function(formJson, packageName, forRepl, workspace) {
   if (formProperties) {
     var sourceType = jsonObject.Source;
     if (sourceType == "Form") {
-      code = code.concat(Blockly.Yail.getComponentLines(formName, formProperties, null /*parent*/, 
-          componentMap, false /*forRepl*/, propertyNameConverter, workspace.getComponentDatabase()));
+      code = code.concat(Blockly.Yail.getComponentLines(formName, formProperties, null /*parent*/,
+        componentMap, false /*forRepl*/, propertyNameConverter, workspace.getComponentDatabase()));
     } else {
-        throw "Cannot find form properties";
+      throw "Cannot find form properties";
     }
     if (!formName) {
-        throw "Unable to determine form name";
+      throw "Unable to determine form name";
     }
 
     if (!forRepl) {
-        code.push(Blockly.Yail.getYailPrelude(packageName, formName));
+      code.push(Blockly.Yail.getYailPrelude(packageName, formName));
     }
 
     var componentMap = workspace.buildComponentMap([], [], false, false);
 
     for (var comp in componentMap.components)
-        if (componentMap.components.hasOwnProperty(comp))
-            componentNames.push(comp);
+      if (componentMap.components.hasOwnProperty(comp))
+        componentNames.push(comp);
 
     var globalBlocks = componentMap.globals;
     for (var i = 0, block; block = globalBlocks[i]; i++) {
-        code.push(Blockly.Yail.blockToCode(block));
+      code.push(Blockly.Yail.blockToCode(block));
     }
 
     if (formProperties) {
-        var sourceType = jsonObject.Source;
-        if (sourceType == "Form") {
-            code = code.concat(Blockly.Yail.getComponentLines(formName, formProperties, null /*parent*/,
-                componentMap, false /*forRepl*/, propertyNameConverter, workspace.getComponentDatabase()));
-        } else {
-            throw "Source type " + sourceType + " is invalid.";
-        }
+      var sourceType = jsonObject.Source;
+      if (sourceType == "Form") {
+        code = code.concat(Blockly.Yail.getComponentLines(formName, formProperties, null /*parent*/,
+          componentMap, false /*forRepl*/, propertyNameConverter, workspace.getComponentDatabase()));
+      } else {
+        throw "Source type " + sourceType + " is invalid.";
+      }
 
-        // Fetch all of the components in the form, this may result in duplicates
-        componentNames = Blockly.Yail.getDeepNames(formProperties, componentNames);
-        // Remove the duplicates
-        componentNames = componentNames.filter(function(elem, pos) {
-            return componentNames.indexOf(elem) == pos});
+      // Fetch all of the components in the form, this may result in duplicates
+      componentNames = Blockly.Yail.getDeepNames(formProperties, componentNames);
+      // Remove the duplicates
+      componentNames = componentNames.filter(function (elem, pos) {
+        return componentNames.indexOf(elem) == pos
+      });
 
-        // Add runtime initializations
-        code.push(Blockly.Yail.YAIL_INIT_RUNTIME);
+      // Add runtime initializations
+      code.push(Blockly.Yail.YAIL_INIT_RUNTIME);
 
-        if (forRepl) {
-            code = Blockly.Yail.wrapForRepl(formName, code, componentNames);
-        }
+      if (forRepl) {
+        code = Blockly.Yail.wrapForRepl(formName, code, componentNames);
+      }
 
-        // TODO?: get rid of empty property assignments? I'm not convinced this is necessary.
-        // The original code in YABlockCompiler.java attempts to do this, but it matches on
-        // "set-property" rather than "set-and-coerce-property" so I'm not sure it is actually
-        // doing anything. If we do need this, something like the call below might work.
-        //
-        // finalCode = code.join('\n').replace(/\\(set-property.*\"\"\\)\\n*/mg, "");
+      // TODO?: get rid of empty property assignments? I'm not convinced this is necessary.
+      // The original code in YABlockCompiler.java attempts to do this, but it matches on
+      // "set-property" rather than "set-and-coerce-property" so I'm not sure it is actually
+      // doing anything. If we do need this, something like the call below might work.
+      //
+      // finalCode = code.join('\n').replace(/\\(set-property.*\"\"\\)\\n*/mg, "");
     }
-
-    return code.join('\n');  // Blank line between each section.
+  }
+  return code.join('\n');  // Blank line between each section.
 };
 
 Blockly.Yail.getDeepNames = function(componentJson, componentNames) {
@@ -320,10 +321,11 @@ Blockly.Yail.getComponentLines = function(formName, componentJson, parentName, c
     var children = componentJson.$Components;
     for (i = 0; child = children[i]; i++) {
       code = code.concat(Blockly.Yail.getComponentLines(formName, child, componentName,
-          componentMap, forRepl, nameConverter, componentDb));
+        componentMap, forRepl, nameConverter, componentDb));
 
     }
-    return code;
+  }
+  return code;
 };
 
 /**
@@ -409,11 +411,12 @@ Blockly.Yail.getPropertySettersLines = function(componentJson, componentName, co
   var code = [];
   for (var prop in componentJson) {
     if (prop.charAt(0) != "$" && prop != "Uuid") {
-      code.push(Blockly.Yail.getPropertySetterString(componentName, componentJson.$Type, prop, 
+      code.push(Blockly.Yail.getPropertySetterString(componentName, componentJson.$Type, prop,
         componentJson[prop], componentDb));
 
     }
-    return code;
+  }
+  return code;
 };
 
 /**
