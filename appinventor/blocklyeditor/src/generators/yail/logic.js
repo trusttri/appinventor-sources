@@ -93,9 +93,17 @@ Blockly.Yail['move_cube'] = function(){
      * Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE = "(call-yail-primitive ";
      * */
 
+    // var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'GoToUrl' + Blockly.Yail.YAIL_SPACER ;
+    // code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER +'"http://naver.com/"'+Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+    // code += '\'(text))'
+    // return code;
+
+    var argument0 = Blockly.Yail.valueToCode(this, 'VALUE', Blockly.Yail.ORDER_NONE) || "\"\"";
+
     var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'GoToUrl' + Blockly.Yail.YAIL_SPACER ;
-    code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER +'"http://mit.edu/"'+Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
-    code += '\'(text))'
+    code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER ;
+    code += argument0 + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+    code += '\'(text))';
     return code;
 
 

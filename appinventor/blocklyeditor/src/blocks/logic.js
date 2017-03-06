@@ -249,14 +249,6 @@ Blockly.Blocks['logic_or'] = {
 
  */
 
-Blockly.Blocks['temp'] = {
-    init:function(){
-        this.setColour(160);
-        this.appendDummyInput()
-            .appendField('test with me');
-        this.setTooltip('Temporary block testing');
-    }
-}
 
 // with socket for  number
 Blockly.Blocks['move_cube'] = {
