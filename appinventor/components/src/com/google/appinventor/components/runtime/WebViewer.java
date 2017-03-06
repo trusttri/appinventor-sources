@@ -22,6 +22,7 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.EclairUtil;
 import com.google.appinventor.components.runtime.util.FroyoUtil;
 import com.google.appinventor.components.runtime.util.SdkLevel;
+import com.google.appinventor.components.runtime.util.MediaUtil;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -89,6 +90,9 @@ public final class WebViewer extends AndroidViewComponent {
   // allows passing strings to javascript
   WebViewInterface wvInterface;
 
+  //path to javascript library uploaded by user
+  private String jsLibraryPath = "";
+
   /**
    * Creates a new WebViewer component.
    *
@@ -131,6 +135,7 @@ public final class WebViewer extends AndroidViewComponent {
     // will be fill-parent, which will be the default for the web viewer.
 
     HomeUrl("");
+    JavaScriptLibrary("");
     Width(LENGTH_FILL_PARENT);
     Height(LENGTH_FILL_PARENT);
   }
@@ -166,6 +171,7 @@ public final class WebViewer extends AndroidViewComponent {
   // false means to let the WebView handle the Url.  In other words, returning
   // true will not follow the link, and returning false will follow the link.
   private class WebViewerClient extends WebViewClient {
+
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
       return !followLinks;
@@ -216,6 +222,7 @@ public final class WebViewer extends AndroidViewComponent {
   @SimpleProperty()
   public void HomeUrl(String url) {
     homeUrl = url;
+    JavaScriptLibrary("");
     // clear the history, since changing Home is a kind of reset
     webview.clearHistory();
     webview.loadUrl(homeUrl);
@@ -296,6 +303,30 @@ public final class WebViewer extends AndroidViewComponent {
   public void IgnoreSslErrors(boolean ignoreSslErrors) {
     this.ignoreSslErrors = ignoreSslErrors;
     resetWebViewClient();
+  }
+
+
+  /**
+   * Sets JavaScript file
+   */
+  @SimpleProperty(description = "Get the name of the file for the JavaScript library " +
+      "uploaded by the user",
+      category = PropertyCategory.BEHAVIOR, userVisible = false)
+  public String JavaScriptLibrary() {
+    return jsLibraryPath;
+  }
+
+  @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_ASSET,
+      defaultValue = "")
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR, userVisible = false)
+  public void JavaScriptLibrary(String path) {
+    jsLibraryPath = path;
+
+    if(path == null || path.equals("")) {
+      return;
+    } else {
+      webview.loadUrl(MediaUtil.createAssetURLString(jsLibraryPath, container.$form()));
+    }
   }
 
   /**
@@ -440,6 +471,46 @@ public final class WebViewer extends AndroidViewComponent {
     webview.clearCache(true);
   }
 
+  /*
+   *  Takes a JS function name and calls that function in the webViewer.
+   */
+  @SimpleFunction(description = "Run JavaScript method.")
+  public void RunJavaScript(String functionName, String inputs) {
+
+
+    webview.loadUrl("javascript:window.AppInventor.runMethod(" + functionName + "(" + inputs + "))");
+  }
+
+  /*
+   * Create a function in JavaScript. Inputs are separated by commas.
+   */
+  @SimpleFunction(description = "Create JavaScript function.")
+  public void CreateJavaScriptFunction(String functionName, String function, String inputs) {
+    webview.loadUrl("javascript: function " + functionName + "(" + inputs + ") { " + function + "; }");
+  }
+
+  /*
+   *  Gets the value returned by the last JavaScript method called.
+   */
+  @SimpleFunction(description = "Get JavaScript return value.")
+  public String GetJavaScriptReturnValue() {
+    return wvInterface.getReturnString();
+  }
+
+  @SimpleFunction(description = "Create a JavaScript variable.")
+  public void CreateJavaScriptVariable(String variableName, String value) {
+    webview.loadUrl("javascript: var " + variableName + " = " + value + ";");
+  }
+
+  /*
+   * Create a JavaScript object with certain attributes, each of which has a value.
+   * Split up attributes and values by a comma and a space - i.e. 1, 2, 3, 4
+   */
+  @SimpleFunction(description = "Create a JavaScript object.")
+  public void CreateJavaScriptObject(String variableName, String attributes) {
+    webview.loadUrl("javascript: var " + variableName + " = {" + attributes + "};");
+  }
+
   /**
    * Allows the setting of properties to be monitored from the javascript
    * in the WebView
@@ -447,11 +518,13 @@ public final class WebViewer extends AndroidViewComponent {
   public class WebViewInterface {
     Context mContext;
     String webViewString;
+    String returnString;
 
     /** Instantiate the interface and set the context */
     WebViewInterface(Context c) {
       mContext = c;
       webViewString = " ";
+      returnString = " ";
     }
 
     /**
@@ -465,6 +538,23 @@ public final class WebViewer extends AndroidViewComponent {
     }
 
     /**
+     * Set returnString to value returned by JavaScript method.
+     */
+    @JavascriptInterface
+    public void runMethod(String value) {
+      returnString = value;
+    }
+
+    /**
+     * Get the returnString.
+     * @return string
+     */
+    @JavascriptInterface
+    public String getReturnString() {
+      return returnString;
+    }
+
+    /**
      * Sets the web view string
      */
     public void setWebViewString(String newString) {
@@ -473,4 +563,3 @@ public final class WebViewer extends AndroidViewComponent {
 
   }
 }
-

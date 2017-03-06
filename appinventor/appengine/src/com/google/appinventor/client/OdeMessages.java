@@ -3488,6 +3488,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String WebViewStringProperties();
 
+  @DefaultMessage("JavaScriptLibrary")
+  @Description("")
+  String JavaScriptLibraryProperties();
+
   @DefaultMessage("EnableSpeedRegulation")
   @Description("")
   String EnableSpeedRegulationProperties();
@@ -5406,6 +5410,26 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("ClearCaches")
   @Description("")
   String ClearCachesMethods();
+
+  @DefaultMessage("RunJavaScript")
+  @Description("")
+  String RunJavaScriptMethods();
+
+  @DefaultMessage("CreateJavaScriptFunction")
+  @Description("")
+  String CreateJavaScriptFunctionMethods();
+
+  @DefaultMessage("CreateJavaScriptVariable")
+  @Description("")
+  String CreateJavaScriptVariableMethods();
+
+  @DefaultMessage("CreateJavaScriptObject")
+  @Description("")
+  String CreateJavaScriptObjectMethods();
+
+  @DefaultMessage("GetJavaScriptReturnValue")
+  @Description("")
+  String GetJavaScriptReturnValueMethods();
 
   @DefaultMessage("GoBack")
   @Description("")

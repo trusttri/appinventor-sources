@@ -10,6 +10,7 @@
 'use strict';
 
 goog.provide('Blockly.Yail.componentblock');
+goog.provide('Blockly.JavaScript');
 
 /**
  * Lyn's History:
@@ -142,6 +143,7 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
 // type information associated with the socket. The component parameter is treated differently
 // here than the other method parameters. This may be fine, but consider whether
 // to get the type for the first socket in a more general way in this case.
+
   var paramObjects = methodBlock.getMethodTypeObject().parameters;
   var numOfParams = paramObjects.length;
   var yailTypes = [];
@@ -172,11 +174,64 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
   }
 
   var args = [];
+  // Fix the arguments so they pull from the other inputs instead, if using certain WebViewer methods
+  if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "CreateJavaScriptFunction") {
+
+    // For now, assuming inputs are string format mimicking JavaScript
+    var inputString = "";
+    for (var x = 0; x < methodBlock.inputList.length - 4; x++) {
+      var input = methodBlock.getInputTargetBlock('input' + x).toString();
+
+      // var input = Blockly.JavaScript.valueToCode(methodBlock, 'input' + x, Blockly.JavaScript.ORDER_ADDITION || "");
+
+      inputString += input.substring(1, input.length - 1);
+
+      if(x < methodBlock.inputList.length - 5) {
+        inputString += ",";
+      }
+    }
+
+    methodBlock.getInputTargetBlock('ARG2').inputList[0].fieldRow[1].text_ = inputString;
+
+
+  }else if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "RunJavaScript") {
+    var inputString = "";
+
+    for (var x = 0; x < methodBlock.inputList.length - 3; x++) {
+      var input = methodBlock.getInputTargetBlock('input' + x).toString();
+      inputString += input.substring(1, input.length - 1);
+
+      if(x < methodBlock.inputList.length - 4) {
+        inputString += ",";
+      }
+    }
+
+    methodBlock.getInputTargetBlock('ARG1').inputList[0].fieldRow[1].text_ = inputString;
+
+  }else if(methodBlock.typeName == "WebViewer" && methodBlock.methodName == "CreateJavaScriptObject")  {
+    var inputString = "";
+
+    for (var x = 0; x < (methodBlock.inputList.length - 3)/2; x++) {
+      var attr = methodBlock.getInputTargetBlock('ATTR' + x).toString();
+      var attrVal = methodBlock.getInputTargetBlock('ATTRVAL' + x).toString();
+
+      inputString += attr.substring(1, attr.length - 1) + ": " + attrVal.substring(1, attrVal.length - 1);
+
+      if(x < methodBlock.inputList.length - 5) {
+        inputString += ",";
+      }
+    }
+
+    methodBlock.getInputTargetBlock('ARG1').inputList[0].fieldRow[1].text_ = inputString;
+  }
+
   for (var x = 0; x < numOfParams; x++) {
     // TODO(hal, andrew): check for empty socket and generate error if necessary
     args.push(Blockly.Yail.YAIL_SPACER
               + Blockly.Yail.valueToCode(methodBlock, 'ARG' + x, Blockly.Yail.ORDER_NONE));
   }
+
+  console.log(args);
 
   return callPrefix
     + Blockly.Yail.YAIL_QUOTE
