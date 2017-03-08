@@ -712,6 +712,10 @@ public class BlocklyPanel extends HTMLPanel {
       .render();
   }-*/;
 
+  public native void hideChaff()/*-{
+    Blockly.hideChaff();
+  }-*/;
+
   public native void toggleWarning()/*-{
     var handler =
       this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace
