@@ -230,6 +230,7 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
   workspace.componentDb_ = new Blockly.ComponentDatabase();
   workspace.procedureDb_ = new Blockly.ProcedureDatabase(workspace);
   workspace.variableDb_ = new Blockly.VariableDatabase();
+  workspace.blocksNeedingRendering = [];
   workspace.addWarningHandler();
   if (!readOnly) {
     var ai_type_block = goog.dom.createElement('div'),
@@ -267,6 +268,16 @@ Blockly.ai_inject = function(container, workspace) {
   var gridSnap = top.BlocklyPanel_getSnapEnabled && top.BlocklyPanel_getSnapEnabled();
   if (workspace.injected) {
     workspace.setGridSettings(gridEnabled, gridSnap);
+    // Update the workspace size in case the window was resized while we were hidden
+    setTimeout(function() {
+      goog.array.forEach(workspace.blocksNeedingRendering, function(block) {
+        workspace.getWarningHandler().checkErrors(block);
+        block.render();
+      });
+      workspace.blocksNeedingRendering.splice(0);  // clear the array of pending blocks
+      workspace.resizeContents();
+      Blockly.svgResize(workspace);
+    });
     return;
   }
   var options = workspace.options;

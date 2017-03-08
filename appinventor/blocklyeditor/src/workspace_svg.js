@@ -44,6 +44,12 @@ Blockly.WorkspaceSvg.prototype.componentDb_ = null;
 Blockly.WorkspaceSvg.prototype.typeBlock_ = null;
 
 /**
+ * A list of blocks that need rendering the next time the workspace is shown.
+ * @type {?Array.<Blockly.BlockSvg>}
+ */
+Blockly.WorkspaceSvg.prototype.blocksNeedingRendering = null;
+
+/**
  * latest clicked position is used to open the type blocking suggestions window
  * Initial position is 0,0
  * @type {{x: number, y: number}}
@@ -327,21 +333,21 @@ Blockly.WorkspaceSvg.prototype.removeComponent = function(uid) {
 /**
  * Rename a component in the workspace.
  *
+ * @param {!string} uid The unique identifier of the component.
  * @param {!string} oldName The previous name of the component.
  * @param {!string} newName The new name of the component.
- * @param {!string} uid The unique identifier of the component.
  * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
-Blockly.WorkspaceSvg.prototype.renameComponent = function(oldName, newName, uid) {
-  if (!this.componentDb_.renameInstance(oldName, newName, uid)) {
+Blockly.WorkspaceSvg.prototype.renameComponent = function(uid, oldName, newName) {
+  if (!this.componentDb_.renameInstance(uid, oldName, newName)) {
     console.log('Renaming: No such component instance ' + oldName + '; aborting.');
     return this;
   }
   this.typeBlock_.needsReload.components = true;
   var blocks = this.getAllBlocks();
   for (var i = 0, block; block = blocks[i]; ++i) {
-    if (block.category == 'Component') {
-      block.rename(oldName, newName);
+    if (block.category == 'Component' && block.rename(oldName, newName)) {
+      this.blocksNeedingRendering.push(block);
     }
   }
   return this;
