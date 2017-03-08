@@ -31,7 +31,7 @@ Blockly.Xml.domToWorkspaceHeadless = function(xml, workspace) {
       xml = workspace;
       workspace = swap;
       console.warn('Deprecated call to Blockly.Xml.domToWorkspace, ' +
-		   'swap the arguments.');
+                   'swap the arguments.');
     }
     var width;  // Not used in LTR.
     workspace.rendered = false;

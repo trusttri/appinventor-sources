@@ -473,7 +473,7 @@ Blockly.WorkspaceSvg.prototype.buildComponentMap = function(warnings, errors, fo
     } else if (block.category == 'Component' && block.type == 'event') {
       var instanceName = block.instanceName;
       if (!map.components[instanceName]) {
-	      map.components[instanceName] = [];
+        map.components[instanceName] = [];
       }
       map.components[instanceName].push(block);
     }

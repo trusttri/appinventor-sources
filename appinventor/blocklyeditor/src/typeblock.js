@@ -158,7 +158,7 @@ Blockly.TypeBlock.prototype.handleKey = function(e){
       // displaying the first character and add it manually.
       e.preventDefault();
       goog.dom.getElement(this.inputText_).value =
-	String.fromCharCode(e.charCode != null ? e.charCode : e.keycode);
+        String.fromCharCode(e.charCode != null ? e.charCode : e.keycode);
     }
   };
 
