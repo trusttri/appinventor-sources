@@ -315,5 +315,19 @@ Blockly.Blocks['move_cube'] = {
 
     },
 
+    // //this function gets called first!
+    // domToMutation: function(xmlElement) {
+    //
+    //     this.block_info = xmlElement.getAttribute('block_info');
+    //     var decoded_block_info = decodeURIComponent(this.block_info);
+    //     var info_object = JSON.parse(decoded_block_info);
+    //     this.function_name = info_object["function_name"];
+    //
+    //
+    //     this.jsonInit(info_object);
+    //
+    //
+    // },
+
 
 }

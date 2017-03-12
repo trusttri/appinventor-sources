@@ -3793,6 +3793,22 @@ public interface OdeMessages extends Messages {
   @Description("")
   String functionNameParams();
 
+  @DefaultMessage("function")
+  @Description("")
+  String functionParams();
+
+  @DefaultMessage("inputs")
+  @Description("")
+  String inputsParams();
+
+  @DefaultMessage("variableName")
+  @Description("")
+  String variableNameParams();
+
+  @DefaultMessage("attributes")
+  @Description("")
+  String attributesParams();
+
   @DefaultMessage("errorNumber")
   @Description("")
   String errorNumberParams();
