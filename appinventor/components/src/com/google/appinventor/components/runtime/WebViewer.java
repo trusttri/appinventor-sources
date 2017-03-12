@@ -477,7 +477,6 @@ public final class WebViewer extends AndroidViewComponent {
   @SimpleFunction(description = "Run JavaScript method.")
   public void RunJavaScript(String functionName, String inputs) {
 
-
     webview.loadUrl("javascript:window.AppInventor.runMethod(" + functionName + "(" + inputs + "))");
   }
 

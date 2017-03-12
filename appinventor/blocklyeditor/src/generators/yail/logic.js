@@ -85,27 +85,37 @@ Blockly.Yail['logic_compare'] = function() {
 };
 
 Blockly.Yail['move_cube'] = function(){
-    /*
-     "(call-component-method 'WebViewer1 'GoToUrl
-     (*list-for-runtime* "https://developers.google.com/blockly/guides/create-custom-blocks/define-blocks") '(text))"
-     */
-    /*
-     * Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE = "(call-yail-primitive ";
-     * */
 
-    // var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'GoToUrl' + Blockly.Yail.YAIL_SPACER ;
-    // code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER +'"http://naver.com/"'+Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
-    // code += '\'(text))'
-    // return code;
+    var argument0 = Blockly.Yail.valueToCode(this, 'ID', Blockly.Yail.ORDER_NONE);
+    var argument1 = Blockly.Yail.valueToCode(this, 'POSITION_X', Blockly.Yail.ORDER_NONE);
+    var argument2 = Blockly.Yail.valueToCode(this, 'POSITION_Y', Blockly.Yail.ORDER_NONE);
+    var argument3 = Blockly.Yail.valueToCode(this, 'POSITION_Z', Blockly.Yail.ORDER_NONE);
+    var function_name = this.function_name;
 
-    var argument0 = Blockly.Yail.valueToCode(this, 'VALUE', Blockly.Yail.ORDER_NONE) || "\"\"";
-
-    var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'GoToUrl' + Blockly.Yail.YAIL_SPACER ;
+    var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'RunJavaScript' + Blockly.Yail.YAIL_SPACER ;
     code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER ;
-    code += argument0 + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
-    code += '\'(text))';
+    code += '\"' + function_name + '\"' + Blockly.Yail.YAIL_SPACER;
+
+    code += '\"' + '\'' +  argument0 + '\'';
+    code +=  ',' + '\'' + argument1 + '\'' ;
+    code +=  ',' + '\'' + argument2 + '\'' ;
+    code +=  ',' + '\'' + argument3 + '\'' + '\"' + Blockly.Yail.YAIL_SPACER;
+    code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+    code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'text';
+    code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_CLOSE_COMBINATION;
     return code;
 
+    //
+    // var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'RunJavaScript' + Blockly.Yail.YAIL_SPACER ;
+    // code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER ;
+    // code += '\"' + "changeName" + '\"' + Blockly.Yail.YAIL_SPACER;
+    // code += '\"' + '\'' + "hi" + '\'' + ',' + '\'' + "hello" + '\'' + '\"';
+    // code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+    // code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'text';
+    //
+    // code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+    // return code;
 
-}
+
+};
 

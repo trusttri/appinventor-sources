@@ -231,7 +231,6 @@ Blockly.Yail.methodHelper = function(methodBlock, name, methodName, generic) {
               + Blockly.Yail.valueToCode(methodBlock, 'ARG' + x, Blockly.Yail.ORDER_NONE));
   }
 
-  console.log(args);
 
   return callPrefix
     + Blockly.Yail.YAIL_QUOTE

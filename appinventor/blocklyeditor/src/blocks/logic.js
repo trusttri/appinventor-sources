@@ -248,68 +248,36 @@ Blockly.Blocks['logic_or'] = {
 
 
  */
+//JSON.parse --> from string to object
+//JSON.stringify --> from object to string
 
+//for escape characters
+//encoded = encodeURIComponent(text)
+//decodeURIComponent(encoded)
 
 // with socket for  number
 Blockly.Blocks['move_cube'] = {
 
-    //category: 'Logic',//do not set category yet
-
     init:function(){
         this.setColour(160);
-        //this.setPreviousStatement(true);
-        //this.setNextStatement(true);
         this.setTooltip('Moves the selected cube object within VR scene');
     },
 
-    //store sting in mutator
-    /*
-     "{"type":"temp", "message0":"test with me %1", "args0":[{"type":"input_value","name":"VALUE","check":"String"}],
-     "previousStatement":null, "nextStatement":null,"colour":"#B32D5E", "helpUrl":"http://appinventor.mit.edu/explore/ai2/support/blocks/text#string"}"
-     */
-    /*
-     "%7B%22type%22%3A%22text_length%22%2C%20%22message0%22%3A%22length%251%22%2C%20%22args0%22%3A%5B%7B%22type%22%3A%22input_value%22%2C%22name%22%3A%22VALUE%22%2C%22check%22%3A%22String%22%7D%5D%2C%20%22output%22%3A%22Number%22%2C%20%22category%22%3A%22Text%22%2C%22colour%22%3A%22%23B32D5E%22%2C%22previousStatement%22%3Anull%2C%20%22nextStatement%22%3Anull%2C%20%22helpUrl%22%3A%22http%3A%2F%2Fappinventor.mit.edu%2Fexplore%2Fai2%2Fsupport%2Fblocks%2Ftext%23string%22%7D"
-     */
-    //do init() in mutator
-    //call length block from move_cube block
-    //JSON.parse --> from string to object
-    //JSON.stringify --> from object to string
-
-    //for escape characters
-    //encoded = encodeURIComponent(text)
-    //decodeURIComponent(encoded)
 
     mutationToDom: function(){
         var container = document.createElement('mutation');
-        //container.setAttribute('hasDropDown', this.hasDropDown_);
-        container.setAttribute('text_length_block_info', this.block_info);
+        container.setAttribute('block_info', this.block_info);
+        container.setAttribute('function_name', this.function_name);
         return container;
     },
 
     //this function gets called first!
     domToMutation: function(xmlElement) {
-        //convert between two types of blocks
-        //this.hasDropDown_ = xmlElement.getAttribute('hasDropDown');
-        /*if(this.hasDropDown_){
-            this.appendDummyInput()
-                .appendField('move cube')
-                .appendField(new Blockly.FieldDropdown([
-                        ['forward', 'FORWARD'], ['backward', 'BACKWARD'],
-                        ['right', 'RIGHT'], ['left', 'LEFT']
-                    ]),
-                    'DIRECTION');
-        }else{
-            this.appendValueInput('NUMBER')
-                .appendField('move cube ')
-                .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("number", Blockly.Blocks.Utilities.INPUT));
-        }*/
 
-        //call jsonInit function for creating text_length block
-        this.block_info = xmlElement.getAttribute('text_length_block_info');
+        this.block_info = xmlElement.getAttribute('block_info');
         var decoded_block_info = decodeURIComponent(this.block_info);
         var info_object = JSON.parse(decoded_block_info);
-
-        //before doing jsonInit, should remove the previous input and fields
+        this.function_name = info_object["function_name"];
         this.jsonInit(info_object);
 
 
@@ -317,6 +285,7 @@ Blockly.Blocks['move_cube'] = {
 
     // //this function gets called first!
     // domToMutation: function(xmlElement) {
+
     //
     //     this.block_info = xmlElement.getAttribute('block_info');
     //     var decoded_block_info = decodeURIComponent(this.block_info);
