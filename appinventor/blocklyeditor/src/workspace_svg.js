@@ -72,6 +72,8 @@ Blockly.WorkspaceSvg.prototype.onMouseDown_ = (function(func) {
         this.latestClick = point;
         return func.call(this, e);
       } finally {
+        // focus the workspace's parent typeblocking and other keystrokes
+        this.getTopWorkspace().getParentSvg().parentNode.focus();
         //if drawer exists and supposed to close
         if (this.drawer_ && this.drawer_.flyout_.autoClose) {
           this.drawer_.hide();
@@ -316,16 +318,19 @@ Blockly.WorkspaceSvg.prototype.addComponent = function(uid, instanceName, typeNa
  * @returns {Blockly.WorkspaceSvg} The workspace for call chaining.
  */
 Blockly.WorkspaceSvg.prototype.removeComponent = function(uid) {
+  var component = this.componentDb_.getInstance(uid);
   if (!this.componentDb_.removeInstance(uid)) {
     return this;
   }
   this.typeBlock_.needsReload.components = true;
   var blocks = this.getAllBlocks();
   for (var i = 0, block; block = blocks[i]; ++i) {
-    if (block.category == 'Component' && block.componentUid == uid) {
+    if (block.category == 'Component'
+        && block.getFieldValue('COMPONENT_SELECTOR') == component.name) {
       block.dispose(true);
     }
   }
+  Blockly.hideChaff();
   return this;
 };
 
@@ -350,6 +355,7 @@ Blockly.WorkspaceSvg.prototype.renameComponent = function(uid, oldName, newName)
       this.blocksNeedingRendering.push(block);
     }
   }
+  Blockly.hideChaff();
   return this;
 };
 
@@ -844,4 +850,16 @@ Blockly.WorkspaceSvg.prototype.buildComponentMap = function(warnings, errors, fo
     }
   }
   return map;
+};
+
+/**
+ * Get the topmost workspace in the workspace hierarchy.
+ * @returns {Blockly.WorkspaceSvg}
+ */
+Blockly.WorkspaceSvg.prototype.getTopWorkspace = function() {
+  var parent = this;
+  while (parent.targetWorkspace) {
+    parent = parent.targetWorkspace;
+  }
+  return parent;
 };
