@@ -213,6 +213,7 @@ Blockly.BlocklyEditor['create'] = function(container, formName, readOnly, rtl) {
   });
 
   var subContainer = goog.dom.createDom('div', 'injectionDiv');
+  subContainer.setAttribute('tabindex', '0');  // make injection div focusable
   container.appendChild(subContainer);
   var svg = Blockly.createDom_(subContainer, options);
   svg.setAttribute('width', '100%');
