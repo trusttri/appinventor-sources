@@ -267,7 +267,6 @@ Blockly.Blocks['move_cube'] = {
     mutationToDom: function(){
         var container = document.createElement('mutation');
         container.setAttribute('block_info', this.block_info);
-        container.setAttribute('function_name', this.function_name);
         return container;
     },
 
@@ -277,7 +276,6 @@ Blockly.Blocks['move_cube'] = {
         this.block_info = xmlElement.getAttribute('block_info');
         var decoded_block_info = decodeURIComponent(this.block_info);
         var info_object = JSON.parse(decoded_block_info);
-        this.function_name = info_object["function_name"];
         this.jsonInit(info_object);
 
 

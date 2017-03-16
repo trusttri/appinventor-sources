@@ -84,38 +84,68 @@ Blockly.Yail['logic_compare'] = function() {
   return [ code, Blockly.Yail.ORDER_ATOMIC ];
 };
 
+getStringOfParameter = function(parameter, thisBlock){ //should put in parameter_array[i], this
+    // "parameters":[{"name":"ID", "type": "input_value"},{"name":"DIRECTION", "type": "field_dropdown"}
+  if(parameter["type"] == "input_value"){
+
+      if(parameter["name"] == 'COLOR'){
+          var color_string = Blockly.Yail.valueToCode(Blockly.selected, parameter["name"] , Blockly.Yail.ORDER_NONE);
+          var color_num = window.parseInt(color_string) * (-1);
+          var color_num_hexa = "#" + (window.Math.pow(16,6) - color_num).toString(16);
+          console.log(color_string);
+          console.log(color_num_hexa);
+          return color_num_hexa;
+      }
+
+      return Blockly.Yail.valueToCode(thisBlock, parameter["name"], Blockly.Yail.ORDER_NONE )
+
+  }else if(parameter["type"] == "field_dropdown"){
+
+      console.log(thisBlock.getFieldValue(parameter["name"]));
+      return thisBlock.getFieldValue(parameter["name"]);
+
+  }else{
+      console.log("put in wrong parameters");
+      return "";
+  }
+};
+
 Blockly.Yail['move_cube'] = function(){
 
-    var argument0 = Blockly.Yail.valueToCode(this, 'ID', Blockly.Yail.ORDER_NONE);
-    var argument1 = Blockly.Yail.valueToCode(this, 'POSITION_X', Blockly.Yail.ORDER_NONE);
-    var argument2 = Blockly.Yail.valueToCode(this, 'POSITION_Y', Blockly.Yail.ORDER_NONE);
-    var argument3 = Blockly.Yail.valueToCode(this, 'POSITION_Z', Blockly.Yail.ORDER_NONE);
-    var function_name = this.function_name;
+    //get information of block in JSON format
+    var decoded_block_info = decodeURIComponent(this.block_info);
+    var info_JSON_format = JSON.parse(decoded_block_info);
+
+    //get the function name
+    var function_name = info_JSON_format["function_name"];
+
+    //get the parameters, assuming that the user has put an array which contains labels of parameters in order, inside the JSON format
+    var parameter_array = info_JSON_format["parameters"];
+    var string_of_parameters = "";
+
+    for(var i=0; i<parameter_array.length; i++){
+        if(i!=0) {
+            string_of_parameters += ',';
+        }
+        //string_of_parameters += '\'' + Blockly.Yail.valueToCode(this, parameter_array[i]["name"], Blockly.Yail.ORDER_NONE ) + '\'';
+        string_of_parameters += '\'' + getStringOfParameter(parameter_array[i], this) + '\'';
+    }
+
 
     var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'RunJavaScript' + Blockly.Yail.YAIL_SPACER ;
     code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER ;
     code += '\"' + function_name + '\"' + Blockly.Yail.YAIL_SPACER;
 
-    code += '\"' + '\'' +  argument0 + '\'';
-    code +=  ',' + '\'' + argument1 + '\'' ;
-    code +=  ',' + '\'' + argument2 + '\'' ;
-    code +=  ',' + '\'' + argument3 + '\'' + '\"' + Blockly.Yail.YAIL_SPACER;
+    code += '\"' + string_of_parameters + '\"' + Blockly.Yail.YAIL_SPACER;
+
     code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
-    code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'text';
+    code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'any';
     code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_CLOSE_COMBINATION;
     return code;
 
-    //
-    // var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'RunJavaScript' + Blockly.Yail.YAIL_SPACER ;
-    // code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER ;
-    // code += '\"' + "changeName" + '\"' + Blockly.Yail.YAIL_SPACER;
-    // code += '\"' + '\'' + "hi" + '\'' + ',' + '\'' + "hello" + '\'' + '\"';
-    // code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
-    // code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'text';
-    //
-    // code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_CLOSE_COMBINATION;
-    // return code;
 
 
 };
+
+
 
