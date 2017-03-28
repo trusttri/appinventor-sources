@@ -92,6 +92,9 @@ public final class WebViewer extends AndroidViewComponent {
 
   //path to javascript library uploaded by user
   private String jsLibraryPath = "";
+  
+  //JSON string for creating new blocks
+  private String userBlockInformation = "";
 
   /**
    * Creates a new WebViewer component.
@@ -138,6 +141,7 @@ public final class WebViewer extends AndroidViewComponent {
     JavaScriptLibrary("");
     Width(LENGTH_FILL_PARENT);
     Height(LENGTH_FILL_PARENT);
+    JSONBlocks("");
   }
 
   /**
@@ -434,6 +438,36 @@ public final class WebViewer extends AndroidViewComponent {
   public void PromptforPermission(boolean prompt) {
     this.prompt = prompt;
   }
+
+  
+  /**
+   * Text box for users to insert JSON format of blocks they want to create
+   * 
+   * userBlockInformation should strictly follow JSON format
+   */
+  @SimpleProperty(
+		  description = "Users insert their JSON formats here.  " +
+          "Should follow format as specified.", 
+          category = PropertyCategory.BEHAVIOR)
+  public String JSONBlocks(){
+	  return this.userBlockInformation;
+  }
+  
+
+  /**
+   * User specifies the type of block they want to make
+   *
+   * @param userBlockInformation information of JSON format of the block user wants to make
+   */
+  @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_STRING,
+	      defaultValue = "")
+  @SimpleProperty()
+  public void JSONBlocks(String userBlockInformation){
+	  this.userBlockInformation = userBlockInformation;
+  }
+  
+  
+
 
   /**
    * Clear Stored Location permissions. When the geolocation API is used in

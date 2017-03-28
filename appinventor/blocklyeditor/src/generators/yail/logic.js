@@ -84,19 +84,28 @@ Blockly.Yail['logic_compare'] = function() {
   return [ code, Blockly.Yail.ORDER_ATOMIC ];
 };
 
+
+
 getStringOfParameter = function(parameter, thisBlock){ //should put in parameter_array[i], this
     // "parameters":[{"name":"ID", "type": "input_value"},{"name":"DIRECTION", "type": "field_dropdown"}
   if(parameter["type"] == "input_value"){
 
       if(parameter["name"] == 'COLOR'){
-          var color_string = Blockly.Yail.valueToCode(Blockly.selected, parameter["name"] , Blockly.Yail.ORDER_NONE);
-          var color_num = window.parseInt(color_string) * (-1);
-          var color_num_hexa = "#" + (window.Math.pow(16,6) - color_num).toString(16);
-          console.log(color_string);
-          console.log(color_num_hexa);
-          return color_num_hexa;
+
+            var color_string = Blockly.Yail.valueToCode(thisBlock, parameter["name"] , Blockly.Yail.ORDER_NONE);
+            console.log("color string: "+color_string);
+            var color_num = window.parseInt(color_string) * (-1);
+            console.log("color num: "+color_num );
+            var after_zeros =  (window.Math.pow(16,6) - color_num).toString(16);
+            var diff = 6 - after_zeros.length;
+            var hex = "#";
+            for(var i=0; i<diff; i++){hex += "0";}
+            hex += after_zeros;
+            console.log("Hex :"+hex);
+          return hex;
       }
 
+      console.log("not color");
       return Blockly.Yail.valueToCode(thisBlock, parameter["name"], Blockly.Yail.ORDER_NONE )
 
   }else if(parameter["type"] == "field_dropdown"){
@@ -105,15 +114,16 @@ getStringOfParameter = function(parameter, thisBlock){ //should put in parameter
       return thisBlock.getFieldValue(parameter["name"]);
 
   }else{
-      console.log("put in wrong parameters");
-      return "";
+
   }
 };
 
-Blockly.Yail['move_cube'] = function(){
+Blockly.Yail['customizable_block'] = function(){
 
     //get information of block in JSON format
     var decoded_block_info = decodeURIComponent(this.block_info);
+    var webviewer_name = this.webviewer_name;
+    console.log("webviewer" + webviewer_name);
     var info_JSON_format = JSON.parse(decoded_block_info);
 
     //get the function name
@@ -127,19 +137,19 @@ Blockly.Yail['move_cube'] = function(){
         if(i!=0) {
             string_of_parameters += ',';
         }
-        //string_of_parameters += '\'' + Blockly.Yail.valueToCode(this, parameter_array[i]["name"], Blockly.Yail.ORDER_NONE ) + '\'';
+
         string_of_parameters += '\'' + getStringOfParameter(parameter_array[i], this) + '\'';
     }
 
 
-    var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\'WebViewer1 \'RunJavaScript' + Blockly.Yail.YAIL_SPACER ;
+    var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\''+ webviewer_name +' \'RunJavaScript' + Blockly.Yail.YAIL_SPACER ;
     code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER ;
     code += '\"' + function_name + '\"' + Blockly.Yail.YAIL_SPACER;
 
     code += '\"' + string_of_parameters + '\"' + Blockly.Yail.YAIL_SPACER;
 
     code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
-    code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'any';
+    code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'text';
     code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_CLOSE_COMBINATION;
     return code;
 

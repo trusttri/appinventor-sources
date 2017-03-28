@@ -6187,19 +6187,19 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GetRowsWithConditionsMethods();
 
-  @DefaultMessage("简体中文")
+  @DefaultMessage("ç®€ä½“ä¸­æ–‡")
   @Description("")
   String SwitchToSimplifiedChinese();
 
-  @DefaultMessage("繁体中文")
+  @DefaultMessage("ç¹�ä½“ä¸­æ–‡")
   @Description("")
   String SwitchToTraditionalChinese();
 
-  @DefaultMessage("Español")
+  @DefaultMessage("EspaÃ±ol")
   @Description("")
   String SwitchToSpanish();
 
-  @DefaultMessage("Français")
+  @DefaultMessage("FranÃ§ais")
   @Description("")
   String SwitchToFrench();
 
@@ -6207,11 +6207,11 @@ public interface OdeMessages extends Messages {
   @Description("")
   String SwitchToItalian();
 
-  @DefaultMessage("Pусский")
+  @DefaultMessage("PÑƒÑ�Ñ�ÐºÐ¸Ð¹")
   @Description("")
   String SwitchToRussian();
 
-  @DefaultMessage("한국어")
+  @DefaultMessage("í•œêµ­ì–´")
   @Description("")
   String SwitchToKorean();
 
@@ -6219,7 +6219,7 @@ public interface OdeMessages extends Messages {
   @Description("")
   String SwitchToSwedish();
 
-  @DefaultMessage("Português do Brasil")
+  @DefaultMessage("PortuguÃªs do Brasil")
   @Description("")
   String switchToPortugueseBR();
 
@@ -6387,5 +6387,9 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Reload")
   @Description("")
   String reloadWindow();
+
+  @DefaultMessage("JSONBlocks")
+  @Description("Text box for user creating blocks")
+  String JSONBlocksProperties();
 
 }

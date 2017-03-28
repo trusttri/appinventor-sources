@@ -256,17 +256,18 @@ Blockly.Blocks['logic_or'] = {
 //decodeURIComponent(encoded)
 
 // with socket for  number
-Blockly.Blocks['move_cube'] = {
+Blockly.Blocks['customizable_block'] = {
 
     init:function(){
         this.setColour(160);
-        this.setTooltip('Moves the selected cube object within VR scene');
+        this.setTooltip('customizable block with JSON format data');
     },
 
 
     mutationToDom: function(){
         var container = document.createElement('mutation');
         container.setAttribute('block_info', this.block_info);
+        container.setAttribute('webviewer_name', this.webviewer_name);
         return container;
     },
 
@@ -274,6 +275,7 @@ Blockly.Blocks['move_cube'] = {
     domToMutation: function(xmlElement) {
 
         this.block_info = xmlElement.getAttribute('block_info');
+        this.webviewer_name = xmlElement.getAttribute('webviewer_name');
         var decoded_block_info = decodeURIComponent(this.block_info);
         var info_object = JSON.parse(decoded_block_info);
         this.jsonInit(info_object);
@@ -281,20 +283,9 @@ Blockly.Blocks['move_cube'] = {
 
     },
 
-    // //this function gets called first!
-    // domToMutation: function(xmlElement) {
-
-    //
-    //     this.block_info = xmlElement.getAttribute('block_info');
-    //     var decoded_block_info = decodeURIComponent(this.block_info);
-    //     var info_object = JSON.parse(decoded_block_info);
-    //     this.function_name = info_object["function_name"];
-    //
-    //
-    //     this.jsonInit(info_object);
-    //
-    //
-    // },
-
-
+    rename: function(oldname, newname){
+        if (this.webviewer_name == oldname){
+          this.webviewer_name = newname;
+        }
+    }
 }
