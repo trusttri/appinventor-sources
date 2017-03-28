@@ -288,6 +288,7 @@ public final class YaBlocksEditor extends FileEditor
     // Clear and hide the blocks selector tree
     sourceStructureExplorer.clearTree();
     hideComponentBlocks();
+    blocksArea.hideChaff();
   }
 
   @Override

@@ -177,7 +177,7 @@ Blockly.Component.verifyAllBlocks = function () {
     var allBlocks = Blockly.mainWorkspace.getAllBlocks();
     for (var x = 0, block; block = allBlocks[x]; ++x) {
       if (block.category != 'Component') {
-	continue;
+        continue;
       }
       block.verify();
     }

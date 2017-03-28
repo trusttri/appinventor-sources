@@ -120,11 +120,18 @@ Blockly.TypeBlock.prototype.ac_ = null;
  */
 Blockly.TypeBlock.prototype.currentListener_ = null;
 
+/**
+ *
+ * @param {goog.events.KeyEvent} e
+ */
 Blockly.TypeBlock.prototype.handleKey = function(e){
     if (Blockly.mainWorkspace !== this.workspace_) return;  // not targeting this workspace
     // test blocks editor displayed/visible to user
     if (!this.workspace_.getParentSvg() ||
         this.workspace_.getParentSvg().parentElement.offsetParent == null) return;
+    // Don't steal input from Blockly fields.
+    if (e.target != this.ac_.getTarget() &&
+      (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA')) return;
     if (e.altKey || e.ctrlKey || e.metaKey || e.keyCode === 9) return; // 9 is tab
     //We need to duplicate delete handling here from blockly.js
     if (e.keyCode === 8 || e.keyCode === 46) {
@@ -145,13 +152,13 @@ Blockly.TypeBlock.prototype.handleKey = function(e){
       // Enter in the panel makes it select an option
       if (e.keyCode === 13) Blockly.TypeBlock.hide();
     }
-    else {
+    else if (e.keyCode != 13) {
       this.show();
       // Can't seem to make Firefox display first character, so keep all browsers from automatically
       // displaying the first character and add it manually.
       e.preventDefault();
       goog.dom.getElement(this.inputText_).value =
-	String.fromCharCode(e.charCode != null ? e.charCode : e.keycode);
+        String.fromCharCode(e.charCode != null ? e.charCode : e.keycode);
     }
   };
 

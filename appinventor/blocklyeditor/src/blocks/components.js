@@ -197,7 +197,9 @@ Blockly.Blocks.component_event = {
       this.instanceName = newname;
       this.componentDropDown.setValue(this.instanceName);
       Blockly.Blocks.Utilities.renameCollapsed(this, 0);
+      return true;
     }
+    return false;
   },
   renameVar: function(oldName, newName) {
     for (var i = 0, param = 'VAR' + i, input
@@ -560,7 +562,9 @@ Blockly.Blocks.component_method = {
       //title.setText('call ' + this.instanceName + '.' + this.methodType.name);
       this.componentDropDown.setValue(this.instanceName);
       Blockly.Blocks.Utilities.renameCollapsed(this, 0);
+      return true;
     }
+    return false;
   },
   /**
    * Get the underlying method descriptor for the block.
@@ -976,7 +980,9 @@ Blockly.Blocks.component_set_get = {
       //title.setText(this.instanceName + '.');
       this.componentDropDown.setValue(this.instanceName);
       Blockly.Blocks.Utilities.renameCollapsed(this, 0);
+      return true;
     }
+    return false;
   },
   typeblock : function(){
     var componentDb = Blockly.mainWorkspace.getComponentDatabase();
@@ -1116,7 +1122,9 @@ Blockly.Blocks.component_component_block = {
       //title.setText(this.instanceName);
       this.componentDropDown.setValue(this.instanceName);
       Blockly.Blocks.Utilities.renameCollapsed(this, 0);
+      return true;
     }
+    return false;
   },
 
   typeblock : function(){

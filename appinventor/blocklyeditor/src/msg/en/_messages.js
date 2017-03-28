@@ -26,7 +26,9 @@
  */
 'use strict';
 
-goog.provide('Blockly.Msg.en');
+goog.provide('AI.Blockly.Msg.en');
+
+goog.require('Blockly.Msg.en');
 
 /**
  * Due to the frequency of long strings, the 80-column wrap rule need not apply
@@ -1378,4 +1380,5 @@ Blockly.Msg.en.switch_language_to_english = {
 };
 
 // Initalize language definition to English
+Blockly.Msg.en.switch_blockly_language_to_en.init();
 Blockly.Msg.en.switch_language_to_english.init();

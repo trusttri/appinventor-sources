@@ -228,7 +228,7 @@ Blockly.Drawer.prototype.instanceRecordToXMLArray = function(instanceRecord) {
   goog.object.forEach(componentInfo.properties, function(property, name) {
     if (property.deprecated != 'true') {
       var params = {'component_type': typeName, 'instance_name': instanceRecord.name,
-		    'property_name': name};
+                    'property_name': name};
       if ((property.mutability & Blockly.PROPERTY_READABLE) == Blockly.PROPERTY_READABLE) {
         params['set_or_get'] = 'get';
         Array.prototype.push.apply(xmlArray, this.blockTypeToXMLArray('component_set_get', params));

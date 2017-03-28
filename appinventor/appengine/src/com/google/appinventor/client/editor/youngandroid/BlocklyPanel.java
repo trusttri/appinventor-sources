@@ -53,12 +53,12 @@ public class BlocklyPanel extends HTMLPanel {
 
   public static interface BlocklySource extends JsniBundle {
     @LibrarySource(value="blockly.js",
-		   prepend="(function(window, document, console){\nthis.goog = goog = top.goog;\n",
-		   postpend="\n}.apply(window, [$wnd, $doc, $wnd.console]));\n" +
-		   "for(var ns in window.goog.implicitNamespaces_) {\n" +
-		   "  if(ns.indexOf('.') !== false) ns = ns.split('.')[0];\n" +
-		   "  top[ns] = window.goog.global[ns];\n" +
-		   "}\nwindow['Blockly'] = top['Blockly'];\nwindow['AI'] = top['AI'];")
+                   prepend="(function(window, document, console){\nthis.goog = goog = top.goog;\n",
+                   postpend="\n}.apply(window, [$wnd, $doc, $wnd.console]));\n" +
+                   "for(var ns in window.goog.implicitNamespaces_) {\n" +
+                   "  if(ns.indexOf('.') !== false) ns = ns.split('.')[0];\n" +
+                   "  top[ns] = window.goog.global[ns];\n" +
+                   "}\nwindow['Blockly'] = top['Blockly'];\nwindow['AI'] = top['AI'];")
     public void initBlockly();
   }
 
@@ -716,6 +716,10 @@ public class BlocklyPanel extends HTMLPanel {
     this.@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::workspace
       .resize()
       .render();
+  }-*/;
+
+  public native void hideChaff()/*-{
+    Blockly.hideChaff();
   }-*/;
 
   public native void toggleWarning()/*-{

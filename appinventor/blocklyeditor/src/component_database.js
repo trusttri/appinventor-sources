@@ -121,7 +121,7 @@ Blockly.ComponentDatabase.prototype.addInstance = function(uid, name, typeName) 
   if (this.hasInstance(uid)) {
     return false;
   }
-  this.instances_[uid] = {name: name, typeName: typeName};
+  this.instances_[uid] = {uuid: uid, name: name, typeName: typeName};
   this.instanceNameUid_[name] = uid;
   return true;
 };
