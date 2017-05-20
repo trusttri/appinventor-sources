@@ -88,14 +88,14 @@ Blockly.Yail['logic_compare'] = function() {
 
 getStringOfParameter = function(parameter, thisBlock){ //should put in parameter_array[i], this
     // "parameters":[{"name":"ID", "type": "input_value"},{"name":"DIRECTION", "type": "field_dropdown"}
-  if(parameter["type"] == "input_value"){
+  if(parameter["type"] == "INPUT"){
 
       if(parameter["name"] == 'COLOR'){
 
             var color_string = Blockly.Yail.valueToCode(thisBlock, parameter["name"] , Blockly.Yail.ORDER_NONE);
-            console.log("color string: "+color_string);
+
             var color_num = window.parseInt(color_string) * (-1);
-            console.log("color num: "+color_num );
+
             var after_zeros =  (window.Math.pow(16,6) - color_num).toString(16);
             var diff = 6 - after_zeros.length;
             var hex = "#";
@@ -105,12 +105,11 @@ getStringOfParameter = function(parameter, thisBlock){ //should put in parameter
           return hex;
       }
 
-      console.log("not color");
+
       return Blockly.Yail.valueToCode(thisBlock, parameter["name"], Blockly.Yail.ORDER_NONE )
 
-  }else if(parameter["type"] == "field_dropdown"){
+  }else if(parameter["type"] == "FIELD"){
 
-      console.log(thisBlock.getFieldValue(parameter["name"]));
       return thisBlock.getFieldValue(parameter["name"]);
 
   }else{
@@ -131,31 +130,50 @@ Blockly.Yail['customizable_block'] = function(){
 
     //get the parameters, assuming that the user has put an array which contains labels of parameters in order, inside the JSON format
     var parameter_array = info_JSON_format["parameters"];
-    var string_of_parameters = "";
-
-    for(var i=0; i<parameter_array.length; i++){
-        if(i!=0) {
-            string_of_parameters += ',';
-        }
-
-        string_of_parameters += '\'' + getStringOfParameter(parameter_array[i], this) + '\'';
+	
+	//have to join the parameters into one text blob. Use App Inventor's yail code for text join block
+    var string_of_parameters = '(call-yail-primitive string-append (*list-for-runtime*  ';
+	
+	//string_of_parameters += ' \"\\\"\" ' // to make "\""
+	
+	
+	for(var i=0; i<parameter_array.length; i++){		
+		 if(i!=0){			 
+			 string_of_parameters += " \",\" " //for ","
+		 }
+        
+		//call-yail-primitive string-append (*list-for-runtime* "\""     "'"       "hi"          "'"       ","  "\"" ) '(text text text text text ) "join")
+		string_of_parameters +=  ' \"\'\" '
+		//string_of_parameters += ' \" '+ getStringOfParameter(parameter_array[i], this) + ' \" '
+		string_of_parameters +=  getStringOfParameter(parameter_array[i], this) 
+		string_of_parameters += ' \"\'\" ';
+	
     }
-
-
+	
+	//end
+	//string_of_parameters += ' \"\\\"\" '; // to make "\""
+	string_of_parameters += ' ) \'('
+	
+	for(var i=0; i<(3 * parameter_array.length + (parameter_array.length - 1)); i++){
+		
+		string_of_parameters += 'text ';
+	}
+	
+	string_of_parameters += ') "join") ';
+	
     var code = Blockly.Yail.YAIL_CALL_COMPONENT_METHOD + Blockly.Yail.YAIL_SPACER + '\''+ webviewer_name +' \'RunJavaScript' + Blockly.Yail.YAIL_SPACER ;
     code += Blockly.Yail.YAIL_OPEN_BLOCK + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER ;
     code += '\"' + function_name + '\"' + Blockly.Yail.YAIL_SPACER;
-
-    code += '\"' + string_of_parameters + '\"' + Blockly.Yail.YAIL_SPACER;
-
+	
+	code += string_of_parameters + Blockly.Yail.YAIL_SPACER;
     code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
     code += '\'' +Blockly.Yail.YAIL_OPEN_COMBINATION+'text'+ Blockly.Yail.YAIL_SPACER +'text';
     code += Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_CLOSE_COMBINATION;
     return code;
 
 
-
 };
+
 
 
 
